@@ -1,4 +1,33 @@
-# OpenCode Monitor
+# OpenCode Status Bar
+
+A lightweight macOS menu bar status indicator for the [OpenCode](https://opencode.ai) desktop app.
+Glance at the menu bar to see whether OpenCode is working, finished, or needs your approval or an answer.
+
+This is a fork of [OpenClaudeAgent/opencode-monitor](https://github.com/OpenClaudeAgent/opencode-monitor)
+(MIT licensed, now archived). It is not an official OpenCode project.
+
+## What This Fork Changes
+
+- **Works with the OpenCode desktop app.** The desktop app's local server requires a per-launch password,
+  so the original port scanning can't see it. A small OpenCode plugin (`integrations/opencode-monitor.js`)
+  writes status-only snapshots that the menu bar app reads. No credentials, prompts, or tool output are exported.
+- **Native menu bar look.** SF Symbols and system text that adapt to light/dark menu bars; the icon turns yellow
+  only when something needs your attention (`Awaiting approval`, `Awaiting answer`, `Needs attention`).
+- **Real attention signals.** Pending approvals and questions come from OpenCode itself, not timing guesses.
+- **Trimmed down.** The dashboard, analytics database, security scanner, local API server, Claude usage polling,
+  and port scanning are no longer loaded. Memory dropped from about 79 MB to 36 MB.
+- **Quiet logging.** One log line per status change instead of one every 2 seconds.
+- **Show OpenCode** as the first dropdown item.
+
+See [`integrations/README.md`](integrations/README.md) for how the plugin and native launcher work.
+
+**Status:** there is no installer yet. Setup currently requires building `integrations/launcher.m`
+and linking the plugin into `~/.config/opencode/plugins/` by hand. The sections below describe the
+original project and are partly out of date.
+
+---
+
+## Original README
 
 > **Note** : Ce projet est entièrement *vibe-codé* avec [OpenCode](https://github.com/sst/opencode) ❤️ et Claude Opus 4.5.
 

@@ -1,11 +1,11 @@
 """Handlers mixin for OpenCodeApp - Contains all callback methods."""
 
 from typing import TYPE_CHECKING
+import subprocess
 
 from ..security.analyzer import SecurityAlert, RiskLevel
 from ..ui.terminal import focus_iterm2
-from ..dashboard import show_dashboard
-from ..utils.logger import info
+from ..utils.logger import info, error
 
 
 if TYPE_CHECKING:
@@ -21,6 +21,16 @@ class HandlersMixin:
     _has_critical_alert: bool
     _needs_refresh: bool
 
+    def _open_opencode(self, _):
+        """Launch or foreground the installed OpenCode desktop app."""
+        try:
+            subprocess.run(
+                ["/usr/bin/open", "-b", "ai.opencode.desktop"],
+                check=True, capture_output=True, timeout=5,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            error(f"Could not open OpenCode: {exc}")
+
     def _focus_terminal(self, tty: str):
         """Focus iTerm2 on the given TTY."""
         focus_iterm2(tty)
@@ -29,11 +39,6 @@ class HandlersMixin:
         """Manual refresh callback."""
         info("Manual refresh requested")
         self._needs_refresh = True
-
-    def _show_dashboard(self, _):
-        """Open the PyQt Dashboard window."""
-        info("Opening Dashboard...")
-        show_dashboard()
 
     def _add_security_alert(self, alert: SecurityAlert):
         """Add a security alert to the history."""

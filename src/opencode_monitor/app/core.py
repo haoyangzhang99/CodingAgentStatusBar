@@ -3,11 +3,14 @@ Core OpenCodeApp class - Main menu bar application.
 
 This module provides the OpenCodeApp class which:
 - Manages application state and lifecycle
-- Runs background monitoring loop
+- Polls status snapshots written by the OpenCode desktop bridge plugin
 - Combines MenuMixin and HandlersMixin for functionality
+
+Trimmed build: the dashboard, analytics indexer, security auditor, local API
+server, Claude usage polling, and legacy port scanning are not started or
+imported. Their code remains in the repository.
 """
 
-import asyncio
 import threading
 import time
 from typing import Optional
@@ -15,20 +18,69 @@ from typing import Optional
 import rumps
 
 from ..core.models import State, SessionStatus, Usage
-from ..core.monitor import fetch_all_instances
-from ..core.usage import fetch_usage
+from ..core.monitor.bridge import read_bridge_state
 from ..ui.menu import MenuBuilder
-from ..utils.settings import get_settings
 from ..utils.logger import info, error
-from ..security.auditor import start_auditor
-from ..security.enrichment import SecurityEnrichmentWorker
-
-# Use new unified indexer instead of deprecated collector
-from ..analytics.indexer import start_indexer
-from ..analytics.db import get_analytics_db
 
 from .handlers import HandlersMixin
 from .menu import MenuMixin
+
+
+def status_for(state: Optional[State]) -> tuple[str, str, bool]:
+    """Return (menu bar label, SF Symbol name, needs attention) for a state."""
+    if state is None or not state.connected:
+        return "OpenCode offline", "terminal", False
+    agents = [agent for inst in state.instances for agent in inst.agents]
+    approval = any(tool.may_need_permission for a in agents for tool in a.tools)
+    question = any(a.has_pending_ask_user for a in agents)
+    if approval and question:
+        return "Needs attention", "exclamationmark.circle", True
+    if approval:
+        return "Awaiting approval", "hand.raised", True
+    if question:
+        return "Awaiting answer", "questionmark.circle", True
+    busy = [a for a in agents if a.status == SessionStatus.BUSY]
+    if busy:
+        root_count = sum(not a.is_subagent for a in busy)
+        return (f"{root_count} working" if root_count > 1 else "Working..."), "terminal", False
+    if agents:
+        return "Done", "checkmark.circle", False
+    return "OpenCode idle", "terminal", False
+
+
+def state_fingerprint(state: Optional[State]) -> tuple:
+    """Everything the menu displays, excluding timestamps, for change detection."""
+    if state is None:
+        return ()
+    return (state.connected,) + tuple(
+        (
+            inst.port,
+            agent.id,
+            agent.title,
+            agent.full_dir,
+            agent.parent_id,
+            agent.status,
+            agent.has_pending_ask_user,
+            tuple((tool.name, tool.may_need_permission) for tool in agent.tools),
+        )
+        for inst in state.instances
+        for agent in inst.agents
+    )
+
+
+def status_summary(state: Optional[State]) -> str:
+    """One log line describing the status, without session titles or paths."""
+    title = status_for(state)[0]
+    agents = [a for inst in (state.instances if state else []) for a in inst.agents]
+    busy = sum(a.status == SessionStatus.BUSY and not a.is_subagent for a in agents)
+    attention = sum(
+        a.has_pending_ask_user or any(t.may_need_permission for t in a.tools)
+        for a in agents
+    )
+    return (
+        f"{title} (sessions: {len(agents)}, working: {busy}, "
+        f"needing attention: {attention})"
+    )
 
 
 class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
@@ -41,57 +93,30 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
     """
 
     POLL_INTERVAL = 2  # seconds
-    USAGE_INTERVALS = [30, 60, 120, 300, 600]  # Available options
-    # Ask user timeout options (in seconds) - how long to show 🔔 before dismissing
-    ASK_USER_TIMEOUTS = [300, 900, 1800, 3600]  # 5m, 15m, 30m, 1h
 
     def __init__(self):
         super().__init__(
             name="OpenCode Monitor",
-            title="🤖",
+            title="OpenCode",
             quit_button=None,  # type: ignore[arg-type]  # rumps accepts None to disable quit button
         )
 
         # State tracking
         self._state: Optional[State] = None
-        self._usage: Optional[Usage] = None
+        self._usage: Optional[Usage] = None  # Usage polling is disabled
         self._state_lock = threading.Lock()
-        self._last_usage_update = 0
-        self._previous_busy_agents: set = set()
         self._running = True
         self._needs_refresh = True
         self._port_names: dict[int, str] = {}
         self._PORT_NAMES_LIMIT = 50
 
-        # Cache of sessions we've seen as BUSY, with their port
-        # Format: {session_id: port} - allows invalidation when port dies
-        self._known_active_sessions: dict[str, int] = {}
-        self._KNOWN_SESSIONS_LIMIT = 200
-
-        # Security monitoring
+        # Security alerts raised while rendering tool rows in the dropdown
         self._security_alerts: list = []
         self._max_alerts = 20
         self._has_critical_alert = False
 
         # Menu builder
         self._menu_builder = MenuBuilder(self._port_names, self._PORT_NAMES_LIMIT)
-
-        # Start security auditor
-        start_auditor()
-
-        # Start unified indexer (replaces collector + handles real-time + backfill)
-        start_indexer()
-        info("[OpenCodeApp] Unified indexer started")
-
-        # Start security enrichment worker (scores parts with risk analysis)
-        self._enrichment_worker = SecurityEnrichmentWorker(db=get_analytics_db())
-        self._enrichment_worker.start()
-        info("[OpenCodeApp] Security enrichment worker started")
-
-        # Start analytics API server (for dashboard access)
-        from ..api import start_api_server
-
-        start_api_server()
 
         # Build initial menu
         self._build_static_menu()
@@ -105,159 +130,102 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
     @rumps.timer(2)
     def _ui_refresh(self, _):
         """Timer callback to refresh UI on main thread."""
+        if not getattr(self, "_menu_bar_logged", False) and hasattr(self, "_nsapp"):
+            item = self._nsapp.nsstatusitem
+            window = item.button().window()
+            if window is not None:
+                info(f"Menu bar ready: visible={item.isVisible()}, frame={window.frame()}")
+                self._menu_bar_logged = True
         if self._needs_refresh:
             self._build_menu()
             self._update_title()
             self._needs_refresh = False
 
     def _update_title(self):
-        """Update menu bar title based on state."""
+        """Update the compact status label and native menu bar presentation."""
         with self._state_lock:
             state = self._state
-            usage = self._usage
 
-        if state is None or not state.connected:
-            self.title = "🤖"
+        title, symbol, attention = status_for(state)
+
+        # Keep rumps' plain title in sync before styling its native button.
+        self.title = title
+        nsapp = getattr(self, "_nsapp", None)
+        item = getattr(nsapp, "nsstatusitem", None)
+        if item is None:
+            return
+        button = item.button()
+        if button is None:
             return
 
-        parts = []
+        import AppKit
 
-        # Busy count
-        if state.busy_count > 0:
-            parts.append(str(state.busy_count))
-
-        # Idle instances count (instances with no main agents)
-        idle_instances = sum(
-            1
-            for inst in state.instances
-            if not any(not a.is_subagent for a in inst.agents)
+        # Plain text and a template image let macOS adapt to each Space's menu bar.
+        button.setTitle_(title)
+        image = AppKit.NSImage.imageWithSystemSymbolName_accessibilityDescription_(
+            symbol, title
         )
-        if idle_instances > 0:
-            parts.append(f"💤 {idle_instances}")
-
-        # Permission pending indicator
-        has_permission_pending = any(
-            tool.may_need_permission
-            for instance in state.instances
-            for agent in instance.agents
-            for tool in agent.tools
-        )
-        if has_permission_pending:
-            parts.append("🔒")
-
-        # Ask user pending indicator (MCP Notify)
-        if state.has_pending_ask_user:
-            parts.append("🔔")
-
-        # Todos
-        total_todos = state.todos.pending + state.todos.in_progress
-        if total_todos > 0:
-            parts.append(f"⏳{total_todos}")
-
-        # Usage
-        if usage and not usage.error:
-            five_h = usage.five_hour.utilization
-            if five_h >= 90:
-                icon = "🔴"
-            elif five_h >= 70:
-                icon = "🟠"
-            elif five_h >= 50:
-                icon = "🟡"
+        if image is not None:
+            image = image.copy()
+            image.setSize_((16, 16))
+            if attention:
+                # Color only the icon's pixels; button tint also affects native text.
+                colored = AppKit.NSImage.alloc().initWithSize_((16, 16))
+                colored.lockFocus()
+                try:
+                    rect = ((0, 0), (16, 16))
+                    image.drawInRect_fromRect_operation_fraction_(
+                        rect, AppKit.NSZeroRect, AppKit.NSCompositingOperationSourceOver, 1.0
+                    )
+                    AppKit.NSColor.systemYellowColor().set()
+                    AppKit.NSRectFillUsingOperation(rect, AppKit.NSCompositingOperationSourceIn)
+                finally:
+                    colored.unlockFocus()
+                colored.setTemplate_(False)
+                image = colored
             else:
-                icon = "🟢"
-            parts.append(f"{icon}{five_h}%")
-
-        if parts:
-            self.title = "🤖 " + " ".join(parts)
-        else:
-            self.title = "🤖"
-
-    def _update_session_cache(self, new_state: State) -> set[str]:
-        """Update the known active sessions cache based on new state."""
-        current_ports = {inst.port for inst in new_state.instances}
-
-        # Remove sessions from ports that no longer exist
-        dead_sessions = [
-            sid
-            for sid, port in self._known_active_sessions.items()
-            if port not in current_ports
-        ]
-        for sid in dead_sessions:
-            del self._known_active_sessions[sid]
-
-        # Collect currently busy sessions
-        current_busy_agents: set[str] = set()
-        for instance in new_state.instances:
-            for agent in instance.agents:
-                if agent.status == SessionStatus.BUSY:
-                    current_busy_agents.add(agent.id)
-                    self._known_active_sessions[agent.id] = instance.port
-
-        # Limit cache size (remove oldest entries, but keep currently busy)
-        if len(self._known_active_sessions) > self._KNOWN_SESSIONS_LIMIT:
-            excess = len(self._known_active_sessions) - self._KNOWN_SESSIONS_LIMIT
-            to_remove = [
-                sid
-                for sid in list(self._known_active_sessions.keys())[:excess]
-                if sid not in current_busy_agents
-            ]
-            for sid in to_remove:
-                del self._known_active_sessions[sid]
-
-        return current_busy_agents
+                image.setTemplate_(True)
+        button.setImage_(image)
+        button.setImagePosition_(AppKit.NSImageLeft)
+        button.setContentTintColor_(None)
+        button.setAccessibilityLabel_(f"OpenCode: {title}")
+        button.setNeedsDisplay_(True)
 
     def _run_monitor_loop(self):
-        """Background monitoring loop."""
-        info("OpenCode Monitor started (rumps)")
+        """Poll bridge snapshots; log and redraw only when something changes."""
+        info("OpenCode Monitor started")
+        last_fingerprint = None
+        last_summary = None
+        last_error = None
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        while self._running:
+            start_time = time.time()
+            try:
+                new_state = read_bridge_state()
+                with self._state_lock:
+                    self._state = new_state
 
-        try:
-            while self._running:
-                start_time = time.time()
-
-                try:
-                    new_state = loop.run_until_complete(
-                        fetch_all_instances(
-                            known_active_sessions=set(
-                                self._known_active_sessions.keys()
-                            )
-                        )
-                    )
-
-                    with self._state_lock:
-                        self._state = new_state
-
-                    # Update session cache and track busy agents
-                    self._previous_busy_agents = self._update_session_cache(new_state)
+                fingerprint = state_fingerprint(new_state)
+                if fingerprint != last_fingerprint:
+                    last_fingerprint = fingerprint
                     self._needs_refresh = True
 
-                    info(f"State updated: {new_state.instance_count} instances")
+                summary = status_summary(new_state)
+                if summary != last_summary:
+                    last_summary = summary
+                    info(f"Status changed: {summary}")
+                last_error = None
+            except Exception as e:
+                message = f"Monitor error: {e}"
+                # Repeat failures every 2 seconds would flood the log.
+                if message != last_error:
+                    last_error = message
+                    error(message)
 
-                except Exception as e:
-                    error(f"Monitor error: {e}")
+            elapsed = time.time() - start_time
+            time.sleep(max(0, self.POLL_INTERVAL - elapsed))
 
-                # Update usage periodically
-                settings = get_settings()
-                now = time.time()
-                if now - self._last_usage_update >= settings.usage_refresh_interval:
-                    try:
-                        new_usage = fetch_usage()
-                        with self._state_lock:
-                            self._usage = new_usage
-                        self._last_usage_update = now
-                        self._needs_refresh = True
-                    except Exception as e:
-                        error(f"Usage update error: {e}")
-
-                elapsed = time.time() - start_time
-                sleep_time = max(0, self.POLL_INTERVAL - elapsed)
-                time.sleep(sleep_time)
-
-        finally:
-            loop.close()
-            info("OpenCode Monitor stopped")
+        info("OpenCode Monitor stopped")
 
 
 def main():

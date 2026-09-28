@@ -35,6 +35,13 @@ from opencode_monitor.core.models import (
 )
 
 
+@pytest.fixture(autouse=True)
+def no_live_bridge_snapshots():
+    """Legacy port tests must not see the developer's real desktop bridge files."""
+    with patch("opencode_monitor.core.monitor.fetcher.read_bridge_instances", return_value=[]):
+        yield
+
+
 # ===========================================================================
 # Tests for find_opencode_ports()
 # ===========================================================================

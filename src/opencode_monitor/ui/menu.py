@@ -8,7 +8,7 @@ from typing import Optional, Callable, Any
 import rumps
 
 from ..core.models import State, SessionStatus, Usage, Agent
-from ..security.analyzer import analyze_command, RiskLevel, get_level_emoji
+from ..security.analyzer import analyze_command, RiskLevel
 
 
 # Truncation limits for menu items
@@ -16,6 +16,34 @@ TITLE_MAX_LENGTH = 40
 TOOL_ARG_MAX_LENGTH = 30
 TODO_CURRENT_MAX_LENGTH = 35
 TODO_PENDING_MAX_LENGTH = 30
+
+
+def set_menu_symbol(item: Any, symbol: str) -> None:
+    """Give a menu item a monochrome SF Symbol that adapts to light/dark menus."""
+    item.symbol_name = symbol
+    try:
+        import AppKit
+
+        image = AppKit.NSImage.imageWithSystemSymbolName_accessibilityDescription_(
+            symbol, None
+        )
+        if image is None:
+            return
+        image.setTemplate_(True)
+        item._menuitem.setImage_(image)
+    except Exception:
+        # A missing icon must never break the menu; the text still shows.
+        pass
+
+
+def set_menu_indent(item: Any, level: int) -> None:
+    """Indent natively; leading spaces would sit between the icon and the text."""
+    if level <= 0:
+        return
+    try:
+        item._menuitem.setIndentationLevel_(level)
+    except Exception:
+        pass
 
 
 def truncate_with_tooltip(
@@ -140,11 +168,11 @@ class MenuBuilder:
 
                     return cb
 
-                items.append(
-                    rumps.MenuItem(
-                        f"💤 {display_name} (idle)", callback=make_focus_cb(tty)
-                    )
+                idle_item = rumps.MenuItem(
+                    f"{display_name} (idle)", callback=make_focus_cb(tty)
                 )
+                set_menu_symbol(idle_item, "moon.zzz")
+                items.append(idle_item)
 
         # Add usage items
         if usage:
@@ -174,20 +202,25 @@ class MenuBuilder:
             List of rumps.MenuItem objects
         """
         items = []
-        prefix = "    " * indent
-        sub_prefix = "    " * (indent + 1)
+        # Symbols match the menu bar: terminal = working, checkmark = done,
+        # question mark = waiting for an answer, hand = waiting for approval.
+        approval = any(tool.may_need_permission for tool in agent.tools)
 
         # Agent icon and callback
         if indent > 0:
             # Sub-agent icons (never have ask_user)
-            status_icon = "└ ●" if agent.status == SessionStatus.BUSY else "└ ○"
+            symbol = "circle.fill" if agent.status == SessionStatus.BUSY else "circle"
             callback = None
         else:
             # Main agent icons
             if agent.has_pending_ask_user:
-                status_icon = "🔔"  # Awaiting user response (MCP Notify)
+                symbol = "questionmark.circle"
+            elif approval:
+                symbol = "hand.raised"
+            elif agent.status == SessionStatus.BUSY:
+                symbol = "terminal"
             else:
-                status_icon = "🤖"
+                symbol = "checkmark.circle"
 
             def make_focus_cb(t):
                 def cb(_):
@@ -204,14 +237,10 @@ class MenuBuilder:
             title = title.split("(@")[0].strip()
 
         # Create agent item
-        items.append(
-            truncate_with_tooltip(
-                title,
-                TITLE_MAX_LENGTH,
-                prefix=f"{prefix}{status_icon} ",
-                callback=callback,
-            )
-        )
+        agent_item = truncate_with_tooltip(title, TITLE_MAX_LENGTH, callback=callback)
+        set_menu_symbol(agent_item, symbol)
+        set_menu_indent(agent_item, indent)
+        items.append(agent_item)
 
         # Tools with security analysis and permission detection
         if agent.tools:
@@ -225,22 +254,19 @@ class MenuBuilder:
                     if alert.level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
                         alert_callback(alert)
 
-                # Determine tool icon: permission > security > default
+                # Determine tool symbol: permission > security > default
                 if tool.may_need_permission:
-                    tool_icon = "🔒"  # May be waiting for permission
-                elif alert:
-                    risk_emoji = get_level_emoji(alert.level)
-                    tool_icon = risk_emoji if risk_emoji else "🔧"
+                    tool_symbol = "hand.raised"
+                elif alert and alert.level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
+                    tool_symbol = "exclamationmark.triangle"
                 else:
-                    tool_icon = "🔧"
+                    tool_symbol = "wrench.and.screwdriver"
 
-                full_tool_text = f"{tool.name}: {tool.arg}"
+                full_tool_text = f"{tool.name}: {tool.arg}" if tool.arg else tool.name
 
-                item = truncate_with_tooltip(
-                    full_tool_text,
-                    TOOL_ARG_MAX_LENGTH,
-                    prefix=f"{sub_prefix}{tool_icon} ",
-                )
+                item = truncate_with_tooltip(full_tool_text, TOOL_ARG_MAX_LENGTH)
+                set_menu_symbol(item, tool_symbol)
+                set_menu_indent(item, indent + 1)
 
                 # Set tooltip based on state
                 if tool.may_need_permission:
@@ -250,11 +276,11 @@ class MenuBuilder:
                         duration = f"{mins}m {secs}s"
                     else:
                         duration = f"{elapsed_sec}s"
-                    tooltip = f"🔒 May be waiting for permission (running {duration})\n\n{tool.arg}"
+                    tooltip = f"May be waiting for permission (running {duration})\n\n{tool.arg}"
                     item._menuitem.setToolTip_(tooltip)
                 elif alert and alert.level in (RiskLevel.HIGH, RiskLevel.CRITICAL):
                     tooltip = (
-                        f"⚠️ {alert.reason}\nScore: {alert.score}/100\n\n{tool.arg}"
+                        f"{alert.reason}\nScore: {alert.score}/100\n\n{tool.arg}"
                     )
                     item._menuitem.setToolTip_(tooltip)
 
@@ -262,39 +288,33 @@ class MenuBuilder:
 
         # Pending ask_user (MCP Notify awaiting response)
         if agent.has_pending_ask_user and agent.ask_user_title:
-            item = truncate_with_tooltip(
-                agent.ask_user_title,
-                TITLE_MAX_LENGTH,
-                prefix=f"{sub_prefix}❓ ",
-            )
+            item = truncate_with_tooltip(agent.ask_user_title, TITLE_MAX_LENGTH)
+            set_menu_symbol(item, "text.bubble")
+            set_menu_indent(item, indent + 1)
             item._menuitem.setToolTip_(
-                f"🔔 Awaiting user response\n\n{agent.ask_user_title}"
+                f"Awaiting user response\n\n{agent.ask_user_title}"
             )
             items.append(item)
 
         # Todos
         if agent.todos:
             if agent.todos.in_progress > 0 and agent.todos.current_label:
-                items.append(
-                    truncate_with_tooltip(
-                        agent.todos.current_label,
-                        TODO_CURRENT_MAX_LENGTH,
-                        prefix=f"{sub_prefix}🔄 ",
-                    )
+                item = truncate_with_tooltip(
+                    agent.todos.current_label, TODO_CURRENT_MAX_LENGTH
                 )
+                set_menu_symbol(item, "play.circle")
+                set_menu_indent(item, indent + 1)
+                items.append(item)
 
             if agent.todos.pending > 0 and agent.todos.next_label:
                 suffix = (
                     f" (+{agent.todos.pending - 1})" if agent.todos.pending > 1 else ""
                 )
                 full_label = agent.todos.next_label + suffix
-                items.append(
-                    truncate_with_tooltip(
-                        full_label,
-                        TODO_PENDING_MAX_LENGTH,
-                        prefix=f"{sub_prefix}⏳ ",
-                    )
-                )
+                item = truncate_with_tooltip(full_label, TODO_PENDING_MAX_LENGTH)
+                set_menu_symbol(item, "hourglass")
+                set_menu_indent(item, indent + 1)
+                items.append(item)
 
         return items
 

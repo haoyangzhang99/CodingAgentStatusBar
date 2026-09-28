@@ -14,6 +14,7 @@ from ..client import OpenCodeClient
 from .ports import find_opencode_ports, get_tty_for_port
 from .ask_user import check_pending_ask_user_from_disk
 from .helpers import extract_tools_from_messages, count_todos
+from .bridge import read_bridge_instances
 
 
 async def fetch_instance(port: int) -> tuple[Optional[Instance], int, int, list, set]:
@@ -122,8 +123,9 @@ async def fetch_all_instances(known_active_sessions: Optional[set] = None) -> St
     """
     # Find all ports
     ports = await find_opencode_ports()
+    bridge_instances = read_bridge_instances()
 
-    if not ports:
+    if not ports and not bridge_instances:
         return State(connected=False)
 
     # Fetch all instances in parallel
@@ -138,8 +140,8 @@ async def fetch_all_instances(known_active_sessions: Optional[set] = None) -> St
             all_busy_session_ids.update(busy_ids)
 
     # Second pass: process results and handle idle sessions with ask_user
-    seen_session_ids: set[str] = set()
-    instances = []
+    seen_session_ids = {agent.id for instance in bridge_instances for agent in instance.agents}
+    instances = list(bridge_instances)
     total_pending = 0
     total_in_progress = 0
 

@@ -26,6 +26,7 @@ class Tool:
     name: str
     arg: str = ""
     elapsed_ms: int = 0  # Time since tool started running (milliseconds)
+    permission_pending: Optional[bool] = None
 
     # Tools that naturally take long and should not trigger permission detection
     EXCLUDED_TOOLS: frozenset[str] = frozenset({"task"})  # Sub-agents (immutable)
@@ -36,6 +37,9 @@ class Tool:
 
         Note: This is informational only, not 100% reliable.
         """
+        if self.permission_pending is not None:
+            return self.permission_pending
+
         from ..utils.settings import get_settings
 
         threshold_ms = get_settings().permission_threshold_seconds * 1000
