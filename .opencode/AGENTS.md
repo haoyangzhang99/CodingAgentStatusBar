@@ -1,98 +1,37 @@
-# Instructions projet opencode-status-bar
+# Project Instructions: OpenCode Status Bar
 
-## Outils d'analyse Python
+A macOS menu bar app showing whether the OpenCode desktop app is working, done, or waiting for
+the user. Read `DEVELOPMENT.md` for the layout; most of `src/opencode_status_bar/` is inherited
+code that the app does not load.
 
-Ce projet dispose d'outils CLI intégrés pour l'analyse de code Python.
-Utilise ces outils au lieu de lsmcp-python qui a des problèmes de timeout.
+## Scope
 
-### Navigation dans le code
+- The app's runtime path is: `integrations/opencode-status-bar.js` (plugin) → snapshot files →
+  `core/monitor/bridge.py` → `app/` and `ui/menu.py`. Prefer changes there.
+- Don't make the app import `analytics`, `dashboard`, `api`, `aiohttp`, `PyQt6`, `duckdb`, `flask`,
+  or `watchdog`. A test enforces this.
+- The app makes no network requests. The plugin must not write prompts, messages, tool arguments,
+  tool output, or credentials.
+- Menu bar and dropdown icons are monochrome SF Symbol templates, except yellow for attention states.
+  Don't add emoji to menu text.
 
-```bash
-# Aller à la définition d'un symbole
-uv run python -m tools.pycode goto <file>:<line>:<col>
+## Commands
 
-# Trouver toutes les références
-uv run python -m tools.pycode refs <file>:<line>:<col>
+```sh
+uv run pytest tests/ -q                                  # Python tests
+node --test tests/opencode-status-bar-plugin.test.mjs    # plugin tests
+make run                                                 # run from source
+./install.sh                                             # rebuild and reinstall the app
+```
 
-# Obtenir la documentation (hover)
-uv run python -m tools.pycode hover <file>:<line>:<col>
+## Code Analysis Tools
 
-# Lister tous les symboles d'un fichier
+`tools/pycode` wraps jedi, ruff, radon, and vulture. Add `--json` for machine-readable output.
+
+```sh
+uv run python -m tools.pycode goto <file>:<line>:<col>   # also: refs, hover
 uv run python -m tools.pycode symbols <file>
-```
-
-### Qualité du code
-
-```bash
-# Linting avec ruff
-uv run python -m tools.pycode lint <path>
-
-# Vérifier le formatage
-uv run python -m tools.pycode check <path>
-
-# Analyser la complexité cyclomatique
-uv run python -m tools.pycode complexity <path>
-
-# Analyser l'indice de maintenabilité
-uv run python -m tools.pycode maintainability <path>
-
-# Détecter le code mort
-uv run python -m tools.pycode dead-code <path>
-
-# Rapport combiné
+uv run python -m tools.pycode lint [--fix] <path>        # also: check (formatting)
+uv run python -m tools.pycode complexity <path>          # also: maintainability, dead-code
 uv run python -m tools.pycode report <path>
-```
-
-### Options
-
-- `--json` : Sortie JSON parsable par les agents
-- `--verbose` ou `-v` : Afficher plus de détails
-
-### Exemples
-
-```bash
-# Navigation JSON
-uv run python -m tools.pycode --json goto src/opencode_status_bar/app.py:50:4
-
-# Symboles d'un fichier
-uv run python -m tools.pycode symbols src/opencode_status_bar/utils/logger.py
-
-# Rapport de qualité sur un répertoire
-uv run python -m tools.pycode report src/opencode_status_bar/analytics/
-
-# Lint avec corrections automatiques
-uv run python -m tools.pycode lint --fix src/
-```
-
-## Structure du projet
-
-```
-src/opencode_status_bar/
-├── analytics/      # Analytics et requêtes DuckDB
-├── api/            # API REST Flask
-├── app/            # Application rumps (menu bar)
-├── core/           # Monitoring des instances OpenCode
-├── dashboard/      # Dashboard PyQt6
-├── security/       # Analyse de sécurité
-├── ui/             # Composants UI
-└── utils/          # Utilitaires (logger, settings, etc.)
-
-tools/
-└── pycode/         # Outils CLI d'analyse Python
-
-tests/
-├── integration/    # Tests d'intégration dashboard
-└── *.py            # Tests unitaires
-```
-
-## Commandes utiles
-
-```bash
-# Tests
-make test                    # Tous les tests
-make coverage                # Tests avec couverture
-
-# Développement
-make run                     # Lancer l'app menu bar
-uv run python -m opencode_status_bar.dashboard  # Lancer le dashboard
 ```

@@ -1,6 +1,9 @@
-# Performance Profiling Tools
+# Developer Tools
 
-These tools help identify and measure performance bottlenecks in OpenCode Status Bar.
+`pycode/` is a code navigation and quality CLI; see `.opencode/AGENTS.md` for its commands.
+
+The profilers below measure the **inherited dashboard and local API**, which the menu bar app
+no longer runs. They need the `legacy` dependencies (`uv sync`) and a running dashboard or API server.
 
 ## Prerequisites
 

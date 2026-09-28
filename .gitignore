@@ -47,8 +47,6 @@ mutants/
 .mutmut-cache/
 
 # Temporary reports and audits
-maintenance/audit-reports/
-maintenance/reports/
 audit-reports/
 reports/*.md
 

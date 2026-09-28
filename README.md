@@ -120,10 +120,13 @@ node --test tests/opencode-status-bar-plugin.test.mjs   # plugin tests
 After changing Python code, quit the app from its menu and reopen it. After changing the plugin,
 restart OpenCode.
 
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the project layout, running from source, and debugging.
+
 This fork keeps the original project's dashboard, analytics, security scanner, and local API code
 (under `src/opencode_status_bar/`), but the menu bar app no longer loads any of it. Running those
-parts needs the optional `legacy` dependencies (`uv sync --extra legacy`). `docs/` and
-`DEVELOPMENT.md` are design notes inherited from the original project and describe those features.
+parts needs the optional `legacy` dependencies (`uv sync --extra legacy`). The original project's
+design notes are in its [repository](https://github.com/OpenClaudeAgent/opencode-monitor) and in
+this repository's Git history.
 
 ## Credits and License
 
