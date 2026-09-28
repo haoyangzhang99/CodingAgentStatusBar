@@ -2,15 +2,11 @@
 Tests for the loguru-based logger module.
 """
 
-import json
 from io import StringIO
-from unittest.mock import patch
 
-import pytest
 
 from opencode_status_bar.utils.logger import (
     setup_logger,
-    setup_logging,
     get_logger,
     debug,
     info,

@@ -4,9 +4,6 @@ Menu mixin for OpenCodeApp - Contains menu building methods.
 This module provides the MenuMixin class with:
 - Static menu building (_build_static_menu)
 - Dynamic menu building (_build_menu)
-
-The Dashboard entry and Preferences submenu (Claude usage refresh and the
-legacy ask_user timeout) were removed along with the features they controlled.
 """
 
 import threading
@@ -14,7 +11,7 @@ from typing import Optional
 
 import rumps
 
-from ..core.models import State, Usage
+from ..core.models import State
 from ..ui.menu import MenuBuilder, set_menu_symbol
 
 
@@ -23,10 +20,8 @@ class MenuMixin:
 
     # Type hints for attributes from OpenCodeApp
     _state: Optional[State]
-    _usage: Optional[Usage]
     _state_lock: threading.Lock
     _menu_builder: MenuBuilder
-    _has_critical_alert: bool
 
     # Menu items (will be set by _build_static_menu)
     _open_opencode_item: rumps.MenuItem
@@ -34,8 +29,6 @@ class MenuMixin:
     _quit_item: rumps.MenuItem
 
     # Handlers (will be provided by HandlersMixin)
-    def _focus_terminal(self, tty: str): ...
-    def _add_security_alert(self, alert): ...
     def _on_refresh(self, _): ...
     def _open_opencode(self, _): ...
 
@@ -63,14 +56,10 @@ class MenuMixin:
         """Build the menu from current state."""
         with self._state_lock:
             state = self._state
-            usage = self._usage
 
-        # Build dynamic items using MenuBuilder
+        # Clicking a session row brings OpenCode to the front.
         dynamic_items = self._menu_builder.build_dynamic_items(
-            state,
-            usage,
-            focus_callback=self._focus_terminal,
-            alert_callback=self._add_security_alert,
+            state, on_select=self._open_opencode
         )
 
         # Rebuild complete menu (rumps.App.menu has .add()/.clear() but no type stubs)

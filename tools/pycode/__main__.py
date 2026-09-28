@@ -25,7 +25,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
 
 from .navigation import goto_definition, find_references, get_hover, list_symbols
 from .diagnostics import lint, check

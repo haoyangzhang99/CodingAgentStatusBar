@@ -71,7 +71,7 @@ Restart OpenCode afterwards if the plugin changed.
 
 ```sh
 ./uninstall.sh          # removes the app, plugin, and status files
-./uninstall.sh --purge  # also removes logs, settings, and .venv
+./uninstall.sh --purge  # also removes logs and .venv
 ```
 
 Then restart OpenCode to unload the plugin, and delete this folder if you no longer need it.
@@ -112,7 +112,7 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
 ## Development
 
 ```sh
-uv sync                                  # includes test and legacy dependencies
+uv sync                                  # includes test dependencies
 uv run pytest tests/ -q                  # Python tests
 node --test tests/opencode-status-bar-plugin.test.mjs   # plugin tests
 ```
@@ -122,11 +122,10 @@ restart OpenCode.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the project layout, running from source, and debugging.
 
-This fork keeps the original project's dashboard, analytics, security scanner, and local API code
-(under `src/opencode_status_bar/`), but the menu bar app no longer loads any of it. Running those
-parts needs the optional `legacy` dependencies (`uv sync --extra legacy`). The original project's
-design notes are in its [repository](https://github.com/OpenClaudeAgent/opencode-monitor) and in
-this repository's Git history.
+The original project's dashboard, analytics database, security scanner, local API server, and
+Claude usage tracking were removed in this fork. They remain available in the
+[original repository](https://github.com/OpenClaudeAgent/opencode-monitor) and in this
+repository's Git history.
 
 ## Credits and License
 

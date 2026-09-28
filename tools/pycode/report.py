@@ -5,10 +5,8 @@ Generates a comprehensive code quality report combining all analyses.
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 
 from .diagnostics import lint
 from .metrics import complexity, maintainability
@@ -91,7 +89,7 @@ def generate_report(
 
     # Generate text report
     lines = ["=" * 60]
-    lines.append(f"CODE QUALITY REPORT")
+    lines.append("CODE QUALITY REPORT")
     lines.append(f"Path: {path}")
     lines.append(f"Generated: {timestamp}")
     lines.append("=" * 60)

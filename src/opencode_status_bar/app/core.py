@@ -5,10 +5,6 @@ This module provides the OpenCodeApp class which:
 - Manages application state and lifecycle
 - Polls status snapshots written by the OpenCode desktop bridge plugin
 - Combines MenuMixin and HandlersMixin for functionality
-
-Trimmed build: the dashboard, analytics indexer, security auditor, local API
-server, Claude usage polling, and legacy port scanning are not started or
-imported. Their code remains in the repository.
 """
 
 import threading
@@ -17,7 +13,7 @@ from typing import Optional
 
 import rumps
 
-from ..core.models import State, SessionStatus, Usage
+from ..core.models import State, SessionStatus
 from ..core.monitor.bridge import read_bridge_state
 from ..ui.menu import MenuBuilder
 from ..utils.logger import info, error
@@ -103,17 +99,11 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
 
         # State tracking
         self._state: Optional[State] = None
-        self._usage: Optional[Usage] = None  # Usage polling is disabled
         self._state_lock = threading.Lock()
         self._running = True
         self._needs_refresh = True
         self._port_names: dict[int, str] = {}
         self._PORT_NAMES_LIMIT = 50
-
-        # Security alerts raised while rendering tool rows in the dropdown
-        self._security_alerts: list = []
-        self._max_alerts = 20
-        self._has_critical_alert = False
 
         # Menu builder
         self._menu_builder = MenuBuilder(self._port_names, self._PORT_NAMES_LIMIT)

@@ -18,7 +18,7 @@ Usage: ./uninstall.sh [--purge]
 
 Removes "$APP_NAME.app", the OpenCode plugin, and live status snapshots.
 
-  --purge   Also delete logs, settings, and this folder's .venv.
+  --purge   Also delete logs and this folder's .venv.
 EOF
 }
 
@@ -54,7 +54,7 @@ rm -rf "$CONFIG_DIR/bridge"
 
 if [ "$PURGE" = 1 ]; then
     rm -rf "$CONFIG_DIR" "$LOG_DIR" "$REPO/.venv"
-    echo "Removed logs, settings, and $REPO/.venv"
+    echo "Removed logs and $REPO/.venv"
 fi
 
 cat <<EOF

@@ -182,20 +182,16 @@ class TestTruncationConstants:
     CONSTANTS = [
         ("TITLE_MAX_LENGTH", 40),
         ("TOOL_ARG_MAX_LENGTH", 30),
-        ("TODO_CURRENT_MAX_LENGTH", 35),
-        ("TODO_PENDING_MAX_LENGTH", 30),
     ]
 
     @pytest.mark.parametrize("constant_name,expected_value", CONSTANTS)
     def test_truncation_constants(self, constant_name, expected_value):
         """Verify truncation constants have correct values."""
-        from opencode_status_bar import app
+        from opencode_status_bar.ui import menu
 
-        actual = getattr(app, constant_name)
+        actual = getattr(menu, constant_name)
         assert actual == expected_value
         assert isinstance(actual, int)
-        assert actual > 0
-        assert hasattr(app, constant_name)
 
 
 class TestRealWorldScenarios:

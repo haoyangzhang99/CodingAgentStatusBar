@@ -1,12 +1,11 @@
 import json
 import os
 import time
-from unittest.mock import AsyncMock
 
 import pytest
 
-from opencode_status_bar.core.models import SessionStatus, Tool
-from opencode_status_bar.core.monitor import bridge, fetcher
+from opencode_status_bar.core.models import SessionStatus
+from opencode_status_bar.core.monitor import bridge
 
 
 @pytest.fixture
@@ -40,7 +39,6 @@ def test_bridge_status_and_native_attention(snapshot, status):
     assert agent.status == (SessionStatus.IDLE if status == "idle" else SessionStatus.BUSY)
     assert agent.has_pending_ask_user
     assert agent.tools[0].may_need_permission
-    assert not Tool(name="bash", elapsed_ms=60_000, permission_pending=False).may_need_permission
 
 
 @pytest.mark.parametrize("change", [
@@ -69,14 +67,6 @@ def test_snapshots_group_by_process_and_deduplicate(snapshot):
     instances = bridge.read_bridge_instances()
     assert len(instances) == 1
     assert {a.id for a in instances[0].agents} == {"ses_test", "ses_second"}
-
-
-@pytest.mark.asyncio
-async def test_bridge_detected_without_unauthenticated_server(snapshot, monkeypatch):
-    monkeypatch.setattr(fetcher, "find_opencode_ports", AsyncMock(return_value=[]))
-    state = await fetcher.fetch_all_instances(known_active_sessions=set())
-    assert state.connected
-    assert state.busy_count == 1
 
 
 def test_malformed_file_does_not_hide_valid_snapshot(snapshot):

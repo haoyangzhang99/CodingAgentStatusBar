@@ -48,8 +48,7 @@ malformed, older than 15 seconds, or written by a process that is no longer runn
 merges duplicate sessions. Busy and retry sessions count as working.
 
 The app redraws and logs only when the status changes. Its footprint is about 36 MB with 5
-threads (measured on macOS 26), because it does not import the inherited dashboard (PyQt6),
-analytics (DuckDB), local API (Flask), or port-scanning (aiohttp) code.
+threads (measured on macOS 26). Its only dependencies are rumps and loguru.
 
 ## Native Launcher (`launcher.m`)
 

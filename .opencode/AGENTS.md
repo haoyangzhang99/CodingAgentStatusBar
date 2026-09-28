@@ -1,15 +1,13 @@
 # Project Instructions: OpenCode Status Bar
 
 A macOS menu bar app showing whether the OpenCode desktop app is working, done, or waiting for
-the user. Read `DEVELOPMENT.md` for the layout; most of `src/opencode_status_bar/` is inherited
-code that the app does not load.
+the user. Read `DEVELOPMENT.md` for the layout.
 
 ## Scope
 
 - The app's runtime path is: `integrations/opencode-status-bar.js` (plugin) → snapshot files →
   `core/monitor/bridge.py` → `app/` and `ui/menu.py`. Prefer changes there.
-- Don't make the app import `analytics`, `dashboard`, `api`, `aiohttp`, `PyQt6`, `duckdb`, `flask`,
-  or `watchdog`. A test enforces this.
+- Keep runtime dependencies to `rumps` and `loguru`; the app should stay small (about 36 MB).
 - The app makes no network requests. The plugin must not write prompts, messages, tool arguments,
   tool output, or credentials.
 - Menu bar and dropdown icons are monochrome SF Symbol templates, except yellow for attention states.
