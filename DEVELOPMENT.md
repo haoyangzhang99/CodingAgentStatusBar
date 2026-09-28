@@ -34,6 +34,7 @@ The whole app is these parts:
 | `src/opencode_status_bar/utils/logger.py` | Logging |
 | `tools/pycode/` | Code navigation and quality CLI for development (see `.opencode/AGENTS.md`) |
 | `install.sh`, `uninstall.sh` | Build, install, and remove the app and plugin |
+| `assets/make_icon.py` | Draws the app icon; run `uv run python assets/make_icon.py` to regenerate `AppIcon.png` and `AppIcon.icns` |
 
 How the plugin, snapshots, and launcher fit together is described in
 [integrations/README.md](integrations/README.md).

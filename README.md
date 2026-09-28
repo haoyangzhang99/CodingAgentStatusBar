@@ -1,3 +1,5 @@
+<img src="assets/AppIcon.png" width="128" alt="OpenCode Status Bar icon">
+
 # OpenCode Status Bar
 
 A small macOS menu bar item that shows what the [OpenCode](https://opencode.ai) desktop app is doing.

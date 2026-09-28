@@ -83,7 +83,8 @@ VERSION="$("$PY" -c 'import importlib.metadata as m; print(m.version("opencode-s
 BUILD="$(mktemp -d)"
 trap 'rm -rf "$BUILD"' EXIT
 STAGE="$BUILD/$APP_NAME.app"
-mkdir -p "$STAGE/Contents/MacOS"
+mkdir -p "$STAGE/Contents/MacOS" "$STAGE/Contents/Resources"
+cp "$REPO/assets/AppIcon.icns" "$STAGE/Contents/Resources/AppIcon.icns"
 clang -O2 "$REPO/integrations/launcher.m" -o "$STAGE/Contents/MacOS/$EXEC_NAME" \
     -framework Foundation -I"$INCLUDE" -L"$LIBDIR" -Wl,-rpath,"$LIBDIR" -lpython"$PYVER" \
     -DPYTHON_EXECUTABLE="\"$PY\""
@@ -98,6 +99,8 @@ cat >"$STAGE/Contents/Info.plist" <<EOF
     <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>
     <string>$BUNDLE_ID</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleExecutable</key>
     <string>$EXEC_NAME</string>
     <key>CFBundlePackageType</key>
