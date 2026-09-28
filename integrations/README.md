@@ -38,6 +38,17 @@ Behavior details:
 The injected v1 SDK client has no methods for questions or permissions, so the plugin calls those
 endpoints through `client._client.get`, an internal API that may change between OpenCode releases.
 
+### Opening the App
+
+When OpenCode loads the plugin, it runs `open -g -b io.github.haoyangzhang99.OpenCodeStatusBar`,
+which starts the menu bar app in the background, or does nothing if it's already running. OpenCode
+loads the plugin once per project, so a flag on `globalThis` limits this to the first load in each
+OpenCode process. If macOS doesn't know the app's ID yet, the plugin opens
+`~/Applications/OpenCode Status Bar.app` directly. Failures are ignored.
+
+Creating `~/.config/opencode-status-bar/no-autolaunch` turns this off. Launching only happens on
+macOS; tests replace the launcher (`tests/opencode-status-bar-launch.test.mjs`).
+
 The installed file `~/.config/opencode/plugins/opencode-status-bar.js` only re-exports this file,
 so `git pull` updates the plugin the next time OpenCode starts.
 

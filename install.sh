@@ -146,10 +146,9 @@ fi
 cat <<EOF
 
 Done. Next steps:
-  1. Fully quit OpenCode (Cmd+Q) and reopen it, so it loads the plugin.
-     Until then the menu bar shows "OpenCode offline".
-  2. Optional: to start at login, add "$APP_NAME" in
-     System Settings > General > Login Items.
+  Fully quit OpenCode (Cmd+Q) and reopen it, so it loads the plugin.
+  Until then the menu bar shows "OpenCode offline". After that, OpenCode
+  opens "$APP_NAME" automatically whenever it starts.
 
 If the icon is hidden behind the notch or other menu bar icons, hold Command
 and drag it further right.

@@ -51,12 +51,15 @@ The installer:
 4. Opens the app.
 
 Then **fully quit OpenCode (Cmd+Q) and reopen it** so it loads the plugin. Until then the
-menu bar shows `OpenCode offline`.
+menu bar shows `OpenCode offline`. From then on, **OpenCode opens the status bar app whenever
+it starts**, so you don't need to launch it yourself.
 
 Keep the project folder where it is: the app and plugin run from it. If you move the folder,
 run `./install.sh` again.
 
-To start the app at login, add **OpenCode Status Bar** in System Settings > General > Login Items.
+To stop OpenCode from opening the app, run
+`mkdir -p ~/.config/opencode-status-bar && touch ~/.config/opencode-status-bar/no-autolaunch`.
+Delete that file to turn it back on.
 
 ## Update
 
@@ -87,6 +90,8 @@ connects to OpenCode.
 - Snapshots older than 15 seconds, or from an OpenCode process that has exited, are ignored.
 - Finished sessions stay listed for 60 seconds, which is how `Done` appears.
 - Approval and question states come from OpenCode's own pending-request lists, not timing guesses.
+- When OpenCode starts, the plugin opens the menu bar app in the background (once per OpenCode
+  launch). If you quit the app, it stays closed until OpenCode starts again.
 
 Technical details are in [`integrations/README.md`](integrations/README.md).
 
@@ -114,7 +119,7 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
 ```sh
 uv sync                                  # includes test dependencies
 uv run pytest tests/ -q                  # Python tests
-node --test tests/opencode-status-bar-plugin.test.mjs   # plugin tests
+make test                                # Python and plugin tests
 ```
 
 After changing Python code, quit the app from its menu and reopen it. After changing the plugin,

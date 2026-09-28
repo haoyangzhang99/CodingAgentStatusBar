@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +14,9 @@ if (!process.env.MONITOR_PLUGIN_TEST_CHILD) {
   test("plugin suite in isolated HOME", async () => {
     const home = await mkdtemp(join(tmpdir(), "monitor-plugin-test-"));
     try {
+      // Opt out of opening the real menu bar app; launching has its own tests.
+      await mkdir(join(home, ".config", "opencode-status-bar"), { recursive: true });
+      await writeFile(join(home, ".config", "opencode-status-bar", "no-autolaunch"), "");
       const env = { ...process.env, HOME: home, MONITOR_PLUGIN_TEST_CHILD: "1" };
       delete env.NODE_TEST_CONTEXT;
       const child = spawn(process.execPath, ["--test", fileURLToPath(import.meta.url)], {

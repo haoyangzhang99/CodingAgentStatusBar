@@ -29,7 +29,7 @@ run-debug:
 
 test:
 	@uv run pytest tests/ -q
-	@node --test tests/opencode-status-bar-plugin.test.mjs
+	@node --test --experimental-test-module-mocks tests/*.test.mjs
 
 coverage:
 	@uv run pytest tests/ --cov=src/opencode_status_bar --cov-report=term-missing

@@ -1,10 +1,41 @@
+import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, chmod, writeFile, rename, unlink } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+const BUNDLE_ID = "io.github.haoyangzhang99.OpenCodeStatusBar";
+// Shared across plugin module instances, so each OpenCode process launches once.
+const LAUNCHED = Symbol.for("opencode-status-bar.launched");
+
+// Open the menu bar app when OpenCode starts. OpenCode loads this plugin once per
+// project, so only the first load in a process does anything. Never throws.
+function launchStatusBar() {
+  try {
+    if (globalThis[LAUNCHED] || process.platform !== "darwin") return;
+    globalThis[LAUNCHED] = true;
+    const home = homedir();
+    if (existsSync(join(home, ".config", "opencode-status-bar", "no-autolaunch"))) return;
+    const open = (args, fallback) => {
+      const child = spawn("/usr/bin/open", args, { stdio: "ignore", detached: true });
+      child.on("error", () => {});
+      if (fallback) child.on("exit", (code) => { if (code !== 0) fallback(); });
+      child.unref();
+    };
+    // -g opens it without stealing focus; an already-running app is left as is.
+    // Fall back to the install path if macOS hasn't indexed the app's ID yet.
+    open(["-g", "-b", BUNDLE_ID], () => {
+      try { open(["-g", join(home, "Applications", "OpenCode Status Bar.app")]); } catch {}
+    });
+  } catch {
+    // Launching is a convenience; it must never break OpenCode.
+  }
+}
+
 // Only the default export is a plugin: OpenCode invokes every exported function.
 export default async function statusBarBridge({ client, directory }) {
+  launchStatusBar();
   const interval = 2_000;
   const timeout = 5_000;
   const retention = 60_000;

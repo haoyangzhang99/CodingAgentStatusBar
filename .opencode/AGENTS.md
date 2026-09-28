@@ -17,7 +17,7 @@ the user. Read `DEVELOPMENT.md` for the layout.
 
 ```sh
 uv run pytest tests/ -q                                  # Python tests
-node --test tests/opencode-status-bar-plugin.test.mjs    # plugin tests
+node --test --experimental-test-module-mocks tests/*.test.mjs   # plugin tests
 make run                                                 # run from source
 ./install.sh                                             # rebuild and reinstall the app
 ```
