@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from opencode_monitor.utils.datetime import ms_to_datetime
+from opencode_status_bar.utils.datetime import ms_to_datetime
 
 
 class TestMsToDatetime:

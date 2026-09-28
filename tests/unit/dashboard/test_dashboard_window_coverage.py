@@ -25,7 +25,7 @@ def make_mock_state(
     tty="/dev/ttys001",
 ):
     """Factory for creating mock State objects."""
-    from opencode_monitor.core.models import State, Instance, Todos
+    from opencode_status_bar.core.models import State, Instance, Todos
 
     if agents is None:
         agents = []
@@ -50,7 +50,7 @@ def make_mock_agent(
     ask_user_branch="",
 ):
     """Factory for creating mock Agent objects."""
-    from opencode_monitor.core.models import Agent, SessionStatus
+    from opencode_status_bar.core.models import Agent, SessionStatus
 
     if status is None:
         status = SessionStatus.BUSY
@@ -105,7 +105,7 @@ def mock_api_client():
         "critical_items": [],
     }
 
-    with patch("opencode_monitor.api.get_api_client") as mock_get:
+    with patch("opencode_status_bar.api.get_api_client") as mock_get:
         mock_get.return_value = mock_client
         yield mock_client
 
@@ -113,7 +113,7 @@ def mock_api_client():
 @pytest.fixture
 def dashboard_window(qapp, mock_api_client):
     """DashboardWindow with mocked refresh for isolated testing."""
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
 
     with patch.object(DashboardWindow, "_start_refresh"):
         window = DashboardWindow()
@@ -125,7 +125,7 @@ def dashboard_window(qapp, mock_api_client):
 @pytest.fixture
 def dashboard_with_mock_sections(qapp, mock_api_client):
     """DashboardWindow with mocked sections for handler testing."""
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
 
     with patch.object(DashboardWindow, "_fetch_monitoring_data"):
         with patch.object(DashboardWindow, "_fetch_security_data"):
@@ -170,7 +170,7 @@ class TestLauncherShowDashboard:
         self, existing_process_state, should_terminate, should_kill
     ):
         """show_dashboard() handles existing process states correctly."""
-        import opencode_monitor.dashboard.window.launcher as launcher
+        import opencode_status_bar.dashboard.window.launcher as launcher
 
         mock_existing = None
         if existing_process_state:
@@ -196,7 +196,7 @@ class TestLauncherShowDashboard:
             mock_popen.assert_called_once()
             call_args = mock_popen.call_args
             assert "-m" in call_args[0][0], "Should use -m flag"
-            assert "opencode_monitor.dashboard" in call_args[0][0], (
+            assert "opencode_status_bar.dashboard" in call_args[0][0], (
                 "Should launch dashboard module"
             )
             assert call_args[1]["start_new_session"] == True, "Should start new session"
@@ -251,7 +251,7 @@ class TestDashboardSignalHandlers:
         window, _ = dashboard_with_mock_sections
         window._agent_tty_map = tty_map
 
-        with patch("opencode_monitor.ui.terminal.focus_iterm2") as mock_focus:
+        with patch("opencode_status_bar.ui.terminal.focus_iterm2") as mock_focus:
             window._on_open_terminal(agent_id)
 
             if should_focus:
@@ -424,13 +424,13 @@ class TestFetchMethods:
                 id="monitoring",
             ),
             pytest.param(
-                "opencode_monitor.api.get_api_client",
+                "opencode_status_bar.api.get_api_client",
                 "_fetch_security_data",
                 "Security fetch error",
                 id="security",
             ),
             pytest.param(
-                "opencode_monitor.api.get_api_client",
+                "opencode_status_bar.api.get_api_client",
                 "_fetch_analytics_data",
                 "Analytics fetch error",
                 id="analytics",
@@ -442,7 +442,7 @@ class TestFetchMethods:
     ):
         """Fetch methods log error and continue on exception."""
         with patch(patch_target, side_effect=RuntimeError("Test error")):
-            with patch("opencode_monitor.dashboard.window.main.error") as mock_error:
+            with patch("opencode_status_bar.dashboard.window.main.error") as mock_error:
                 getattr(dashboard_window, method_name)()
                 mock_error.assert_called()
                 assert any(
@@ -465,12 +465,12 @@ class TestFetchApiUnavailable:
         self, qapp, method_name, signal_name
     ):
         """Fetch methods return early when API is unavailable."""
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
 
         mock_client = MagicMock()
         mock_client.is_available = False
 
-        with patch("opencode_monitor.api.get_api_client", return_value=mock_client):
+        with patch("opencode_status_bar.api.get_api_client", return_value=mock_client):
             with patch.object(DashboardWindow, "_start_refresh"):
                 window = DashboardWindow()
                 try:
@@ -488,8 +488,8 @@ class TestFetchApiUnavailable:
 
     def test_fetch_monitoring_data_success(self, qapp, mock_api_client):
         """_fetch_monitoring_data fetches and emits complete monitoring data."""
-        from opencode_monitor.dashboard.window import DashboardWindow
-        from opencode_monitor.core.models import Tool
+        from opencode_status_bar.dashboard.window import DashboardWindow
+        from opencode_status_bar.core.models import Tool
 
         agent = make_mock_agent(tools=[Tool(name="bash", arg="ls -la", elapsed_ms=100)])
         mock_state = make_mock_state(
@@ -535,7 +535,7 @@ class TestFetchApiUnavailable:
 
     def test_fetch_security_data_success(self, qapp, mock_api_client):
         """_fetch_security_data fetches and emits security data via API."""
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
 
         with patch.object(DashboardWindow, "_start_refresh"):
             window = DashboardWindow()
@@ -578,7 +578,7 @@ class TestFetchApiUnavailable:
         self, qapp, total_tokens, expected_str
     ):
         """_fetch_analytics_data formats tokens correctly for different scales."""
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
 
         mock_client = MagicMock()
         mock_client.is_available = True
@@ -591,7 +591,7 @@ class TestFetchApiUnavailable:
             "details": {"tokens": {"input": total_tokens, "cache_read": 0}},
         }
 
-        with patch("opencode_monitor.api.get_api_client", return_value=mock_client):
+        with patch("opencode_status_bar.api.get_api_client", return_value=mock_client):
             with patch.object(DashboardWindow, "_start_refresh"):
                 window = DashboardWindow()
                 try:
@@ -634,17 +634,17 @@ class TestFetchApiUnavailable:
 
     def test_fetch_tracing_data_handles_exception(self, qapp):
         """_fetch_tracing_data logs error with traceback on exception."""
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             side_effect=RuntimeError("Tracing error"),
         ):
             with patch.object(DashboardWindow, "_start_refresh"):
                 window = DashboardWindow()
                 try:
                     with patch(
-                        "opencode_monitor.dashboard.window.main.error"
+                        "opencode_status_bar.dashboard.window.main.error"
                     ) as mock_error:
                         window._fetch_tracing_data()
                         assert mock_error.call_count == 1
@@ -665,7 +665,7 @@ class TestMonitoringDataProcessing:
 
     def test_fetch_monitoring_with_waiting_agents(self, qapp, mock_api_client):
         """_fetch_monitoring_data correctly processes agents with pending ask_user."""
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
 
         agent = make_mock_agent(
             agent_id="agent-wait",
@@ -708,7 +708,7 @@ class TestMonitoringDataProcessing:
 
     def test_fetch_monitoring_with_repo_context(self, qapp, mock_api_client):
         """_fetch_monitoring_data uses repo when agent name not available."""
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
 
         agent = make_mock_agent(
             has_pending_ask_user=True,
@@ -758,7 +758,7 @@ class TestSyncChecker:
 
     def test_sync_checker_mode_transitions(self, qapp):
         """SyncChecker transitions between fast and slow polling modes."""
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         mock_client = MagicMock()
         mock_client.is_available = True
@@ -767,7 +767,7 @@ class TestSyncChecker:
 
         callback_calls = []
 
-        with patch("opencode_monitor.api.get_api_client", return_value=mock_client):
+        with patch("opencode_status_bar.api.get_api_client", return_value=mock_client):
             checker = SyncChecker(on_sync_detected=lambda: callback_calls.append(True))
             assert checker._timer is not None, "Timer should be created"
             try:
@@ -793,7 +793,7 @@ class TestSyncChecker:
 
     def test_sync_checker_api_availability(self, qapp):
         """SyncChecker handles API availability correctly."""
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         mock_client = MagicMock()
         mock_client.is_available = True
@@ -802,7 +802,7 @@ class TestSyncChecker:
 
         callback_calls = []
 
-        with patch("opencode_monitor.api.get_api_client", return_value=mock_client):
+        with patch("opencode_status_bar.api.get_api_client", return_value=mock_client):
             checker = SyncChecker(on_sync_detected=lambda: callback_calls.append(True))
             try:
                 # First check skips callback
@@ -820,14 +820,14 @@ class TestSyncChecker:
 
     def test_sync_checker_api_unavailable(self, qapp):
         """SyncChecker does not callback when API unavailable."""
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         mock_client = MagicMock()
         mock_client.is_available = False
 
         callback_calls = []
 
-        with patch("opencode_monitor.api.get_api_client", return_value=mock_client):
+        with patch("opencode_status_bar.api.get_api_client", return_value=mock_client):
             checker = SyncChecker(on_sync_detected=lambda: callback_calls.append(True))
             try:
                 checker._check()
@@ -838,12 +838,12 @@ class TestSyncChecker:
 
     def test_sync_checker_handles_exception(self, qapp):
         """SyncChecker handles exceptions gracefully without crashing."""
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         callback_calls = []
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             side_effect=RuntimeError("Connection error"),
         ):
             checker = SyncChecker(on_sync_detected=lambda: callback_calls.append(True))
@@ -869,7 +869,7 @@ class TestAnalyticsSectionKeyFormats:
     @pytest.fixture
     def analytics_section(self, qapp):
         """Create AnalyticsSection for testing."""
-        from opencode_monitor.dashboard.sections.analytics import AnalyticsSection
+        from opencode_status_bar.dashboard.sections.analytics import AnalyticsSection
 
         section = AnalyticsSection()
         yield section

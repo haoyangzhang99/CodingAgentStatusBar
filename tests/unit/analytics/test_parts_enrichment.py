@@ -19,8 +19,8 @@ import time
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.loaders.parts import (
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.loaders.parts import (
     load_parts_fast,
     LoaderStats,
     _process_reasoning_part,
@@ -30,7 +30,7 @@ from opencode_monitor.analytics.loaders.parts import (
     _process_compaction_part,
     _process_file_part,
 )
-from opencode_monitor.analytics.tracing import TracingDataService
+from opencode_status_bar.analytics.tracing import TracingDataService
 
 
 # =============================================================================
@@ -1105,8 +1105,8 @@ class TestAPIEndpoints:
     def app(self, analytics_db: AnalyticsDB):
         """Create Flask app with test configuration."""
         from flask import Flask
-        from opencode_monitor.api.routes.sessions import sessions_bp
-        from opencode_monitor.api.routes._context import RouteContext
+        from opencode_status_bar.api.routes.sessions import sessions_bp
+        from opencode_status_bar.api.routes._context import RouteContext
 
         app = Flask(__name__)
         app.register_blueprint(sessions_bp)

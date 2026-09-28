@@ -2,16 +2,16 @@
 
 ## Overview
 
-OpenCode Monitor is a native macOS menu bar app with a PyQt6 dashboard for monitoring OpenCode instances.
+OpenCode Status Bar is a native macOS menu bar app with a PyQt6 dashboard for monitoring OpenCode instances.
 
 ```
-opencode-monitor/
+opencode-status-bar/
 │
 ├── bin/
-│   └── opencode-menubar              # Entry point script
+│   └── opencode-status-bar              # Entry point script
 │
 ├── src/
-│   └── opencode_monitor/             # Main Python package
+│   └── opencode_status_bar/             # Main Python package
 │       ├── __init__.py
 │       ├── app.py                    # Backwards-compatibility wrapper
 │       │
@@ -366,7 +366,7 @@ OpenCode Storage Files
 
 ## Configuration
 
-Settings stored in `~/.config/opencode-monitor/settings.json`:
+Settings stored in `~/.config/opencode-status-bar/settings.json`:
 
 ```json
 {
@@ -375,7 +375,7 @@ Settings stored in `~/.config/opencode-monitor/settings.json`:
 ```
 
 Database:
-- `~/.config/opencode-monitor/analytics.duckdb` (DuckDB) - All data (analytics + security)
+- `~/.config/opencode-status-bar/analytics.duckdb` (DuckDB) - All data (analytics + security)
 
 ## DuckDB Schema
 

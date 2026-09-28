@@ -5,7 +5,7 @@ Consolidated: 17 tests → 5 tests with stronger assertions.
 
 import pytest
 
-from opencode_monitor.security.mitre_utils import (
+from opencode_status_bar.security.mitre_utils import (
     serialize_mitre_techniques,
     deserialize_mitre_techniques,
 )

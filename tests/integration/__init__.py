@@ -1,5 +1,5 @@
 """
-Integration tests for the OpenCode Monitor dashboard.
+Integration tests for the OpenCode Status Bar dashboard.
 
 This package contains end-to-end tests for the PyQt dashboard UI
 using pytest-qt. Tests can run in both headless and visible modes.

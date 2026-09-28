@@ -90,12 +90,12 @@ if summary_title := data.get("summary_title"):
 ```
 Without subtitle (current):
 ┌────────────────────────────────────────────────────────────┐
-│ 🌳 opencode-monitor                    01-08 14:32   2m 5s │
+│ 🌳 opencode-status-bar                    01-08 14:32   2m 5s │
 ├────────────────────────────────────────────────────────────┤
 
 With subtitle (enhanced):
 ┌────────────────────────────────────────────────────────────┐
-│ 🌳 opencode-monitor                    01-08 14:32   2m 5s │
+│ 🌳 opencode-status-bar                    01-08 14:32   2m 5s │
 │    Fix authentication bug in login flow                    │ ← text_muted
 ├────────────────────────────────────────────────────────────┤
 ```
@@ -482,7 +482,7 @@ Detail panel expanded:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Type / Name                              Time      Duration  In    Out      │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 🌳 opencode-monitor                      01-08     2m 5s     45K   12K      │
+│ 🌳 opencode-status-bar                      01-08     2m 5s     45K   12K      │
 │    Implement dashboard data enrichment                                 ← subtitle
 │ ├─ 💬 user → coder [main]                14:32     1m 2s     5K    2K       │
 │ │  ├─ 📖 Read the project structure      14:32:05  250ms     1K    -    ✓   │

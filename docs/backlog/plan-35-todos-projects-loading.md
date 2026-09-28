@@ -26,7 +26,7 @@ Les tables `todos` et `projects` existent dans le schema DB (`db.py`) mais :
 ```json
 {
   "id": "61ab6c1cb2dcb238f74ea62a1d899faca11bd485",
-  "worktree": "/Users/sofiane/Projects/opencode-monitor",
+  "worktree": "/Users/sofiane/Projects/opencode-status-bar",
   "vcs": "git",
   "time": {"created": 1766909809452, "updated": 1767455301774}
 }

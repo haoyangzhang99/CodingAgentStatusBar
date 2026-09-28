@@ -1,5 +1,5 @@
 """
-Tests for opencode_monitor.core.monitor module.
+Tests for opencode_status_bar.core.monitor module.
 
 Consolidated test suite covering:
 - find_opencode_ports() - subprocess mocking for netstat
@@ -15,7 +15,7 @@ import time
 import json
 from unittest.mock import patch, MagicMock, AsyncMock
 
-from opencode_monitor.core.monitor import (
+from opencode_status_bar.core.monitor import (
     find_opencode_ports,
     get_tty_for_port,
     extract_tools_from_messages,
@@ -27,7 +27,7 @@ from opencode_monitor.core.monitor import (
     _has_activity_after_notify,
     check_pending_ask_user_from_disk,
 )
-from opencode_monitor.core.models import (
+from opencode_status_bar.core.models import (
     Instance,
     Agent,
     SessionStatus,
@@ -38,7 +38,7 @@ from opencode_monitor.core.models import (
 @pytest.fixture(autouse=True)
 def no_live_bridge_snapshots():
     """Legacy port tests must not see the developer's real desktop bridge files."""
-    with patch("opencode_monitor.core.monitor.fetcher.read_bridge_instances", return_value=[]):
+    with patch("opencode_status_bar.core.monitor.fetcher.read_bridge_instances", return_value=[]):
         yield
 
 
@@ -119,9 +119,9 @@ tcp4       0      0  127.0.0.1.9000         *.*                    LISTEN
         async def mock_check(port):
             return mock_check_result(port)
 
-        with patch("opencode_monitor.core.monitor.ports.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.core.monitor.ports.subprocess.run") as mock_run:
             with patch(
-                "opencode_monitor.core.monitor.ports.check_opencode_port",
+                "opencode_status_bar.core.monitor.ports.check_opencode_port",
                 side_effect=mock_check,
             ):
                 mock_run.return_value = mock_result
@@ -136,7 +136,7 @@ tcp4       0      0  127.0.0.1.9000         *.*                    LISTEN
     @pytest.mark.asyncio
     async def test_returns_empty_list_when_netstat_fails(self):
         """When subprocess raises exception, return empty list"""
-        with patch("opencode_monitor.core.monitor.ports.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.core.monitor.ports.subprocess.run") as mock_run:
             mock_run.side_effect = Exception("Command failed")
             result = await find_opencode_ports()
 
@@ -230,7 +230,7 @@ opencode  12345   user    5u  IPv4 0xabc123      0t0  TCP 127.0.0.1:8080 (LISTEN
         mock_lsof = MagicMock()
         mock_lsof.stdout = lsof_output
 
-        with patch("opencode_monitor.core.monitor.ports.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.core.monitor.ports.subprocess.run") as mock_run:
             if ps_raises:
                 mock_run.side_effect = [mock_lsof, Exception("ps failed")]
             elif ps_output is not None:
@@ -247,7 +247,7 @@ opencode  12345   user    5u  IPv4 0xabc123      0t0  TCP 127.0.0.1:8080 (LISTEN
 
     def test_returns_empty_string_when_lsof_fails(self):
         """When lsof raises exception, return empty string"""
-        with patch("opencode_monitor.core.monitor.ports.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.core.monitor.ports.subprocess.run") as mock_run:
             mock_run.side_effect = Exception("Command failed")
             result = get_tty_for_port(8080)
 
@@ -569,7 +569,7 @@ class TestFetchInstance:
         )
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.get_tty_for_port",
+            "opencode_status_bar.core.monitor.fetcher.get_tty_for_port",
             return_value="ttys001",
         ):
             (
@@ -653,7 +653,7 @@ class TestFetchInstance:
         )
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.get_tty_for_port",
+            "opencode_status_bar.core.monitor.fetcher.get_tty_for_port",
             return_value="ttys001",
         ):
             (
@@ -729,7 +729,7 @@ class TestFetchInstance:
         )
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.get_tty_for_port",
+            "opencode_status_bar.core.monitor.fetcher.get_tty_for_port",
             return_value="",
         ):
             instance, _, _, _, _ = await fetch_instance(8080)
@@ -759,7 +759,7 @@ class TestFetchInstance:
         )
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.get_tty_for_port",
+            "opencode_status_bar.core.monitor.fetcher.get_tty_for_port",
             return_value="",
         ):
             (
@@ -787,7 +787,7 @@ class TestFetchAllInstances:
     async def test_returns_disconnected_state_when_no_ports(self):
         """Return disconnected state when no OpenCode ports found"""
         with patch(
-            "opencode_monitor.core.monitor.fetcher.find_opencode_ports", return_value=[]
+            "opencode_status_bar.core.monitor.fetcher.find_opencode_ports", return_value=[]
         ):
             state = await fetch_all_instances()
 
@@ -824,11 +824,11 @@ class TestFetchAllInstances:
                 return (instance2, 3, 2, [], set())
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.find_opencode_ports",
+            "opencode_status_bar.core.monitor.fetcher.find_opencode_ports",
             side_effect=mock_find,
         ):
             with patch(
-                "opencode_monitor.core.monitor.fetcher.fetch_instance",
+                "opencode_status_bar.core.monitor.fetcher.fetch_instance",
                 side_effect=mock_fetch,
             ):
                 state = await fetch_all_instances()
@@ -854,11 +854,11 @@ class TestFetchAllInstances:
                 return (None, 0, 0, [], set())
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.find_opencode_ports",
+            "opencode_status_bar.core.monitor.fetcher.find_opencode_ports",
             side_effect=mock_find,
         ):
             with patch(
-                "opencode_monitor.core.monitor.fetcher.fetch_instance",
+                "opencode_status_bar.core.monitor.fetcher.fetch_instance",
                 side_effect=mock_fetch,
             ):
                 state = await fetch_all_instances()
@@ -886,15 +886,15 @@ class TestFetchAllInstances:
             return AskUserResult(has_pending=True, title=f"Question for {session_id}")
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.find_opencode_ports",
+            "opencode_status_bar.core.monitor.fetcher.find_opencode_ports",
             side_effect=mock_find,
         ):
             with patch(
-                "opencode_monitor.core.monitor.fetcher.fetch_instance",
+                "opencode_status_bar.core.monitor.fetcher.fetch_instance",
                 side_effect=mock_fetch,
             ):
                 with patch(
-                    "opencode_monitor.core.monitor.fetcher.check_pending_ask_user_from_disk",
+                    "opencode_status_bar.core.monitor.fetcher.check_pending_ask_user_from_disk",
                     side_effect=mock_check_pending,
                 ):
                     # With cache: only known_session should be included
@@ -928,15 +928,15 @@ class TestFetchAllInstances:
             return AskUserResult(has_pending=True, title="Question")
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.find_opencode_ports",
+            "opencode_status_bar.core.monitor.fetcher.find_opencode_ports",
             side_effect=mock_find,
         ):
             with patch(
-                "opencode_monitor.core.monitor.fetcher.fetch_instance",
+                "opencode_status_bar.core.monitor.fetcher.fetch_instance",
                 side_effect=mock_fetch,
             ):
                 with patch(
-                    "opencode_monitor.core.monitor.fetcher.check_pending_ask_user_from_disk",
+                    "opencode_status_bar.core.monitor.fetcher.check_pending_ask_user_from_disk",
                     side_effect=mock_check_pending,
                 ):
                     # Without cache: include all sessions
@@ -972,11 +972,11 @@ class TestFetchAllInstances:
             )
 
         with patch(
-            "opencode_monitor.core.monitor.fetcher.find_opencode_ports",
+            "opencode_status_bar.core.monitor.fetcher.find_opencode_ports",
             side_effect=mock_find,
         ):
             with patch(
-                "opencode_monitor.core.monitor.fetcher.fetch_instance",
+                "opencode_status_bar.core.monitor.fetcher.fetch_instance",
                 side_effect=mock_fetch,
             ):
                 state = await fetch_all_instances()
@@ -1438,7 +1438,7 @@ class TestCheckPendingAskUserFromDisk:
         mock_settings.ask_user_timeout = 30 * 60
 
         with patch(
-            "opencode_monitor.core.monitor.ask_user.get_settings",
+            "opencode_status_bar.core.monitor.ask_user.get_settings",
             return_value=mock_settings,
         ):
             result = check_pending_ask_user_from_disk(
@@ -1451,7 +1451,7 @@ class TestCheckPendingAskUserFromDisk:
         mock_settings.ask_user_timeout = 60 * 60
 
         with patch(
-            "opencode_monitor.core.monitor.ask_user.get_settings",
+            "opencode_status_bar.core.monitor.ask_user.get_settings",
             return_value=mock_settings,
         ):
             result = check_pending_ask_user_from_disk(
@@ -1466,7 +1466,7 @@ class TestCheckPendingAskUserFromDisk:
         message_dir.mkdir(parents=True)
 
         with patch(
-            "opencode_monitor.core.monitor._find_latest_notify_ask_user",
+            "opencode_status_bar.core.monitor._find_latest_notify_ask_user",
             side_effect=Exception("File error"),
         ):
             result = check_pending_ask_user_from_disk(

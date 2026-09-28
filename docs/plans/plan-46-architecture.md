@@ -129,7 +129,7 @@ Database ──► API (add fields) ──► DataLoader ──► Views (displa
 ### 2.1 TypedDict Definitions (Python Type Hints)
 
 ```python
-# File: src/opencode_monitor/dashboard/sections/tracing/types.py
+# File: src/opencode_status_bar/dashboard/sections/tracing/types.py
 
 from typing import TypedDict, Optional, Literal
 
@@ -222,7 +222,7 @@ AgentType = Literal["main", "executor", "tea", "subagent", "coder", "analyst", "
 ### 2.2 Widget Interfaces
 
 ```python
-# File: src/opencode_monitor/dashboard/sections/tracing/widgets.py
+# File: src/opencode_status_bar/dashboard/sections/tracing/widgets.py
 
 from typing import Protocol, Optional
 from PyQt6.QtWidgets import QWidget
@@ -268,7 +268,7 @@ class ThumbnailProvider(Protocol):
 ### 2.3 Helper Functions Interface
 
 ```python
-# File: src/opencode_monitor/dashboard/sections/tracing/enriched_helpers.py
+# File: src/opencode_status_bar/dashboard/sections/tracing/enriched_helpers.py
 
 from typing import Optional
 
@@ -344,12 +344,12 @@ def parse_file_attachment(file_url: str) -> Optional[dict]:
 **Purpose**: Display agent type as a colored pill badge.
 
 ```python
-# File: src/opencode_monitor/dashboard/sections/tracing/widgets.py
+# File: src/opencode_status_bar/dashboard/sections/tracing/widgets.py
 
 from PyQt6.QtWidgets import QLabel, QWidget
 from PyQt6.QtCore import Qt
 
-from opencode_monitor.dashboard.styles import COLORS, FONTS, RADIUS
+from opencode_status_bar.dashboard.styles import COLORS, FONTS, RADIUS
 
 
 # Agent color definitions (add to colors.py)
@@ -844,7 +844,7 @@ def add_part_item(parent: QTreeWidgetItem, part: dict, index: int) -> QTreeWidge
 ### 4.1 Image Thumbnail Caching
 
 ```python
-# File: src/opencode_monitor/dashboard/sections/tracing/image_cache.py
+# File: src/opencode_status_bar/dashboard/sections/tracing/image_cache.py
 
 from typing import Optional
 from PyQt6.QtGui import QPixmap, QImage

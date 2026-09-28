@@ -8,7 +8,7 @@ import sqlite3
 import tempfile
 import os
 
-from opencode_monitor.utils.db import db_connection, db_cursor
+from opencode_status_bar.utils.db import db_connection, db_cursor
 
 
 class TestDbConnection:

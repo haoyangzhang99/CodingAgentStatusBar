@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.indexer import (
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.indexer import (
     FileTracker,
     FileParser,
     ParsedSession,

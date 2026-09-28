@@ -1,7 +1,7 @@
 """Tests for PathExtractor - extracting file paths from bash commands."""
 
 import pytest
-from opencode_monitor.security.scope.path_extractor import PathExtractor
+from opencode_status_bar.security.scope.path_extractor import PathExtractor
 
 
 class TestPathExtractor:

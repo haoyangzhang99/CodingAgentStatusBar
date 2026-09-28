@@ -40,7 +40,7 @@ part/
 
 ### Phase 1 : Extraire les sessions ROOT
 
-**Fichier** : `src/opencode_monitor/analytics/loader.py`
+**Fichier** : `src/opencode_status_bar/analytics/loader.py`
 
 ```python
 def extract_root_sessions(storage_path: Path, max_days: int = 30) -> list[AgentTrace]:
@@ -92,7 +92,7 @@ def load_traces(db, storage_path, max_days=30):
 
 ### Phase 3 : Améliorer l'UI
 
-**Fichier** : `src/opencode_monitor/dashboard/sections/tracing.py`
+**Fichier** : `src/opencode_status_bar/dashboard/sections/tracing.py`
 
 - Distinguer visuellement ROOT vs CHILD
 - Icône différente : 🌳 pour ROOT, 🔗 pour délégation

@@ -1,7 +1,7 @@
 """Tests for RiskAnalyzer - Pattern-based security risk analysis."""
 
 import pytest
-from opencode_monitor.security.analyzer import (
+from opencode_status_bar.security.analyzer import (
     RiskAnalyzer,
     RiskResult,
     RiskLevel,

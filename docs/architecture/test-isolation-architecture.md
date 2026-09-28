@@ -238,7 +238,7 @@ def qapp():
 @pytest.fixture
 def dashboard_window(qapp, qtbot, mock_api_client):
     """Function-scoped dashboard window with automatic cleanup."""
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
     
     window = DashboardWindow(api_client=mock_api_client)
     qtbot.addWidget(window)  # Automatic cleanup
@@ -354,7 +354,7 @@ def mock_registry():
 def mock_api_client(mock_registry):
     """Function-scoped mock API client."""
     from unittest.mock import MagicMock
-    from opencode_monitor.api.client import APIClient
+    from opencode_status_bar.api.client import APIClient
     
     mock = MagicMock(spec=APIClient)
     mock_registry.register_mock('api_client', mock)
@@ -827,7 +827,7 @@ test-random:
 
 # Coverage with parallel execution
 test-coverage:
-	pytest -n auto --dist loadgroup --cov=src/opencode_monitor --cov-report=html
+	pytest -n auto --dist loadgroup --cov=src/opencode_status_bar --cov-report=html
 
 # Specific worker count (for CI)
 test-ci:
@@ -863,7 +863,7 @@ jobs:
       
       - name: Run tests (parallel)
         run: |
-          pytest -n 4 --dist loadgroup -v --cov=src/opencode_monitor
+          pytest -n 4 --dist loadgroup -v --cov=src/opencode_status_bar
       
       - name: Upload coverage
         uses: codecov/codecov-action@v3

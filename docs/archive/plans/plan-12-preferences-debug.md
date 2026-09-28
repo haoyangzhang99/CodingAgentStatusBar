@@ -45,7 +45,7 @@ Identifier et corriger le bug qui empeche les preferences d'etre correctement ap
 ### 3. Points de verification
 
 **Fichier de configuration** :
-- Emplacement : `~/.config/opencode-monitor/settings.json`
+- Emplacement : `~/.config/opencode-status-bar/settings.json`
 - Format : JSON valide
 - Contenu : Tous les parametres avec leurs valeurs actuelles
 
@@ -64,7 +64,7 @@ Identifier et corriger le bug qui empeche les preferences d'etre correctement ap
 
 ```bash
 # Apres avoir modifie une preference
-cat ~/.config/opencode-monitor/settings.json
+cat ~/.config/opencode-status-bar/settings.json
 ```
 
 **Questions** :

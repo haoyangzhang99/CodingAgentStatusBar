@@ -30,24 +30,24 @@ Séparer les responsabilités :
 
 ### Phase 1 : Dashboard en lecture seule
 
-**Fichier** : `src/opencode_monitor/analytics/db.py`
+**Fichier** : `src/opencode_status_bar/analytics/db.py`
 - Ajouter paramètre `read_only: bool = False` au constructeur `AnalyticsDB`
 - Passer ce paramètre à `duckdb.connect()`
 
-**Fichier** : `src/opencode_monitor/dashboard/window.py`
+**Fichier** : `src/opencode_status_bar/dashboard/window.py`
 - Supprimer `_sync_opencode_data()` et le signal `sync_completed`
 - Dans `_fetch_*_data()`, utiliser `AnalyticsDB(read_only=True)`
 
 ### Phase 2 : Sync périodique dans le menubar
 
-**Fichier** : `src/opencode_monitor/app/core.py` ou `handlers.py`
+**Fichier** : `src/opencode_status_bar/app/core.py` ou `handlers.py`
 - Ajouter timer pour sync périodique (configurable, défaut 5 min)
 - Le sync existant dans `needs_refresh()` reste mais avec intervalle plus court
 
 ### Phase 3 (Optionnel) : IPC pour refresh à la demande
 
 - Mécanisme simple : fichier signal ou socket Unix
-- Dashboard écrit un fichier `/tmp/opencode-monitor-refresh`
+- Dashboard écrit un fichier `/tmp/opencode-status-bar-refresh`
 - Menubar surveille ce fichier et lance un sync quand détecté
 - Alternative : Bouton dans le dashboard qui tue/relance le sync
 

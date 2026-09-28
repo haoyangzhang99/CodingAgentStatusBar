@@ -7,7 +7,7 @@ mass deletion detection, time window filtering, and event factory.
 
 import time
 import pytest
-from opencode_monitor.security.sequences import (
+from opencode_status_bar.security.sequences import (
     SequenceAnalyzer,
     SecurityEvent,
     EventType,

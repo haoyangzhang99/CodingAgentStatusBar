@@ -20,12 +20,12 @@ from datetime import datetime
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.tracing import (
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.tracing import (
     TracingDataService,
     TracingConfig,
 )
-from opencode_monitor.analytics.tracing.helpers import extract_tool_display_info
+from opencode_status_bar.analytics.tracing.helpers import extract_tool_display_info
 
 
 class TestExtractToolDisplayInfo:

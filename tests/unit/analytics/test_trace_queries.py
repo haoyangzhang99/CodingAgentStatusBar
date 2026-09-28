@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.loader import extract_traces, load_traces
-from opencode_monitor.analytics.models import AgentTrace
-from opencode_monitor.analytics.queries.trace_queries import (
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.loader import extract_traces, load_traces
+from opencode_status_bar.analytics.models import AgentTrace
+from opencode_status_bar.analytics.queries.trace_queries import (
     TraceQueries,
     TraceTreeNode,
     SessionWithTraces,

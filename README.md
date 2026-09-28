@@ -1,227 +1,131 @@
 # OpenCode Status Bar
 
-A lightweight macOS menu bar status indicator for the [OpenCode](https://opencode.ai) desktop app.
-Glance at the menu bar to see whether OpenCode is working, finished, or needs your approval or an answer.
+A small macOS menu bar item that shows what the [OpenCode](https://opencode.ai) desktop app is doing.
+Check it while you work in other apps to see whether OpenCode is still working, has finished,
+or is waiting for you to approve something or answer a question.
 
 This is a fork of [OpenClaudeAgent/opencode-monitor](https://github.com/OpenClaudeAgent/opencode-monitor)
-(MIT licensed, now archived). It is not an official OpenCode project.
+(MIT licensed, now archived). It is a community project, not an official OpenCode product.
 
-## What This Fork Changes
+## What You'll See
 
-- **Works with the OpenCode desktop app.** The desktop app's local server requires a per-launch password,
-  so the original port scanning can't see it. A small OpenCode plugin (`integrations/opencode-monitor.js`)
-  writes status-only snapshots that the menu bar app reads. No credentials, prompts, or tool output are exported.
-- **Native menu bar look.** SF Symbols and system text that adapt to light/dark menu bars; the icon turns yellow
-  only when something needs your attention (`Awaiting approval`, `Awaiting answer`, `Needs attention`).
-- **Real attention signals.** Pending approvals and questions come from OpenCode itself, not timing guesses.
-- **Trimmed down.** The dashboard, analytics database, security scanner, local API server, Claude usage polling,
-  and port scanning are no longer loaded. Memory dropped from about 79 MB to 36 MB.
-- **Quiet logging.** One log line per status change instead of one every 2 seconds.
-- **Show OpenCode** as the first dropdown item.
+The menu bar shows an icon and a short status. The icon turns yellow only when OpenCode needs you;
+otherwise the icon and text follow your menu bar's light or dark appearance, like other menu bar items.
 
-See [`integrations/README.md`](integrations/README.md) for how the plugin and native launcher work.
+| Status | Icon | Meaning |
+|---|---|---|
+| `Working...` / `2 working` | Terminal | One or more sessions are generating a response |
+| `Done` | Checkmark | A session finished within the last minute |
+| `Awaiting approval` | Hand (yellow) | OpenCode is waiting for you to approve a permission request |
+| `Awaiting answer` | Question mark (yellow) | OpenCode asked you a question |
+| `Needs attention` | Exclamation mark (yellow) | Both an approval and a question are pending |
+| `OpenCode idle` | Terminal | OpenCode is running, with no recent activity |
+| `OpenCode offline` | Terminal | OpenCode isn't running, or hasn't loaded the plugin yet |
 
-**Status:** there is no installer yet. Setup currently requires building `integrations/launcher.m`
-and linking the plugin into `~/.config/opencode/plugins/` by hand. The sections below describe the
-original project and are partly out of date.
+Attention states take priority over working states. Counts are active sessions, not open windows.
 
----
+Click the item for a dropdown with **Show OpenCode** (brings OpenCode to the front, or opens it),
+each recent session and what it's waiting for, **Refresh**, and **Quit**.
 
-## Original README
+## Requirements
 
-> **Note** : Ce projet est entièrement *vibe-codé* avec [OpenCode](https://github.com/sst/opencode) ❤️ et Claude Opus 4.5.
+- macOS (tested on macOS 26 with an Apple silicon Mac)
+- The OpenCode desktop app (tested with 1.18)
+- [uv](https://docs.astral.sh/uv/): `brew install uv`
+- Xcode Command Line Tools: `xcode-select --install`
 
-Native macOS menu bar app to monitor [OpenCode](https://github.com/sst/opencode) instances and API usage.
+## Install
 
-## Features
-
-### Menu Bar
-- **Real-time monitoring** of OpenCode instances
-- **Agent hierarchy** with main agents and sub-agents
-- **Tools display** showing currently running tools
-- **Permission detection** 🔒 heuristic indicator for tools waiting approval
-- **MCP Notify tracking** 🔔 indicator when agent awaits user response
-- **Todos tracking** with progress indicators
-- **Claude API usage** (session + weekly)
-- **Click to focus** iTerm2 on the agent's terminal
-- **Configurable settings** via menu
-
-### PyQt6 Dashboard
-- **Monitoring section** - real-time instance overview
-- **Analytics section** - token usage statistics (by period, agent, tool, skill)
-- **Tracing section** - agent delegation tree with timeline and transcript
-- **Security section** - risk analysis with MITRE ATT&CK mapping
-- **Analytics visualization** with interactive dashboard
-
-## Installation
-
-### Requirements
-
-- macOS 12+
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- OpenCode CLI running
-
-### Setup
-
-```bash
-# Clone the repository
-git clone <repo-url>
-cd opencode-monitor
-
-# Run the app
-make run
+```sh
+git clone https://github.com/haoyangzhang99/OpenCodeStatusBar.git
+cd OpenCodeStatusBar
+./install.sh
 ```
 
-## Usage
+The installer:
 
-Once running, the app appears in your menu bar with a 🤖 icon.
+1. Installs Python 3.12 and the app's two dependencies in `.venv` inside this folder.
+2. Builds `~/Applications/OpenCode Status Bar.app` and checks that it starts correctly.
+3. Adds the plugin `~/.config/opencode/plugins/opencode-status-bar.js`, which loads
+   `integrations/opencode-status-bar.js` from this folder.
+4. Opens the app.
 
-### Menu Bar Display
+Then **fully quit OpenCode (Cmd+Q) and reopen it** so it loads the plugin. Until then the
+menu bar shows `OpenCode offline`.
 
-```
-🤖 2 💤 3 🔒 🔔 ⏳ 3 🟢 45%
-```
+Keep the project folder where it is: the app and plugin run from it. If you move the folder,
+run `./install.sh` again.
 
-- `🤖` - App icon
-- `2` - Number of busy agents
-- `💤 3` - Number of idle instances
-- `🔒` - Permission may be pending (tool running > 5s)
-- `🔔` - Agent awaits user response (MCP Notify ask_user)
-- `⏳3` - Total pending todos
-- `🟢45%` - Claude API session usage
+To start the app at login, add **OpenCode Status Bar** in System Settings > General > Login Items.
 
-### Menu Contents
+## Update
 
-Click the icon to see:
-
-```
-🤖 Agent Title                    ← Click to focus terminal
-    🔧 bash: git status           ← Running tool
-    🔒 bash: npm install          ← May need permission (running 15s)
-    🔄 Current task               ← In-progress todo
-    ⏳ Next task (+2)             ← Pending todos
-    └ ● Sub-agent                 ← Sub-agent (busy)
-    └ ○ Sub-agent                 ← Sub-agent (idle)
-🔔 Agent Question                 ← Awaiting user response
-    ❓ Validation requise         ← Question title
----
-🟢 Session: 45% (reset 2h30m)
-📅 Weekly: 29% (reset Mon 0h)
-🌐 Open Claude Usage
----
-📊 Dashboard                      ← Opens PyQt6 dashboard
----
-*🛡️ Security analysis available in Dashboard → Security tab*
----
-Refresh
----
-⚙️ Preferences ▸
-    🔄 Usage refresh ▸
-        30s / 1m ✓ / 2m / 5m / 10m
-    🔔 Ask user timeout ▸
-        5m / 15m / 30m ✓ / 1h
----
-Quit
+```sh
+git pull
+./install.sh
 ```
 
-### Preferences
+Restart OpenCode afterwards if the plugin changed.
 
-Access via **⚙️ Preferences** in the menu:
+## Uninstall
 
-- **🔄 Usage refresh**: How often to fetch Claude API usage (30s - 10m)
-- **🔔 Ask user timeout**: How long to show 🔔 before dismissing (5m - 1h)
+```sh
+./uninstall.sh          # removes the app, plugin, and status files
+./uninstall.sh --purge  # also removes logs, settings, and .venv
+```
 
-Settings are saved to `~/.config/opencode-monitor/settings.json`
+Then restart OpenCode to unload the plugin, and delete this folder if you no longer need it.
+
+## How It Works
+
+OpenCode's desktop app protects its local server with a password that changes every launch,
+so outside programs can't query it directly. Instead, a small OpenCode plugin runs inside
+OpenCode and every 2 seconds writes a status snapshot for each open project to
+`~/.config/opencode-status-bar/bridge/`. The menu bar app reads those files and never
+connects to OpenCode.
+
+- Snapshots older than 15 seconds, or from an OpenCode process that has exited, are ignored.
+- Finished sessions stay listed for 60 seconds, which is how `Done` appears.
+- Approval and question states come from OpenCode's own pending-request lists, not timing guesses.
+
+Technical details are in [`integrations/README.md`](integrations/README.md).
+
+## Privacy
+
+- **Stays on your Mac.** The app makes no network requests.
+- **Written by the plugin:** session IDs, titles, project folder paths, and status flags.
+  Files are readable only by your user account.
+- **Not written:** prompts, messages, tool inputs or output, API keys, or OpenCode's server password.
+- **Logs** (`~/Library/Logs/OpenCodeStatusBar/`) get one line per status change, with counts
+  only: no session titles or paths.
+
+## Limitations
+
+- macOS only. Made for the OpenCode desktop app; the terminal version of OpenCode is untested.
+- The plugin reads approvals and questions through an internal part of OpenCode's plugin client,
+  so a future OpenCode update could break those two indicators.
+- On a crowded menu bar, macOS may hide the item behind the notch. Hold Command and drag it
+  further right.
+- The app links against the Python that `install.sh` set up. If you delete uv's Python
+  installations, run `./install.sh` again.
 
 ## Development
 
-```bash
-# Run the app
-make run
-
-# Run tests
-make test
-
-# Run tests with coverage
-make coverage
+```sh
+uv sync                                  # includes test and legacy dependencies
+uv run pytest tests/ -q                  # Python tests
+node --test tests/opencode-status-bar-plugin.test.mjs   # plugin tests
 ```
 
-### Project Structure
+After changing Python code, quit the app from its menu and reopen it. After changing the plugin,
+restart OpenCode.
 
-```
-opencode-monitor/
-├── bin/
-│   └── opencode-menubar          # Entry point script
-├── src/
-│   └── opencode_monitor/         # Python package
-│       ├── app/                  # Menu bar application
-│       │   ├── core.py           # OpenCodeApp main class
-│       │   ├── handlers.py       # Event callbacks
-│       │   └── menu.py           # Menu building
-│       ├── core/                 # Core monitoring
-│       │   ├── client.py         # OpenCode API client
-│       │   ├── models.py         # Data classes
-│       │   ├── monitor/          # Instance detection
-│       │   └── usage.py          # Claude API usage
-│       ├── api/                  # REST API (Flask)
-│       │   ├── server.py         # Flask server
-│       │   ├── client.py         # API client
-│       │   └── routes/           # API endpoints
-│       ├── analytics/            # Usage analytics (DuckDB)
-│       │   ├── db.py             # Database management
-│       │   ├── indexer/          # Real-time + backfill indexer
-│       │   ├── loaders/          # Data loaders
-│       │   ├── queries/          # SQL queries
-│       │   └── tracing/          # Tracing service
-│       ├── dashboard/            # PyQt6 dashboard
-│       │   ├── sections/         # UI sections
-│       │   ├── widgets/          # Reusable components
-│       │   ├── styles/           # Design system
-│       │   └── window/           # Main window
-│       ├── security/             # Security audit
-│       │   ├── analyzer/         # Risk analysis
-│       │   ├── auditor/          # Background scanner
-│       │   ├── db/               # DuckDB storage (unified)
-│       │   └── sequences.py      # Kill chain detection
-│       ├── ui/                   # Menu bar UI
-│       │   ├── menu.py           # Menu builder
-│       │   └── terminal.py       # iTerm2 focus
-│       └── utils/                # Utilities
-├── tools/pycode/                 # Python analysis CLI
-├── tests/                        # Unit & integration tests
-├── docs/                         # Documentation
-├── pyproject.toml                # Python dependencies
-└── Makefile                      # Dev commands
-```
+This fork keeps the original project's dashboard, analytics, security scanner, and local API code
+(under `src/opencode_status_bar/`), but the menu bar app no longer loads any of it. Running those
+parts needs the optional `legacy` dependencies (`uv sync --extra legacy`). `docs/` and
+`DEVELOPMENT.md` are design notes inherited from the original project and describe those features.
 
-## Roadmap
+## Credits and License
 
-See [docs/backlog/](docs/backlog/) for planned features and [docs/archive/](docs/archive/) for completed plans.
-
-## Changelog
-
-| Version | Date | Description |
-|---------|------|-------------|
-| v2.23.0 | 2026-01-04 | Python Analysis CLI - jedi/radon/vulture tools, 10 commands, `.opencode/AGENTS.md` |
-| v2.13.0 | 2025-12-30 | Analytics dashboard - DuckDB, PyQt6 visualization, delegation metrics |
-| v2.12.0 | 2025-12-30 | Display idle session count in menu bar title |
-| v2.11.0 | 2025-12-29 | MCP Notify ask_user detection - bell icon when agent awaits response |
-| v2.10.0 | 2025-12-29 | Permission detection heuristic - lock icon on tools running > 5s |
-| v2.9.0 | 2025-12-28 | Refactoring - Extract database, risk_analyzer, reporter, terminal modules |
-| v2.8.0 | 2025-12-28 | Security audit module - analyze commands, reads, writes, webfetches |
-| v2.7.0 | 2025-12-28 | Tooltips on truncated menu items |
-| v2.6.1 | 2025-12-28 | Preferences and menu fixes |
-| v2.6.0 | 2025-12-28 | Settings panel (usage refresh, sounds) |
-| v2.5.0 | 2025-12-28 | Minimal unicode icons for sub-agents |
-| v2.4.0 | 2025-12-28 | Migration to native rumps app |
-| v2.3.0 | 2025-12-28 | Todos displayed under each agent |
-| v2.2.0 | 2025-12-28 | Sound notifications |
-| v2.1.0 | 2025-12-28 | Tools displayed under each agent |
-| v2.0.0 | 2025-12-28 | Python async backend |
-| v1.1.0 | 2025-12-28 | Debug and logging tools |
-| v1.0.0 | 2025-12-28 | Initial release |
-
-## License
-
-MIT
+Based on [opencode-monitor](https://github.com/OpenClaudeAgent/opencode-monitor) by OpenClaudeAgent.
+MIT License; see [LICENSE](LICENSE).

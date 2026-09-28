@@ -1,6 +1,6 @@
 # Test Quality Improvement Orchestration Plan
 
-> **Projet** : opencode-monitor  
+> **Projet** : opencode-status-bar  
 > **Date** : 2025-01-07  
 > **Objectif** : Ratio test/code < 0.8 | Mutation Score > 60% | Assertions/test > 4
 
@@ -502,7 +502,7 @@ pytest tests/ --cov=src --cov-fail-under=70
 
 ```bash
 # Executer mutation testing sur un module
-mutmut run --paths-to-mutate=src/opencode_monitor/security/correlator.py
+mutmut run --paths-to-mutate=src/opencode_status_bar/security/correlator.py
 
 # Voir les resultats
 mutmut results

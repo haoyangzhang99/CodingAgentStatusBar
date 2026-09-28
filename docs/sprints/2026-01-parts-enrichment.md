@@ -45,7 +45,7 @@ Enrichissement du loader pour traiter les 5 types de parts actuellement ignorés
 - [ ] Migration idempotente (safe to run multiple times)
 
 **Fichiers impactés**:
-- `src/opencode_monitor/analytics/db.py`
+- `src/opencode_status_bar/analytics/db.py`
 
 **Notes techniques**:
 ```sql
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS patches (
 - [ ] Gestion d'erreurs robuste (continue on error)
 
 **Fichiers impactés**:
-- `src/opencode_monitor/analytics/loaders/parts.py`
+- `src/opencode_status_bar/analytics/loaders/parts.py`
 
 **Notes techniques**:
 ```python
@@ -159,7 +159,7 @@ elif part_type == "file":
 - [ ] Optimisation : requêtes avec indexes utilisés
 
 **Fichiers impactés**:
-- `src/opencode_monitor/analytics/tracing/session_queries.py` (nouveau mixin ou extension)
+- `src/opencode_status_bar/analytics/tracing/session_queries.py` (nouveau mixin ou extension)
 
 **Notes techniques**:
 ```python
@@ -240,7 +240,7 @@ def get_session_git_history(self, session_id: str) -> dict:
 - [ ] Gestion d'erreurs avec code 500 et message
 
 **Fichiers impactés**:
-- `src/opencode_monitor/api/routes/sessions.py`
+- `src/opencode_status_bar/api/routes/sessions.py`
 
 **Notes techniques**:
 ```python
@@ -327,8 +327,8 @@ from pathlib import Path
 import json
 import tempfile
 
-from opencode_monitor.analytics.loaders.parts import load_parts_fast
-from opencode_monitor.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.loaders.parts import load_parts_fast
+from opencode_status_bar.analytics.db import AnalyticsDB
 
 
 class TestReasoningParts:
@@ -401,7 +401,7 @@ graph TD
 ## Fichiers modifiés (récap)
 
 ```
-src/opencode_monitor/
+src/opencode_status_bar/
 ├── analytics/
 │   ├── db.py                    # Nouvelles tables + migrations
 │   ├── loaders/

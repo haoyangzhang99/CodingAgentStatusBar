@@ -15,8 +15,8 @@ Analysis of current dashboard components to identify exact integration points fo
 
 ### 1.1 Session Tree (replaces Session Cards)
 **Files:**
-- `src/opencode_monitor/dashboard/sections/tracing/section.py`
-- `src/opencode_monitor/dashboard/sections/tracing/tree_builder.py`
+- `src/opencode_status_bar/dashboard/sections/tracing/section.py`
+- `src/opencode_status_bar/dashboard/sections/tracing/tree_builder.py`
 
 **Current Display:**
 - Root sessions show: `🌳 {project_name}` (line 61, tree_builder.py)
@@ -29,7 +29,7 @@ Analysis of current dashboard components to identify exact integration points fo
 - **Missing:** `summary_title` - Not yet in API response
 
 ### 1.2 Timeline View
-**File:** `src/opencode_monitor/dashboard/sections/tracing/views/timeline.py`
+**File:** `src/opencode_status_bar/dashboard/sections/tracing/views/timeline.py`
 
 **Current Display (TimelineEventWidget):**
 | Element | Source | Line |
@@ -57,7 +57,7 @@ elif event_type == "tool_call":
 - Error indicator icon
 
 ### 1.3 Detail Panel
-**File:** `src/opencode_monitor/dashboard/sections/tracing/detail_panel/panel.py`
+**File:** `src/opencode_status_bar/dashboard/sections/tracing/detail_panel/panel.py`
 
 **Current Display:**
 | Method | Shows | Lines |
@@ -78,7 +78,7 @@ self._header.setText(f"🌳 {project_name}")
 - `summary_title` as subtitle
 
 ### 1.4 Data Loader
-**File:** `src/opencode_monitor/dashboard/sections/tracing/detail_panel/handlers/data_loader.py`
+**File:** `src/opencode_status_bar/dashboard/sections/tracing/detail_panel/handlers/data_loader.py`
 
 **Tab Loading Methods:**
 | Tab Index | Method | API Endpoint |
@@ -354,14 +354,14 @@ Note: `result_summary` is already fetched but only used in `build_tools_by_messa
 ## 7. Files to Modify Summary
 
 ```
-src/opencode_monitor/dashboard/sections/tracing/
+src/opencode_status_bar/dashboard/sections/tracing/
 ├── tree_builder.py          # Stories 1, 2: Session labels, tool titles
 ├── tree_items.py            # Story 2: Part item labels
 ├── views/timeline.py        # Stories 2, 3, 4, 5: All timeline enrichments
 ├── detail_panel/panel.py    # Story 4: Root path display
 └── helpers.py               # New: Agent color helper
 
-src/opencode_monitor/api/routes/tracing/
+src/opencode_status_bar/api/routes/tracing/
 ├── builders.py              # API: Add enriched fields to responses
 └── fetchers.py              # Already fetches result_summary
 ```

@@ -1,7 +1,7 @@
 import pytest
 from PyQt6.QtCore import Qt, QModelIndex
 
-from opencode_monitor.dashboard.sections.tracing.tree_model import (
+from opencode_status_bar.dashboard.sections.tracing.tree_model import (
     TreeNode,
     TracingTreeModel,
 )

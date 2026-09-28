@@ -4,7 +4,7 @@
 
 Le MCP Notify permet aux agents d'envoyer des notifications a l'utilisateur via le tool `notify_ask_user`. Quand un agent pose une question a l'utilisateur, il envoie une notification puis **attend la reponse** en passant en mode idle.
 
-Actuellement, OpenCode Monitor ne detecte pas ces demandes d'interaction. L'utilisateur doit verifier manuellement chaque terminal pour savoir si un agent attend une reponse.
+Actuellement, OpenCode Status Bar ne detecte pas ces demandes d'interaction. L'utilisateur doit verifier manuellement chaque terminal pour savoir si un agent attend une reponse.
 
 ## Objectif
 
@@ -190,7 +190,7 @@ Le serveur MCP Notify est defini dans le projet **[OpenFlow](https://github.com/
 - Chemin : `servers/notify/server.py`
 - Config OpenCode : `~/.config/opencode/opencode.json` (section `mcp.notify`)
 
-OpenCode Monitor detecte les appels a ce serveur MCP via l'API OpenCode, sans modification du serveur Notify lui-meme.
+OpenCode Status Bar detecte les appels a ce serveur MCP via l'API OpenCode, sans modification du serveur Notify lui-meme.
 
 ### Mise a jour README.md
 

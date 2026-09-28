@@ -2,7 +2,7 @@
 
 ## Context
 
-Actuellement, l'application OpenCode Monitor affiche les données de monitoring, sécurité et analytics uniquement dans la barre des menus. Les données sont compactes et difficilement lisibles. L'utilisateur doit naviguer rapidement dans le menu pour voir les informations, ce qui n'est pas adapté pour une consultation détaillée ou comparative des données.
+Actuellement, l'application OpenCode Status Bar affiche les données de monitoring, sécurité et analytics uniquement dans la barre des menus. Les données sont compactes et difficilement lisibles. L'utilisateur doit naviguer rapidement dans le menu pour voir les informations, ce qui n'est pas adapté pour une consultation détaillée ou comparative des données.
 
 ## Objective
 

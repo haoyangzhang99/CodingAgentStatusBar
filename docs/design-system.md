@@ -1,13 +1,13 @@
 # Design System
 
-Design system du dashboard OpenCode Monitor.
+Design system du dashboard OpenCode Status Bar.
 
 ## Fichiers de référence
 
 Les tokens de design sont définis dans le code source :
 
-- `src/opencode_monitor/dashboard/styles/colors.py` - Palette de couleurs
-- `src/opencode_monitor/dashboard/styles/dimensions.py` - Spacing, typography, UI constants
+- `src/opencode_status_bar/dashboard/styles/colors.py` - Palette de couleurs
+- `src/opencode_status_bar/dashboard/styles/dimensions.py` - Spacing, typography, UI constants
 
 ## Principes
 

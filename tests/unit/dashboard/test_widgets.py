@@ -11,7 +11,7 @@ class TestAgentBadge:
 
     def test_set_agent_shows_badge(self, qtbot):
         """Badge should be visible when agent is set."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -24,7 +24,7 @@ class TestAgentBadge:
 
     def test_empty_agent_hides_badge(self, qtbot):
         """Badge should be hidden when agent is empty."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -36,7 +36,7 @@ class TestAgentBadge:
 
     def test_none_agent_hides_badge(self, qtbot):
         """Badge should be hidden when agent is None."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -48,7 +48,7 @@ class TestAgentBadge:
 
     def test_unknown_agent_uses_truncated_name(self, qtbot):
         """Unknown agent should show truncated name."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -61,7 +61,7 @@ class TestAgentBadge:
 
     def test_agent_type_property(self, qtbot):
         """Should return correct agent type."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -72,7 +72,7 @@ class TestAgentBadge:
 
     def test_init_with_agent(self, qtbot):
         """Should display agent on initialization."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -84,7 +84,7 @@ class TestAgentBadge:
 
     def test_tooltip_shows_agent_type(self, qtbot):
         """Tooltip should show full agent type."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -95,7 +95,7 @@ class TestAgentBadge:
 
     def test_agent_labels_mapping(self, qtbot):
         """Known agents should use short labels."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             AgentBadge,
         )
 
@@ -119,7 +119,7 @@ class TestErrorIndicator:
 
     def test_set_error_shows_indicator(self, qtbot):
         """Indicator should be visible when error is set."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 
@@ -132,7 +132,7 @@ class TestErrorIndicator:
 
     def test_none_error_hides_indicator(self, qtbot):
         """Indicator should be hidden when error is None."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 
@@ -145,7 +145,7 @@ class TestErrorIndicator:
 
     def test_empty_dict_hides_indicator(self, qtbot):
         """Indicator should be hidden for empty error dict."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 
@@ -157,7 +157,7 @@ class TestErrorIndicator:
 
     def test_has_error_method(self, qtbot):
         """has_error should return correct state."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 
@@ -174,7 +174,7 @@ class TestErrorIndicator:
 
     def test_tooltip_shows_error_name(self, qtbot):
         """Tooltip should show error name."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 
@@ -186,7 +186,7 @@ class TestErrorIndicator:
 
     def test_tooltip_shows_error_data(self, qtbot):
         """Tooltip should show error data/message."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 
@@ -199,7 +199,7 @@ class TestErrorIndicator:
 
     def test_long_error_data_is_truncated(self, qtbot):
         """Long error data should be truncated in tooltip."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 
@@ -215,7 +215,7 @@ class TestErrorIndicator:
 
     def test_hidden_by_default(self, qtbot):
         """Indicator should be hidden by default."""
-        from opencode_monitor.dashboard.sections.tracing.enriched_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.enriched_widgets import (
             ErrorIndicator,
         )
 

@@ -1,5 +1,5 @@
 """
-Tests for opencode_monitor.dashboard.widgets
+Tests for opencode_status_bar.dashboard.widgets
 
 Coverage target: 100% for all widget classes
 Tests widget creation, properties, methods, and signals.
@@ -54,7 +54,7 @@ class TestFormatTokens:
     )
     def test_format_tokens(self, count, expected):
         """format_tokens returns correct formatted string."""
-        from opencode_monitor.dashboard.styles import format_tokens
+        from opencode_status_bar.dashboard.styles import format_tokens
 
         assert format_tokens(count) == expected
 
@@ -82,7 +82,7 @@ class TestFormatDurationMs:
     )
     def test_format_duration_ms(self, elapsed_ms, expected):
         """format_duration_ms returns correct formatted string."""
-        from opencode_monitor.dashboard.styles import format_duration_ms
+        from opencode_status_bar.dashboard.styles import format_duration_ms
 
         assert format_duration_ms(elapsed_ms) == expected
 
@@ -97,7 +97,7 @@ class TestMetricCard:
 
     def test_metric_card_creation_and_properties(self, qapp, widget_parent):
         """MetricCard creation, value setting, label, dimensions, and shadow effect."""
-        from opencode_monitor.dashboard.widgets import MetricCard
+        from opencode_status_bar.dashboard.widgets import MetricCard
         from PyQt6.QtWidgets import QGraphicsDropShadowEffect
 
         # Creation basic
@@ -122,8 +122,8 @@ class TestMetricCard:
 
     def test_metric_card_with_accent(self, qapp, widget_parent):
         """MetricCard with custom accent and invalid accent fallback."""
-        from opencode_monitor.dashboard.widgets import MetricCard
-        from opencode_monitor.dashboard.styles import COLORS
+        from opencode_status_bar.dashboard.widgets import MetricCard
+        from opencode_status_bar.dashboard.styles import COLORS
 
         # Creation with accent
         card = MetricCard("100", "Requests", accent="success", parent=widget_parent)
@@ -146,7 +146,7 @@ class TestMetricCard:
     )
     def test_accent_mapping(self, qapp, widget_parent, accent, expected_in_map):
         """MetricCard accent colors are correctly mapped."""
-        from opencode_monitor.dashboard.widgets import MetricCard
+        from opencode_status_bar.dashboard.widgets import MetricCard
 
         card = MetricCard("0", "Test", accent=accent, parent=widget_parent)
         assert card._accent_color == card.ACCENT_MAP[accent]
@@ -162,7 +162,7 @@ class TestStatusBadge:
 
     def test_status_badge_creation_and_behavior(self, qapp, widget_parent):
         """StatusBadge creation, variant, set_variant, invalid fallback, is QLabel."""
-        from opencode_monitor.dashboard.widgets import StatusBadge
+        from opencode_status_bar.dashboard.widgets import StatusBadge
 
         # Creation basic (includes bullet prefix)
         badge = StatusBadge("BUSY", parent=widget_parent)
@@ -198,7 +198,7 @@ class TestStatusBadge:
     )
     def test_valid_variants(self, qapp, widget_parent, variant):
         """StatusBadge supports all documented variants."""
-        from opencode_monitor.dashboard.widgets import StatusBadge
+        from opencode_status_bar.dashboard.widgets import StatusBadge
 
         badge = StatusBadge("Test", variant=variant, parent=widget_parent)
         assert variant in StatusBadge.VARIANTS
@@ -214,7 +214,7 @@ class TestRiskBadge:
 
     def test_risk_badge_creation_and_behavior(self, qapp, widget_parent):
         """RiskBadge creation, invalid level fallback, is Badge subclass."""
-        from opencode_monitor.dashboard.widgets import RiskBadge, Badge
+        from opencode_status_bar.dashboard.widgets import RiskBadge, Badge
 
         # Creation basic
         badge = RiskBadge("critical", parent=widget_parent)
@@ -242,7 +242,7 @@ class TestRiskBadge:
     )
     def test_level_text_uppercase(self, qapp, widget_parent, level, expected_upper):
         """RiskBadge displays level in uppercase."""
-        from opencode_monitor.dashboard.widgets import RiskBadge
+        from opencode_status_bar.dashboard.widgets import RiskBadge
 
         badge = RiskBadge(level, parent=widget_parent)
         assert badge.text() == expected_upper
@@ -258,7 +258,7 @@ class TestTypeBadge:
 
     def test_type_badge_creation_and_behavior(self, qapp, widget_parent):
         """TypeBadge creation, case insensitive, invalid fallback, is Badge subclass."""
-        from opencode_monitor.dashboard.widgets import TypeBadge, Badge
+        from opencode_status_bar.dashboard.widgets import TypeBadge, Badge
 
         # Creation basic
         badge = TypeBadge("bash", parent=widget_parent)
@@ -294,7 +294,7 @@ class TestTypeBadge:
     )
     def test_operation_types(self, qapp, widget_parent, op_type, expected_upper):
         """TypeBadge displays operation type in uppercase."""
-        from opencode_monitor.dashboard.widgets import TypeBadge
+        from opencode_status_bar.dashboard.widgets import TypeBadge
 
         badge = TypeBadge(op_type, parent=widget_parent)
         assert badge.text() == expected_upper
@@ -310,7 +310,7 @@ class TestSegmentedControl:
 
     def test_segmented_control_creation_and_selection(self, qapp, widget_parent):
         """SegmentedControl creation, options count, initial selection, buttons checkable, only one checked."""
-        from opencode_monitor.dashboard.widgets import SegmentedControl
+        from opencode_status_bar.dashboard.widgets import SegmentedControl
 
         # Creation basic
         options = ["Day", "Week", "Month", "Year"]
@@ -352,7 +352,7 @@ class TestSegmentedControl:
         self, qapp, widget_parent, target_index, expected_index, description
     ):
         """SegmentedControl set_current_index handles valid, out-of-bounds, and negative indices."""
-        from opencode_monitor.dashboard.widgets import SegmentedControl
+        from opencode_status_bar.dashboard.widgets import SegmentedControl
 
         control = SegmentedControl(["A", "B", "C"], parent=widget_parent)
         control.set_current_index(target_index)
@@ -360,7 +360,7 @@ class TestSegmentedControl:
 
     def test_segmented_control_signals(self, qtbot, widget_parent):
         """SegmentedControl emits selection_changed signal correctly."""
-        from opencode_monitor.dashboard.widgets import SegmentedControl
+        from opencode_status_bar.dashboard.widgets import SegmentedControl
 
         control = SegmentedControl(["A", "B", "C"], parent=widget_parent)
         qtbot.addWidget(control)
@@ -391,7 +391,7 @@ class TestDataTable:
 
     def test_data_table_creation_and_configuration(self, qapp, widget_parent):
         """DataTable creation, column count, initial rows, constants, sorting enabled."""
-        from opencode_monitor.dashboard.widgets import DataTable
+        from opencode_status_bar.dashboard.widgets import DataTable
 
         # Creation basic
         headers = ["Name", "Value", "Status", "Risk"]
@@ -418,7 +418,7 @@ class TestDataTable:
 
     def test_data_table_row_operations(self, qapp, widget_parent):
         """DataTable add_row, add_multiple_rows, clear_data, items not editable, add_row with variant."""
-        from opencode_monitor.dashboard.widgets import DataTable
+        from opencode_status_bar.dashboard.widgets import DataTable
 
         table = DataTable(["Name", "Value"], parent=widget_parent)
 
@@ -449,7 +449,7 @@ class TestDataTable:
 
     def test_data_table_tooltip(self, qapp, widget_parent):
         """DataTable.add_row sets tooltip for long values."""
-        from opencode_monitor.dashboard.widgets import DataTable
+        from opencode_status_bar.dashboard.widgets import DataTable
 
         table = DataTable(["Path"], parent=widget_parent)
         long_path = "/very/long/path/to/some/deeply/nested/file.txt"
@@ -475,8 +475,8 @@ class TestDataTable:
     )
     def test_variant_colors(self, qapp, widget_parent, variant, color_key):
         """DataTable applies correct colors for variants."""
-        from opencode_monitor.dashboard.widgets import DataTable
-        from opencode_monitor.dashboard.styles import COLORS
+        from opencode_status_bar.dashboard.widgets import DataTable
+        from opencode_status_bar.dashboard.styles import COLORS
 
         table = DataTable(["Col"], parent=widget_parent)
         table.add_row([("Value", variant)])
@@ -496,7 +496,7 @@ class TestSectionHeader:
 
     def test_section_header_without_subtitle(self, qapp, widget_parent):
         """SectionHeader creation with title only, no subtitle attribute."""
-        from opencode_monitor.dashboard.widgets import SectionHeader
+        from opencode_status_bar.dashboard.widgets import SectionHeader
 
         # Creation basic
         header = SectionHeader("Sessions", parent=widget_parent)
@@ -512,7 +512,7 @@ class TestSectionHeader:
 
     def test_section_header_with_subtitle_and_action(self, qapp, widget_parent):
         """SectionHeader with title, subtitle, and action."""
-        from opencode_monitor.dashboard.widgets import SectionHeader
+        from opencode_status_bar.dashboard.widgets import SectionHeader
 
         # Creation with subtitle
         header = SectionHeader(
@@ -538,7 +538,7 @@ class TestBadge:
 
     def test_badge_base_class(self, qapp, widget_parent):
         """Badge creation, text uppercase, is QLabel subclass."""
-        from opencode_monitor.dashboard.widgets import Badge
+        from opencode_status_bar.dashboard.widgets import Badge
 
         # Creation
         badge = Badge("test", "#ff0000", "#ffffff", parent=widget_parent)
@@ -562,7 +562,7 @@ class TestCellBadge:
 
     def test_cell_badge_creation(self, qapp, widget_parent):
         """CellBadge creation with custom colors."""
-        from opencode_monitor.dashboard.widgets import CellBadge
+        from opencode_status_bar.dashboard.widgets import CellBadge
 
         badge = CellBadge("test", "#ff0000", "#330000", parent=widget_parent)
         assert badge.text() == "TEST"
@@ -570,7 +570,7 @@ class TestCellBadge:
 
     def test_create_risk_badge_levels(self, qapp, widget_parent):
         """create_risk_badge returns correct badge for each risk level."""
-        from opencode_monitor.dashboard.widgets import create_risk_badge
+        from opencode_status_bar.dashboard.widgets import create_risk_badge
 
         # All risk levels
         for level in ["critical", "high", "medium", "low"]:
@@ -587,7 +587,7 @@ class TestCellBadge:
 
     def test_create_type_badge_operations(self, qapp, widget_parent):
         """create_type_badge returns correct badge for operation types."""
-        from opencode_monitor.dashboard.widgets import create_type_badge
+        from opencode_status_bar.dashboard.widgets import create_type_badge
 
         # Common operation types
         for op_type in ["bash", "command", "read", "write", "edit", "webfetch"]:
@@ -600,8 +600,8 @@ class TestCellBadge:
 
     def test_create_score_badge_thresholds(self, qapp, widget_parent):
         """create_score_badge applies correct colors based on score thresholds."""
-        from opencode_monitor.dashboard.widgets import create_score_badge
-        from opencode_monitor.dashboard.styles import COLORS
+        from opencode_status_bar.dashboard.widgets import create_score_badge
+        from opencode_status_bar.dashboard.styles import COLORS
 
         # Score >= 80: critical color
         badge_critical = create_score_badge(85)
@@ -630,7 +630,7 @@ class TestMetricsRow:
 
     def test_metrics_row_operations(self, qapp, widget_parent):
         """MetricsRow creation, add_metric, update_metric, update nonexistent, add_stretch."""
-        from opencode_monitor.dashboard.widgets import MetricsRow, MetricCard
+        from opencode_status_bar.dashboard.widgets import MetricsRow, MetricCard
 
         # Creation
         row = MetricsRow(parent=widget_parent)

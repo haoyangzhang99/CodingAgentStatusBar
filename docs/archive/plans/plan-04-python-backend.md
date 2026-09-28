@@ -82,7 +82,7 @@ L'utilisateur lance un seul daemon Python qui remplace les deux daemons Bash exi
 
 **Ce que l'utilisateur peut faire** :
 - Activer le mode debug via variable d'environnement (`OPENCODE_DEBUG=1`)
-- Consulter les logs dans un fichier dedie (`/tmp/opencode-monitor.log`)
+- Consulter les logs dans un fichier dedie (`/tmp/opencode-status-bar.log`)
 - Voir les logs en temps reel avec `tail -f`
 
 **Niveaux de log** :
@@ -178,7 +178,7 @@ Le daemon produit un fichier `/tmp/opencode-state.json` compatible avec le plugi
 - [ ] La memoire reste stable (pas de memory leak)
 
 ### Logging
-- [ ] Les logs sont ecrits dans `/tmp/opencode-monitor.log`
+- [ ] Les logs sont ecrits dans `/tmp/opencode-status-bar.log`
 - [ ] Le mode debug s'active avec `OPENCODE_DEBUG=1`
 - [ ] Les niveaux de log sont respectes (DEBUG, INFO, WARN, ERROR)
 

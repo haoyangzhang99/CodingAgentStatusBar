@@ -22,21 +22,21 @@ class TestGetSortKey:
 
     def test_sort_key_with_started_at(self):
         """Return started_at timestamp when present."""
-        from opencode_monitor.api.routes.tracing.utils import get_sort_key
+        from opencode_status_bar.api.routes.tracing.utils import get_sort_key
 
         item = {"started_at": "2026-01-01T10:00:00"}
         assert get_sort_key(item) == "2026-01-01T10:00:00"
 
     def test_sort_key_with_created_at(self):
         """Fall back to created_at when started_at missing."""
-        from opencode_monitor.api.routes.tracing.utils import get_sort_key
+        from opencode_status_bar.api.routes.tracing.utils import get_sort_key
 
         item = {"created_at": "2026-01-01T09:00:00"}
         assert get_sort_key(item) == "2026-01-01T09:00:00"
 
     def test_sort_key_prefers_started_at(self):
         """Prefer started_at over created_at."""
-        from opencode_monitor.api.routes.tracing.utils import get_sort_key
+        from opencode_status_bar.api.routes.tracing.utils import get_sort_key
 
         item = {
             "started_at": "2026-01-01T10:00:00",
@@ -46,7 +46,7 @@ class TestGetSortKey:
 
     def test_sort_key_returns_min_timestamp_when_empty(self):
         """Return MIN_TIMESTAMP when no timestamps present."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             MIN_TIMESTAMP,
             get_sort_key,
         )
@@ -56,7 +56,7 @@ class TestGetSortKey:
 
     def test_sort_key_with_none_values(self):
         """Handle None values correctly."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             MIN_TIMESTAMP,
             get_sort_key,
         )
@@ -70,7 +70,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_webfetch_url(self):
         """Extract URL from webfetch tool arguments."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"url": "https://example.com/api"})
         result = extract_display_info("webfetch", args)
@@ -78,7 +78,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_context7_library_id(self):
         """Extract libraryId from context7 query-docs tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"libraryId": "/org/project"})
         result = extract_display_info("context7_query-docs", args)
@@ -86,7 +86,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_read_file_path(self):
         """Extract filePath from read tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"filePath": "/home/user/file.py"})
         result = extract_display_info("read", args)
@@ -94,7 +94,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_glob_path(self):
         """Extract path from glob tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"path": "/home/user"})
         result = extract_display_info("glob", args)
@@ -102,7 +102,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_bash_command(self):
         """Extract command from bash tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"command": "ls -la"})
         result = extract_display_info("bash", args)
@@ -110,7 +110,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_grep_pattern(self):
         """Extract pattern from grep tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"pattern": "function.*test"})
         result = extract_display_info("grep", args)
@@ -118,7 +118,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_task_description(self):
         """Extract description from task tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"description": "Run tests"})
         result = extract_display_info("task", args)
@@ -126,21 +126,21 @@ class TestExtractDisplayInfo:
 
     def test_extract_display_info_no_args(self):
         """Return None when arguments is None."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         result = extract_display_info("bash", None)
         assert result is None
 
     def test_extract_display_info_invalid_json(self):
         """Return None when arguments is invalid JSON."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         result = extract_display_info("bash", "not json")
         assert result is None
 
     def test_extract_display_info_unknown_tool(self):
         """Return None for unknown tool type."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         args = json.dumps({"some": "args"})
         result = extract_display_info("unknown_tool", args)
@@ -148,7 +148,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_display_info_truncates_long_values(self):
         """Truncate long values to 80 characters."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         long_url = "https://example.com/" + "a" * 100
         args = json.dumps({"url": long_url})
@@ -159,7 +159,7 @@ class TestExtractDisplayInfo:
 
     def test_extract_bash_truncates_to_60(self):
         """Bash commands truncate to 60 characters."""
-        from opencode_monitor.api.routes.tracing.utils import extract_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_display_info
 
         long_cmd = "echo " + "a" * 100
         args = json.dumps({"command": long_cmd})
@@ -174,7 +174,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_bash_command(self):
         """Extract bash command with truncation at 100 chars."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"command": "ls -la /home/user"})
         result = extract_tool_display_info("bash", args)
@@ -182,7 +182,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_bash_long_command(self):
         """Long bash commands get truncated with ellipsis."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         long_cmd = "x" * 150
         args = json.dumps({"command": long_cmd})
@@ -192,7 +192,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_read_file_path(self):
         """Extract filePath from read tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"filePath": "/path/to/file.py"})
         result = extract_tool_display_info("read", args)
@@ -200,7 +200,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_read_fallback_path(self):
         """Fall back to path when filePath missing."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"path": "/fallback/path.py"})
         result = extract_tool_display_info("read", args)
@@ -208,7 +208,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_glob_pattern(self):
         """Extract pattern from glob tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"pattern": "**/*.py"})
         result = extract_tool_display_info("glob", args)
@@ -216,7 +216,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_grep_pattern(self):
         """Extract pattern from grep tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"pattern": "TODO"})
         result = extract_tool_display_info("grep", args)
@@ -224,7 +224,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_task_subagent_only(self):
         """Extract subagent_type from task tool when only subagent present."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"subagent_type": "roadmap"})
         result = extract_tool_display_info("task", args)
@@ -232,7 +232,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_task_description_only(self):
         """Extract description from task tool when only description present."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"description": "Analyze the code"})
         result = extract_tool_display_info("task", args)
@@ -240,7 +240,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_task_combined(self):
         """Combine subagent_type and description when both present."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"subagent_type": "librarian", "description": "Find docs"})
         result = extract_tool_display_info("task", args)
@@ -248,21 +248,21 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_empty_args(self):
         """Return empty string when args is None."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         result = extract_tool_display_info("bash", None)
         assert result == ""
 
     def test_tool_display_invalid_json(self):
         """Return empty string for invalid JSON."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         result = extract_tool_display_info("bash", "invalid")
         assert result == ""
 
     def test_tool_display_write_file_path(self):
         """Extract filePath from write tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"filePath": "/write/path.txt"})
         result = extract_tool_display_info("write", args)
@@ -270,7 +270,7 @@ class TestExtractToolDisplayInfo:
 
     def test_tool_display_edit_file_path(self):
         """Extract filePath from edit tool."""
-        from opencode_monitor.api.routes.tracing.utils import extract_tool_display_info
+        from opencode_status_bar.api.routes.tracing.utils import extract_tool_display_info
 
         args = json.dumps({"filePath": "/edit/path.txt"})
         result = extract_tool_display_info("edit", args)
@@ -282,7 +282,7 @@ class TestCollectSessionIds:
 
     def test_collect_from_root_rows(self):
         """Collect session IDs from root trace rows."""
-        from opencode_monitor.api.routes.tracing.utils import collect_session_ids
+        from opencode_status_bar.api.routes.tracing.utils import collect_session_ids
 
         # Row format: (trace_id, session_id, ..., child_session_id at index 13)
         root_rows = [
@@ -330,7 +330,7 @@ class TestCollectSessionIds:
 
     def test_collect_from_child_rows(self):
         """Collect child session IDs from child trace rows."""
-        from opencode_monitor.api.routes.tracing.utils import collect_session_ids
+        from opencode_status_bar.api.routes.tracing.utils import collect_session_ids
 
         root_rows = [
             (
@@ -377,7 +377,7 @@ class TestCollectSessionIds:
 
     def test_collect_empty_rows(self):
         """Handle empty row lists."""
-        from opencode_monitor.api.routes.tracing.utils import collect_session_ids
+        from opencode_status_bar.api.routes.tracing.utils import collect_session_ids
 
         all_ids, root_ids = collect_session_ids([], [])
         assert all_ids == set()
@@ -389,7 +389,7 @@ class TestMatchDelegationTokens:
 
     def test_match_existing_tokens(self):
         """Return existing tokens if already present."""
-        from opencode_monitor.api.routes.tracing.utils import match_delegation_tokens
+        from opencode_status_bar.api.routes.tracing.utils import match_delegation_tokens
 
         delegation_tokens = {"tokens_in": 100, "tokens_out": 200}
         result, matched_session = match_delegation_tokens(
@@ -401,7 +401,7 @@ class TestMatchDelegationTokens:
 
     def test_match_no_delegation_start(self):
         """Return original tokens when no delegation start."""
-        from opencode_monitor.api.routes.tracing.utils import match_delegation_tokens
+        from opencode_status_bar.api.routes.tracing.utils import match_delegation_tokens
 
         delegation_tokens = {"tokens_in": None, "tokens_out": None}
         result, matched_session = match_delegation_tokens(
@@ -413,7 +413,7 @@ class TestMatchDelegationTokens:
 
     def test_match_by_agent_type_and_time(self):
         """Match subagent session by agent type and time proximity."""
-        from opencode_monitor.api.routes.tracing.utils import match_delegation_tokens
+        from opencode_status_bar.api.routes.tracing.utils import match_delegation_tokens
 
         now = datetime.now()
         delegation_tokens = {"tokens_in": None, "tokens_out": None}
@@ -437,7 +437,7 @@ class TestMatchDelegationTokens:
 
     def test_no_match_different_agent(self):
         """Don't match if agent type differs."""
-        from opencode_monitor.api.routes.tracing.utils import match_delegation_tokens
+        from opencode_status_bar.api.routes.tracing.utils import match_delegation_tokens
 
         now = datetime.now()
         delegation_tokens = {"tokens_in": None, "tokens_out": None}
@@ -459,7 +459,7 @@ class TestMatchDelegationTokens:
 
     def test_no_match_time_too_far(self):
         """Don't match if time difference > 5 seconds."""
-        from opencode_monitor.api.routes.tracing.utils import match_delegation_tokens
+        from opencode_status_bar.api.routes.tracing.utils import match_delegation_tokens
 
         now = datetime.now()
         delegation_tokens = {"tokens_in": None, "tokens_out": None}
@@ -485,7 +485,7 @@ class TestCreateAgentAtTimeGetter:
 
     def test_get_initial_agent(self):
         """Return initial agent when no timeline."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             create_agent_at_time_getter,
         )
 
@@ -498,7 +498,7 @@ class TestCreateAgentAtTimeGetter:
 
     def test_get_default_agent(self):
         """Return 'assistant' when session not in initial_agent."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             create_agent_at_time_getter,
         )
 
@@ -508,7 +508,7 @@ class TestCreateAgentAtTimeGetter:
 
     def test_get_agent_from_timeline(self):
         """Return agent from timeline at given timestamp."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             create_agent_at_time_getter,
         )
 
@@ -533,7 +533,7 @@ class TestCalculateExchangeEndTime:
 
     def test_end_time_from_child(self):
         """Get end time from child's ended_at."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             calculate_exchange_end_time,
         )
 
@@ -546,7 +546,7 @@ class TestCalculateExchangeEndTime:
 
     def test_end_time_from_child_duration(self):
         """Calculate end time from child's start + duration."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             calculate_exchange_end_time,
         )
 
@@ -561,7 +561,7 @@ class TestCalculateExchangeEndTime:
 
     def test_end_time_from_next_exchange(self):
         """Get end time from next exchange's start."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             calculate_exchange_end_time,
         )
 
@@ -575,7 +575,7 @@ class TestCalculateExchangeEndTime:
 
     def test_end_time_from_session_end(self):
         """Get end time from session end timestamp."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             calculate_exchange_end_time,
         )
 
@@ -586,7 +586,7 @@ class TestCalculateExchangeEndTime:
 
     def test_end_time_no_children_key(self):
         """Handle exchange without children key."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             calculate_exchange_end_time,
         )
 
@@ -601,7 +601,7 @@ class TestCalculateExchangeDurations:
 
     def test_calculate_duration(self):
         """Calculate duration from ended_at - started_at."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             calculate_exchange_durations,
         )
 
@@ -623,7 +623,7 @@ class TestCalculateExchangeDurations:
 
     def test_skip_exchange_without_start(self):
         """Skip exchanges without started_at."""
-        from opencode_monitor.api.routes.tracing.utils import (
+        from opencode_status_bar.api.routes.tracing.utils import (
             calculate_exchange_durations,
         )
 
@@ -644,7 +644,7 @@ class TestBuildToolsBySession:
 
     def test_build_empty_when_not_included(self):
         """Return empty dict when include_tools is False."""
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = MagicMock()
         result = build_tools_by_session(conn, {"sess_1"}, include_tools=False)
@@ -653,7 +653,7 @@ class TestBuildToolsBySession:
 
     def test_build_empty_when_no_sessions(self):
         """Return empty dict when no session IDs provided."""
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = MagicMock()
         result = build_tools_by_session(conn, set(), include_tools=True)
@@ -662,7 +662,7 @@ class TestBuildToolsBySession:
 
     def test_build_tools_grouped_by_session(self):
         """Build tools dictionary grouped by session_id."""
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = MagicMock()
         # Row format: id, session_id, tool_name, tool_status, arguments, created_at, duration_ms, result_summary, error_message
@@ -718,7 +718,7 @@ class TestBuildToolsByMessage:
 
     def test_build_empty_when_not_included(self):
         """Return empty dict when include_tools is False."""
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_message
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_message
 
         conn = MagicMock()
         result = build_tools_by_message(conn, {"sess_1"}, include_tools=False)
@@ -726,7 +726,7 @@ class TestBuildToolsByMessage:
 
     def test_build_empty_when_no_sessions(self):
         """Return empty dict when no session IDs provided."""
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_message
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_message
 
         conn = MagicMock()
         result = build_tools_by_message(conn, set(), include_tools=True)
@@ -734,7 +734,7 @@ class TestBuildToolsByMessage:
 
     def test_build_tools_grouped_by_message(self):
         """Build tools dictionary grouped by message_id."""
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_message
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_message
 
         conn = MagicMock()
         # Row format: id, session_id, message_id, tool_name, tool_status, arguments, created_at, duration_ms, result_summary, error_message
@@ -777,7 +777,7 @@ class TestBuildToolsByMessage:
 
     def test_skip_tools_without_message_id(self):
         """Skip tools that have no message_id."""
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_message
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_message
 
         conn = MagicMock()
         tool_rows = [
@@ -805,7 +805,7 @@ class TestBuildChildrenByParent:
 
     def test_build_empty_children(self):
         """Return empty dict when no child rows."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_children_by_parent,
         )
 
@@ -814,7 +814,7 @@ class TestBuildChildrenByParent:
 
     def test_build_children_grouped_by_parent(self):
         """Build children dictionary grouped by parent trace ID."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_children_by_parent,
         )
 
@@ -875,7 +875,7 @@ class TestBuildRecursiveChildren:
 
     def test_build_empty_children(self):
         """Return empty list when parent not in dict."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_recursive_children,
         )
 
@@ -884,7 +884,7 @@ class TestBuildRecursiveChildren:
 
     def test_build_recursive_tree(self):
         """Build recursive tree of children."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_recursive_children,
         )
 
@@ -914,7 +914,7 @@ class TestBuildRecursiveChildren:
 
     def test_depth_limit(self):
         """Stop recursion at depth > 10."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_recursive_children,
         )
 
@@ -946,14 +946,14 @@ class TestBuildSegmentTimeline:
 
     def test_build_empty_timeline(self):
         """Return empty dict for empty segments."""
-        from opencode_monitor.api.routes.tracing.builders import build_segment_timeline
+        from opencode_status_bar.api.routes.tracing.builders import build_segment_timeline
 
         result = build_segment_timeline({})
         assert result == {}
 
     def test_build_sorted_timeline(self):
         """Build sorted timeline per session."""
-        from opencode_monitor.api.routes.tracing.builders import build_segment_timeline
+        from opencode_status_bar.api.routes.tracing.builders import build_segment_timeline
 
         now = datetime.now()
         segments_by_session = {
@@ -976,7 +976,7 @@ class TestBuildSegmentTimeline:
 
     def test_skip_segments_without_timestamp_or_agent(self):
         """Skip segments missing timestamp or agent."""
-        from opencode_monitor.api.routes.tracing.builders import build_segment_timeline
+        from opencode_status_bar.api.routes.tracing.builders import build_segment_timeline
 
         now = datetime.now()
         segments_by_session = {
@@ -998,7 +998,7 @@ class TestBuildUserExchange:
 
     def test_build_user_exchange(self):
         """Build user exchange node with all fields."""
-        from opencode_monitor.api.routes.tracing.builders import build_user_exchange
+        from opencode_status_bar.api.routes.tracing.builders import build_user_exchange
 
         now = datetime.now()
         get_agent_at_time = MagicMock(return_value="plan")
@@ -1022,7 +1022,7 @@ class TestBuildUserExchange:
 
     def test_use_msg_agent_when_provided(self):
         """Use msg_agent directly when provided."""
-        from opencode_monitor.api.routes.tracing.builders import build_user_exchange
+        from opencode_status_bar.api.routes.tracing.builders import build_user_exchange
 
         get_agent_at_time = MagicMock()
 
@@ -1040,7 +1040,7 @@ class TestBuildUserExchange:
 
     def test_truncate_long_content(self):
         """Truncate content to 500 characters."""
-        from opencode_monitor.api.routes.tracing.builders import build_user_exchange
+        from opencode_status_bar.api.routes.tracing.builders import build_user_exchange
 
         long_content = "x" * 1000
 
@@ -1061,7 +1061,7 @@ class TestBuildExchangesFromMessages:
 
     def test_build_empty_exchanges(self):
         """Return empty dict for empty messages."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_exchanges_from_messages,
         )
 
@@ -1070,7 +1070,7 @@ class TestBuildExchangesFromMessages:
 
     def test_build_exchanges_user_assistant_pair(self):
         """Build exchange from user + assistant message pair."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_exchanges_from_messages,
         )
 
@@ -1106,7 +1106,7 @@ class TestBuildExchangesFromMessages:
 
     def test_attach_tools_to_exchange(self):
         """Attach tools from assistant message to exchange."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             build_exchanges_from_messages,
         )
 
@@ -1143,7 +1143,7 @@ class TestAttachDelegationsToExchanges:
 
     def test_attach_empty_delegations(self):
         """Return empty list when no delegations."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             attach_delegations_to_exchanges,
         )
 
@@ -1152,7 +1152,7 @@ class TestAttachDelegationsToExchanges:
 
     def test_attach_delegation_to_parent_exchange(self):
         """Attach delegation to the correct parent exchange."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             attach_delegations_to_exchanges,
         )
 
@@ -1171,7 +1171,7 @@ class TestAttachDelegationsToExchanges:
 
     def test_delegation_before_all_exchanges(self):
         """Add delegation as sibling when before all exchanges."""
-        from opencode_monitor.api.routes.tracing.builders import (
+        from opencode_status_bar.api.routes.tracing.builders import (
             attach_delegations_to_exchanges,
         )
 
@@ -1192,7 +1192,7 @@ class TestBuildSessionNode:
 
     def test_build_session_node(self):
         """Build complete session node."""
-        from opencode_monitor.api.routes.tracing.builders import build_session_node
+        from opencode_status_bar.api.routes.tracing.builders import build_session_node
 
         now = datetime.now()
         # Row format: trace_id, session_id, parent_agent, subagent_type, started_at, ended_at,
@@ -1255,7 +1255,7 @@ class TestBuildSessionNode:
 
     def test_build_session_node_fallback_tokens(self):
         """Use row tokens when session_tokens empty."""
-        from opencode_monitor.api.routes.tracing.builders import build_session_node
+        from opencode_status_bar.api.routes.tracing.builders import build_session_node
 
         now = datetime.now()
         row = (
@@ -1291,7 +1291,7 @@ class TestFetchRootTraces:
 
     def test_fetch_root_traces(self):
         """Fetch root traces from database."""
-        from opencode_monitor.api.routes.tracing.fetchers import fetch_root_traces
+        from opencode_status_bar.api.routes.tracing.fetchers import fetch_root_traces
 
         conn = MagicMock()
         expected_rows = [("root_1", "sess_1", "user", "plan")]
@@ -1312,7 +1312,7 @@ class TestFetchSegmentTraces:
 
     def test_fetch_segment_traces_grouped(self):
         """Fetch segment traces grouped by session_id."""
-        from opencode_monitor.api.routes.tracing.fetchers import fetch_segment_traces
+        from opencode_status_bar.api.routes.tracing.fetchers import fetch_segment_traces
 
         conn = MagicMock()
         segment_rows = [
@@ -1335,7 +1335,7 @@ class TestFetchChildTraces:
 
     def test_fetch_child_traces(self):
         """Fetch child traces from database."""
-        from opencode_monitor.api.routes.tracing.fetchers import fetch_child_traces
+        from opencode_status_bar.api.routes.tracing.fetchers import fetch_child_traces
 
         conn = MagicMock()
         expected_rows = [("child_1", "sess_1", "parent_1", "plan", "code")]
@@ -1353,7 +1353,7 @@ class TestFetchMessagesForExchanges:
 
     def test_fetch_empty_for_no_sessions(self):
         """Return empty list when no session IDs."""
-        from opencode_monitor.api.routes.tracing.fetchers import (
+        from opencode_status_bar.api.routes.tracing.fetchers import (
             fetch_messages_for_exchanges,
         )
 
@@ -1364,7 +1364,7 @@ class TestFetchMessagesForExchanges:
 
     def test_fetch_messages(self):
         """Fetch messages for exchanges."""
-        from opencode_monitor.api.routes.tracing.fetchers import (
+        from opencode_status_bar.api.routes.tracing.fetchers import (
             fetch_messages_for_exchanges,
         )
 
@@ -1382,7 +1382,7 @@ class TestFetchSubagentTokens:
 
     def test_fetch_subagent_tokens(self):
         """Fetch subagent sessions and tokens."""
-        from opencode_monitor.api.routes.tracing.fetchers import fetch_subagent_tokens
+        from opencode_status_bar.api.routes.tracing.fetchers import fetch_subagent_tokens
 
         conn = MagicMock()
         now = datetime.now()
@@ -1412,7 +1412,7 @@ class TestFetchTokensBySession:
 
     def test_fetch_empty_for_no_sessions(self):
         """Return empty dict when no session IDs."""
-        from opencode_monitor.api.routes.tracing.fetchers import fetch_tokens_by_session
+        from opencode_status_bar.api.routes.tracing.fetchers import fetch_tokens_by_session
 
         conn = MagicMock()
         result = fetch_tokens_by_session(conn, set())
@@ -1420,7 +1420,7 @@ class TestFetchTokensBySession:
 
     def test_fetch_tokens_by_session(self):
         """Fetch aggregated tokens per session."""
-        from opencode_monitor.api.routes.tracing.fetchers import fetch_tokens_by_session
+        from opencode_status_bar.api.routes.tracing.fetchers import fetch_tokens_by_session
 
         conn = MagicMock()
         token_rows = [
@@ -1444,7 +1444,7 @@ class TestGetInitialAgents:
 
     def test_get_empty_for_no_sessions(self):
         """Return empty dict when no session IDs."""
-        from opencode_monitor.api.routes.tracing.fetchers import get_initial_agents
+        from opencode_status_bar.api.routes.tracing.fetchers import get_initial_agents
 
         conn = MagicMock()
         result = get_initial_agents(conn, set())
@@ -1452,7 +1452,7 @@ class TestGetInitialAgents:
 
     def test_get_initial_agents(self):
         """Get initial agent type for each session."""
-        from opencode_monitor.api.routes.tracing.fetchers import get_initial_agents
+        from opencode_status_bar.api.routes.tracing.fetchers import get_initial_agents
 
         conn = MagicMock()
         agent_rows = [

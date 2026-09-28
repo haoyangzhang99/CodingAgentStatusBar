@@ -11,14 +11,14 @@ import sys
 import time
 from pathlib import Path
 
-# Add src to path for opencode_monitor imports
+# Add src to path for opencode_status_bar imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 # Add scripts to path for config imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.security.enrichment.worker import SecurityEnrichmentWorker
-from opencode_monitor.utils.logger import info
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.security.enrichment.worker import SecurityEnrichmentWorker
+from opencode_status_bar.utils.logger import info
 from config import DEFAULT_DB_PATH
 
 BATCH_SLEEP_SECONDS = 0.1
@@ -77,7 +77,7 @@ def bulk_enrich(db: AnalyticsDB, batch_size: int = 1000) -> dict:
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("OpenCode Monitor - Bulk Security Enrichment")
+    print("OpenCode Status Bar - Bulk Security Enrichment")
     print("=" * 60)
 
     db_path = DEFAULT_DB_PATH

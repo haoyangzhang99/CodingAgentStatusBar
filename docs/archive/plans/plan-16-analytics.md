@@ -13,7 +13,7 @@ Ces donnees permettent d'analyser l'utilisation des agents, skills et workflows.
 
 ## Objectif
 
-Ajouter un sous-menu "Analytics" dans opencode-monitor qui permet de visualiser les statistiques d'utilisation avec differentes periodes d'analyse.
+Ajouter un sous-menu "Analytics" dans opencode-status-bar qui permet de visualiser les statistiques d'utilisation avec differentes periodes d'analyse.
 
 ## Comportement attendu
 
@@ -116,7 +116,7 @@ CREATE TABLE parts (id, message_id, tool, status, created_at);
 
 ```python
 # Nouveau module
-src/opencode_monitor/
+src/opencode_status_bar/
 └── analytics/
     ├── __init__.py
     ├── db.py          # Gestion DuckDB
@@ -148,7 +148,7 @@ def analytics_1d(self, _):
 
 ## Specifications implementees
 
-- **Base DuckDB** : `~/.config/opencode-monitor/analytics.duckdb`
+- **Base DuckDB** : `~/.config/opencode-status-bar/analytics.duckdb`
 - **Chargement optimise** : ~9s cold start (skip parts pour performance)
 - **Refresh automatique** : Au demarrage si donnees > 24h
 - **Rapport HTML** : Genere avec Plotly pour les graphiques

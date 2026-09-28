@@ -12,7 +12,7 @@ class TestClickableLabel:
 
     def test_emits_clicked_signal_on_mouse_press(self, qtbot):
         """Should emit clicked signal when mouse is pressed."""
-        from opencode_monitor.dashboard.widgets.controls import ClickableLabel
+        from opencode_status_bar.dashboard.widgets.controls import ClickableLabel
 
         label = ClickableLabel("Test")
         qtbot.addWidget(label)
@@ -22,7 +22,7 @@ class TestClickableLabel:
 
     def test_inherits_qlabel_functionality(self, qtbot):
         """Should support all QLabel methods."""
-        from opencode_monitor.dashboard.widgets.controls import ClickableLabel
+        from opencode_status_bar.dashboard.widgets.controls import ClickableLabel
 
         label = ClickableLabel("Initial")
         qtbot.addWidget(label)
@@ -33,7 +33,7 @@ class TestClickableLabel:
 
     def test_can_connect_slot_to_clicked(self, qtbot):
         """Should allow connecting slots to clicked signal."""
-        from opencode_monitor.dashboard.widgets.controls import ClickableLabel
+        from opencode_status_bar.dashboard.widgets.controls import ClickableLabel
 
         label = ClickableLabel("Click me")
         qtbot.addWidget(label)
@@ -48,7 +48,7 @@ class TestClickableLabel:
 class TestToolsBreakdownWidget:
     def test_shows_all_tools_without_truncation(self, qtbot):
         from collections import Counter
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ToolsBreakdownWidget,
         )
 
@@ -70,7 +70,7 @@ class TestToolsBreakdownWidget:
 
     def test_last_tool_has_corner_prefix(self, qtbot):
         from collections import Counter
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ToolsBreakdownWidget,
         )
 
@@ -92,7 +92,7 @@ class TestToolsBreakdownWidget:
 
     def test_non_last_tools_have_branch_prefix(self, qtbot):
         from collections import Counter
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ToolsBreakdownWidget,
         )
 
@@ -137,7 +137,7 @@ class TestFilesListWidget:
 
     def test_shows_all_files(self, qtbot):
         """Widget should show all files without truncation."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -155,7 +155,7 @@ class TestFilesListWidget:
 
     def test_no_more_indicator(self, qtbot):
         """Widget should not show '+N more...' indicator."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -173,7 +173,7 @@ class TestFilesListWidget:
 
     def test_header_shows_file_count(self, qtbot):
         """Header should display total file count."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -186,7 +186,7 @@ class TestFilesListWidget:
 
     def test_empty_files_shows_no_files_message(self, qtbot):
         """Empty files list should show 'No files accessed'."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -204,7 +204,7 @@ class TestFilesListWidget:
 
     def test_prioritizes_edit_over_read(self, qtbot):
         """Should show edit files before read files."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -230,7 +230,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_load_files_computes_totals_from_per_file_stats(self, qtbot):
         """load_files should compute totals from per-file additions/deletions."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -249,7 +249,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_header_shows_green_additions(self, qtbot):
         """Header should display additions in green color."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -266,7 +266,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_header_shows_red_deletions(self, qtbot):
         """Header should display deletions in red color."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -283,7 +283,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_export_button_visible_with_stats(self, qtbot):
         """Export button should be visible when files have diff stats."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -299,7 +299,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_export_button_hidden_without_stats(self, qtbot):
         """Export button should be hidden when files have no diff stats."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -315,7 +315,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_diff_requested_signal_emitted_on_export_click(self, qtbot):
         """Clicking export button should emit diff_requested signal."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -334,7 +334,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_signal_not_emitted_without_session_id(self, qtbot):
         """Signal should not be emitted if session_id is None."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -359,7 +359,7 @@ class TestFilesListWidgetDiffExport:
 
     def test_per_file_stats_displayed(self, qtbot):
         """Per-file additions/deletions should be displayed in file list."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             FilesListWidget,
         )
 
@@ -390,7 +390,7 @@ class TestSessionOverviewPanelDiffHandler:
         import json
         from unittest.mock import patch
         from pathlib import Path
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             SessionOverviewPanel,
         )
 
@@ -428,7 +428,7 @@ class TestSessionOverviewPanelDiffHandler:
         import json
         from unittest.mock import patch
         from pathlib import Path
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             SessionOverviewPanel,
         )
 
@@ -473,7 +473,7 @@ class TestSessionOverviewPanelDiffHandler:
         """Handler should not crash when diff file doesn't exist."""
         from unittest.mock import patch
         from pathlib import Path
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             SessionOverviewPanel,
         )
 
@@ -497,7 +497,7 @@ class TestSessionOverviewPanelDiffHandler:
         """Handler should not crash on invalid JSON."""
         from unittest.mock import patch
         from pathlib import Path
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             SessionOverviewPanel,
         )
 
@@ -525,7 +525,7 @@ class TestSessionOverviewPanelDiffHandler:
         import json
         from unittest.mock import patch
         from pathlib import Path
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             SessionOverviewPanel,
         )
 
@@ -554,7 +554,7 @@ class TestSessionOverviewPanelDiffHandler:
         import json
         from unittest.mock import patch
         from pathlib import Path
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             SessionOverviewPanel,
         )
 

@@ -38,12 +38,12 @@ TracingSection
 
 ### Task 1: Update TimelineTab to use TimelineView
 
-**File**: `src/opencode_monitor/dashboard/sections/tracing/tabs/timeline.py`
+**File**: `src/opencode_status_bar/dashboard/sections/tracing/tabs/timeline.py`
 
 Replace the basic QListWidget with the new `TimelineView` component:
 
 ```python
-from opencode_monitor.dashboard.sections.tracing.views import TimelineView
+from opencode_status_bar.dashboard.sections.tracing.views import TimelineView
 
 class TimelineTab(BaseTab):
     def __init__(self, parent=None):
@@ -74,7 +74,7 @@ class TimelineTab(BaseTab):
 
 ### Task 2: Update DataLoader to fetch full timeline
 
-**File**: `src/opencode_monitor/dashboard/sections/tracing/detail_panel/handlers/data_loader.py`
+**File**: `src/opencode_status_bar/dashboard/sections/tracing/detail_panel/handlers/data_loader.py`
 
 Add method to load timeline from new API:
 
@@ -104,10 +104,10 @@ TimelineView.event_clicked(event_dict)
 
 ### Task 4: Add "Delegations" tab with DelegationTreeView
 
-**File**: `src/opencode_monitor/dashboard/sections/tracing/tabs/delegations.py` (NEW)
+**File**: `src/opencode_status_bar/dashboard/sections/tracing/tabs/delegations.py` (NEW)
 
 ```python
-from opencode_monitor.dashboard.sections.tracing.views import DelegationTreePanel
+from opencode_status_bar.dashboard.sections.tracing.views import DelegationTreePanel
 
 class DelegationsTab(BaseTab):
     def __init__(self, parent=None):
@@ -127,7 +127,7 @@ class DelegationsTab(BaseTab):
 
 ### Task 5: Register new tab in TraceDetailPanel
 
-**File**: `src/opencode_monitor/dashboard/sections/tracing/detail_panel/panel.py`
+**File**: `src/opencode_status_bar/dashboard/sections/tracing/detail_panel/panel.py`
 
 ```python
 from ..tabs import DelegationsTab  # Add import
@@ -143,7 +143,7 @@ def _setup_tabs(self, layout):
 
 ### Task 6: Update tab data loading
 
-**File**: `src/opencode_monitor/dashboard/sections/tracing/detail_panel/handlers/data_loader.py`
+**File**: `src/opencode_status_bar/dashboard/sections/tracing/detail_panel/handlers/data_loader.py`
 
 Update `_load_tab_data` to handle new tabs:
 

@@ -200,11 +200,11 @@ ALTER TABLE parts ADD COLUMN IF NOT EXISTS call_id VARCHAR;
 
 | Fichier | Modifications |
 |---------|---------------|
-| `src/opencode_monitor/analytics/db.py` | Schéma enrichi, migrations |
-| `src/opencode_monitor/analytics/collector.py` | Nouveaux extracteurs |
-| `src/opencode_monitor/analytics/loader.py` | Loaders enrichis |
-| `src/opencode_monitor/analytics/models.py` | Nouveaux dataclasses |
-| `src/opencode_monitor/analytics/queries.py` | Nouvelles requêtes |
+| `src/opencode_status_bar/analytics/db.py` | Schéma enrichi, migrations |
+| `src/opencode_status_bar/analytics/collector.py` | Nouveaux extracteurs |
+| `src/opencode_status_bar/analytics/loader.py` | Loaders enrichis |
+| `src/opencode_status_bar/analytics/models.py` | Nouveaux dataclasses |
+| `src/opencode_status_bar/analytics/queries.py` | Nouvelles requêtes |
 | `tests/test_analytics_*.py` | Tests de régression |
 
 ## Checklist de validation

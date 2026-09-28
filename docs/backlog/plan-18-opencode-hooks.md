@@ -2,7 +2,7 @@
 
 ## Contexte
 
-La detection des permissions dans opencode-monitor repose actuellement sur une heuristique de polling (plan-14) qui scanne periodiquement l'etat des sessions. Cette approche fonctionne mais presente des limites :
+La detection des permissions dans opencode-status-bar repose actuellement sur une heuristique de polling (plan-14) qui scanne periodiquement l'etat des sessions. Cette approche fonctionne mais presente des limites :
 - Delai entre la demande de permission et sa detection (intervalle de polling)
 - Consommation de ressources pour le polling constant
 - Risque de faux positifs/negatifs selon le timing
@@ -55,7 +55,7 @@ Approche en deux phases :
 
 ### Phase 2 - Integration webhook (si POC concluant)
 
-**Cote opencode-monitor :**
+**Cote opencode-status-bar :**
 - Un endpoint webhook est ajoute (ex: `POST /api/permission`)
 - Le endpoint recoit les notifications de permission en temps reel
 - L'icone de la menubar est mise a jour instantanement (cadenas)
@@ -82,7 +82,7 @@ Approche en deux phases :
 - [ ] Evaluer fiabilite : tous les cas detectes ?
 
 ### Phase 2 - Integration (si POC OK)
-- [ ] Endpoint webhook dans opencode-monitor
+- [ ] Endpoint webhook dans opencode-status-bar
 - [ ] Plugin modifie pour appeler le webhook
 - [ ] Mise a jour icone menubar via webhook
 - [ ] Notification sonore via webhook

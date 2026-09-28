@@ -5,14 +5,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from opencode_monitor.core.models import SessionStatus, Tool
-from opencode_monitor.core.monitor import bridge, fetcher
+from opencode_status_bar.core.models import SessionStatus, Tool
+from opencode_status_bar.core.monitor import bridge, fetcher
 
 
 @pytest.fixture
 def snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge.Path, "home", lambda: tmp_path)
-    path = tmp_path / ".config/opencode-monitor/bridge/status.json"
+    path = tmp_path / ".config/opencode-status-bar/bridge/status.json"
     path.parent.mkdir(parents=True)
     data = {
         "version": 1,

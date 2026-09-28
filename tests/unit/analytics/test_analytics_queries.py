@@ -13,8 +13,8 @@ from typing import Any
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.queries import AnalyticsQueries
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.queries import AnalyticsQueries
 
 
 # =============================================================================

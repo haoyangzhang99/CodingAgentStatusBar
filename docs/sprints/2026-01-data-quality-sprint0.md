@@ -66,8 +66,8 @@ root_tokens = sum(
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Add token extraction logic
-- `src/opencode_monitor/analytics/db.py` - Update session_stats insert
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Add token extraction logic
+- `src/opencode_status_bar/analytics/db.py` - Update session_stats insert
 - `tests/test_token_calculation.py` - NEW
 
 **Tasks**:
@@ -117,10 +117,10 @@ LEFT JOIN exchange_traces t ON e.exchange_id = t.exchange_id
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/indexer/bulk_loader.py` - Add Plan 45 loading
-- `src/opencode_monitor/analytics/indexer/hybrid.py` - Add real-time loading
-- `src/opencode_monitor/analytics/indexer/handlers.py` - Add exchange handlers
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Add exchange parsing
+- `src/opencode_status_bar/analytics/indexer/bulk_loader.py` - Add Plan 45 loading
+- `src/opencode_status_bar/analytics/indexer/hybrid.py` - Add real-time loading
+- `src/opencode_status_bar/analytics/indexer/handlers.py` - Add exchange handlers
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Add exchange parsing
 - `tests/test_plan45_loading.py` - NEW
 
 **Tasks**:
@@ -165,9 +165,9 @@ class SyncState:
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/indexer/bulk_loader.py` - Add lock acquisition
-- `src/opencode_monitor/analytics/indexer/sync_state.py` - NEW (lock manager)
-- `src/opencode_monitor/analytics/indexer/watcher.py` - Add lock check
+- `src/opencode_status_bar/analytics/indexer/bulk_loader.py` - Add lock acquisition
+- `src/opencode_status_bar/analytics/indexer/sync_state.py` - NEW (lock manager)
+- `src/opencode_status_bar/analytics/indexer/watcher.py` - Add lock check
 - `tests/test_race_condition.py` - NEW
 
 **Tasks**:
@@ -215,8 +215,8 @@ CREATE INDEX IF NOT EXISTS idx_traces_exchange ON exchange_traces(exchange_id);
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - Add index creation
-- `src/opencode_monitor/analytics/migrations/add_indexes.sql` - NEW
+- `src/opencode_status_bar/analytics/db.py` - Add index creation
+- `src/opencode_status_bar/analytics/migrations/add_indexes.sql` - NEW
 - `tests/test_indexes.py` - NEW
 
 **Tasks**:
@@ -260,8 +260,8 @@ ALTER TABLE parts RENAME COLUMN error_data_json TO error_data;
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - Update schema
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Update error parsing
+- `src/opencode_status_bar/analytics/db.py` - Update schema
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Update error parsing
 - `tests/test_error_data.py` - NEW
 
 **Tasks**:
@@ -385,8 +385,8 @@ DQ-005 (error_data)─┘
 
 - **Epic**: [epic-data-quality.md](../epics/epic-data-quality.md)
 - **Audit Report**: [data-audit-comprehensive-2026-01-10.md](../../audit-reports/data-audit-comprehensive-2026-01-10.md)
-- **Architecture**: `src/opencode_monitor/analytics/`
-- **Database Schema**: `src/opencode_monitor/analytics/db.py`
+- **Architecture**: `src/opencode_status_bar/analytics/`
+- **Database Schema**: `src/opencode_status_bar/analytics/db.py`
 
 ---
 
@@ -440,7 +440,7 @@ duckdb analytics.duckdb "SHOW TABLES;"
 ### Key Files
 
 ```
-src/opencode_monitor/analytics/
+src/opencode_status_bar/analytics/
 ├── db.py                           # Schema changes (US-4, US-5)
 ├── indexer/
 │   ├── parsers.py                 # Token extraction (US-1), Plan 45 (US-2)

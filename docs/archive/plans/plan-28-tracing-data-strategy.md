@@ -304,10 +304,10 @@ Chaque réponse suit ce format :
 
 | Fichier | Action | Description |
 |---------|--------|-------------|
-| `src/opencode_monitor/analytics/tracing_service.py` | Créé | TracingDataService complet (916 lignes) |
-| `src/opencode_monitor/analytics/db.py` | Modifié | +3 tables, +colonnes, +index |
-| `src/opencode_monitor/analytics/loader.py` | Modifié | +load_file_operations() |
-| `src/opencode_monitor/analytics/__init__.py` | Modifié | Export TracingDataService |
+| `src/opencode_status_bar/analytics/tracing_service.py` | Créé | TracingDataService complet (916 lignes) |
+| `src/opencode_status_bar/analytics/db.py` | Modifié | +3 tables, +colonnes, +index |
+| `src/opencode_status_bar/analytics/loader.py` | Modifié | +load_file_operations() |
+| `src/opencode_status_bar/analytics/__init__.py` | Modifié | Export TracingDataService |
 | `tests/test_tracing_service.py` | Créé | 22 tests (100% pass) |
 
 ### Nouvelles tables DuckDB

@@ -1,4 +1,4 @@
-# Instructions projet opencode-monitor
+# Instructions projet opencode-status-bar
 
 ## Outils d'analyse Python
 
@@ -52,13 +52,13 @@ uv run python -m tools.pycode report <path>
 
 ```bash
 # Navigation JSON
-uv run python -m tools.pycode --json goto src/opencode_monitor/app.py:50:4
+uv run python -m tools.pycode --json goto src/opencode_status_bar/app.py:50:4
 
 # Symboles d'un fichier
-uv run python -m tools.pycode symbols src/opencode_monitor/utils/logger.py
+uv run python -m tools.pycode symbols src/opencode_status_bar/utils/logger.py
 
 # Rapport de qualité sur un répertoire
-uv run python -m tools.pycode report src/opencode_monitor/analytics/
+uv run python -m tools.pycode report src/opencode_status_bar/analytics/
 
 # Lint avec corrections automatiques
 uv run python -m tools.pycode lint --fix src/
@@ -67,7 +67,7 @@ uv run python -m tools.pycode lint --fix src/
 ## Structure du projet
 
 ```
-src/opencode_monitor/
+src/opencode_status_bar/
 ├── analytics/      # Analytics et requêtes DuckDB
 ├── api/            # API REST Flask
 ├── app/            # Application rumps (menu bar)
@@ -94,5 +94,5 @@ make coverage                # Tests avec couverture
 
 # Développement
 make run                     # Lancer l'app menu bar
-uv run python -m opencode_monitor.dashboard  # Lancer le dashboard
+uv run python -m opencode_status_bar.dashboard  # Lancer le dashboard
 ```

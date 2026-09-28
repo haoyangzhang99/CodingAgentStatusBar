@@ -1,7 +1,7 @@
 import factory
 from datetime import datetime
 
-from opencode_monitor.core.models import (
+from opencode_status_bar.core.models import (
     Agent,
     Instance,
     Tool,

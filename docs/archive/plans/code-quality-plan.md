@@ -1,6 +1,6 @@
 # Code Quality & Security Sprint Plan
 
-**Project**: OpenCode Monitor v2.11.0  
+**Project**: OpenCode Status Bar v2.11.0  
 **Created**: 2026-01-06  
 **Total Story Points**: 34  
 **Estimated Duration**: 2 sprints (4-5 days)
@@ -87,7 +87,7 @@ uv run pytest -n 8
 **Story Points**: 2
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/db.py`
+- `src/opencode_status_bar/analytics/db.py`
 
 **Acceptance Criteria**:
 - [ ] All `f"SELECT..."` patterns replaced with parameterized queries
@@ -97,7 +97,7 @@ uv run pytest -n 8
 
 **Verification**:
 ```bash
-uv run bandit src/opencode_monitor/analytics/db.py -f txt
+uv run bandit src/opencode_status_bar/analytics/db.py -f txt
 uv run pytest tests/analytics/test_db.py -v
 ```
 
@@ -110,7 +110,7 @@ uv run pytest tests/analytics/test_db.py -v
 **Story Points**: 2
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/indexer/bulk_loader.py`
+- `src/opencode_status_bar/analytics/indexer/bulk_loader.py`
 
 **Acceptance Criteria**:
 - [ ] Dynamic table names handled safely (whitelist validation)
@@ -120,7 +120,7 @@ uv run pytest tests/analytics/test_db.py -v
 
 **Verification**:
 ```bash
-uv run bandit src/opencode_monitor/analytics/indexer/bulk_loader.py -f txt
+uv run bandit src/opencode_status_bar/analytics/indexer/bulk_loader.py -f txt
 uv run pytest tests/analytics/indexer/ -v -k bulk
 ```
 
@@ -133,13 +133,13 @@ uv run pytest tests/analytics/indexer/ -v -k bulk
 **Story Points**: 2
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/loaders/traces.py`
-- `src/opencode_monitor/analytics/loaders/sessions.py`
-- `src/opencode_monitor/analytics/loaders/messages.py`
-- `src/opencode_monitor/analytics/loaders/parts.py`
-- `src/opencode_monitor/analytics/loaders/files.py`
-- `src/opencode_monitor/analytics/loaders/delegations.py`
-- `src/opencode_monitor/analytics/loaders/skills.py`
+- `src/opencode_status_bar/analytics/loaders/traces.py`
+- `src/opencode_status_bar/analytics/loaders/sessions.py`
+- `src/opencode_status_bar/analytics/loaders/messages.py`
+- `src/opencode_status_bar/analytics/loaders/parts.py`
+- `src/opencode_status_bar/analytics/loaders/files.py`
+- `src/opencode_status_bar/analytics/loaders/delegations.py`
+- `src/opencode_status_bar/analytics/loaders/skills.py`
 
 **Acceptance Criteria**:
 - [ ] All dynamic SQL converted to parameterized queries
@@ -149,7 +149,7 @@ uv run pytest tests/analytics/indexer/ -v -k bulk
 
 **Verification**:
 ```bash
-uv run bandit src/opencode_monitor/analytics/loaders/ -r -f txt
+uv run bandit src/opencode_status_bar/analytics/loaders/ -r -f txt
 uv run pytest tests/analytics/loaders/ -v
 ```
 
@@ -162,7 +162,7 @@ uv run pytest tests/analytics/loaders/ -v
 **Story Points**: 1
 
 **Files to Modify**:
-- `src/opencode_monitor/security/db/repository.py`
+- `src/opencode_status_bar/security/db/repository.py`
 
 **Acceptance Criteria**:
 - [ ] All queries use parameter binding
@@ -171,7 +171,7 @@ uv run pytest tests/analytics/loaders/ -v
 
 **Verification**:
 ```bash
-uv run bandit src/opencode_monitor/security/ -r -f txt
+uv run bandit src/opencode_status_bar/security/ -r -f txt
 uv run pytest tests/security/ -v
 ```
 
@@ -184,7 +184,7 @@ uv run pytest tests/security/ -v
 > **Priority**: Medium
 
 ### Definition of Done
-- [ ] `uv run mypy src/opencode_monitor --strict` returns 0 errors
+- [ ] `uv run mypy src/opencode_status_bar --strict` returns 0 errors
 - [ ] All type annotations are explicit (no `Any` unless justified)
 - [ ] All tests pass: `uv run pytest -n 8`
 
@@ -197,7 +197,7 @@ uv run pytest tests/security/ -v
 **Story Points**: 3
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/tracing/helpers.py`
+- `src/opencode_status_bar/analytics/tracing/helpers.py`
 
 **Error Pattern**: `[index]` - accessing `row[0]` where `row` could be None
 
@@ -209,7 +209,7 @@ uv run pytest tests/security/ -v
 
 **Verification**:
 ```bash
-uv run mypy src/opencode_monitor/analytics/tracing/helpers.py --strict
+uv run mypy src/opencode_status_bar/analytics/tracing/helpers.py --strict
 ```
 
 ---
@@ -221,9 +221,9 @@ uv run mypy src/opencode_monitor/analytics/tracing/helpers.py --strict
 **Story Points**: 3
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/loaders/traces.py`
-- `src/opencode_monitor/analytics/loaders/sessions.py`
-- `src/opencode_monitor/analytics/loaders/messages.py`
+- `src/opencode_status_bar/analytics/loaders/traces.py`
+- `src/opencode_status_bar/analytics/loaders/sessions.py`
+- `src/opencode_status_bar/analytics/loaders/messages.py`
 
 **Acceptance Criteria**:
 - [ ] All functions have complete type annotations
@@ -233,9 +233,9 @@ uv run mypy src/opencode_monitor/analytics/tracing/helpers.py --strict
 
 **Verification**:
 ```bash
-uv run mypy src/opencode_monitor/analytics/loaders/traces.py \
-            src/opencode_monitor/analytics/loaders/sessions.py \
-            src/opencode_monitor/analytics/loaders/messages.py --strict
+uv run mypy src/opencode_status_bar/analytics/loaders/traces.py \
+            src/opencode_status_bar/analytics/loaders/sessions.py \
+            src/opencode_status_bar/analytics/loaders/messages.py --strict
 ```
 
 ---
@@ -247,12 +247,12 @@ uv run mypy src/opencode_monitor/analytics/loaders/traces.py \
 **Story Points**: 3
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/loaders/parts.py`
-- `src/opencode_monitor/analytics/loaders/files.py`
-- `src/opencode_monitor/analytics/loaders/delegations.py`
-- `src/opencode_monitor/analytics/loaders/skills.py`
-- `src/opencode_monitor/analytics/loaders/enrichment.py`
-- `src/opencode_monitor/analytics/loaders/utils.py`
+- `src/opencode_status_bar/analytics/loaders/parts.py`
+- `src/opencode_status_bar/analytics/loaders/files.py`
+- `src/opencode_status_bar/analytics/loaders/delegations.py`
+- `src/opencode_status_bar/analytics/loaders/skills.py`
+- `src/opencode_status_bar/analytics/loaders/enrichment.py`
+- `src/opencode_status_bar/analytics/loaders/utils.py`
 
 **Acceptance Criteria**:
 - [ ] Consistent type patterns across all loaders
@@ -261,7 +261,7 @@ uv run mypy src/opencode_monitor/analytics/loaders/traces.py \
 
 **Verification**:
 ```bash
-uv run mypy src/opencode_monitor/analytics/loaders/ --strict
+uv run mypy src/opencode_status_bar/analytics/loaders/ --strict
 ```
 
 ---
@@ -273,7 +273,7 @@ uv run mypy src/opencode_monitor/analytics/loaders/ --strict
 **Story Points**: 2
 
 **Files to Modify**:
-- `src/opencode_monitor/api/client.py`
+- `src/opencode_status_bar/api/client.py`
 
 **Error Pattern**: `[return-value]` - functions returning wrong types
 
@@ -285,7 +285,7 @@ uv run mypy src/opencode_monitor/analytics/loaders/ --strict
 
 **Verification**:
 ```bash
-uv run mypy src/opencode_monitor/api/client.py --strict
+uv run mypy src/opencode_status_bar/api/client.py --strict
 ```
 
 ---
@@ -297,7 +297,7 @@ uv run mypy src/opencode_monitor/api/client.py --strict
 **Story Points**: 2
 
 **Files to Modify**:
-- `src/opencode_monitor/dashboard/sections/security.py`
+- `src/opencode_status_bar/dashboard/sections/security.py`
 
 **Error Pattern**: `[assignment]` - incompatible types in assignments
 
@@ -309,7 +309,7 @@ uv run mypy src/opencode_monitor/api/client.py --strict
 
 **Verification**:
 ```bash
-uv run mypy src/opencode_monitor/dashboard/sections/security.py --strict
+uv run mypy src/opencode_status_bar/dashboard/sections/security.py --strict
 ```
 
 ---
@@ -321,10 +321,10 @@ uv run mypy src/opencode_monitor/dashboard/sections/security.py --strict
 **Story Points**: 3
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/indexer/bulk_loader.py`
-- `src/opencode_monitor/analytics/indexer/handlers.py`
-- `src/opencode_monitor/analytics/indexer/queries.py`
-- `src/opencode_monitor/analytics/indexer/parsers.py`
+- `src/opencode_status_bar/analytics/indexer/bulk_loader.py`
+- `src/opencode_status_bar/analytics/indexer/handlers.py`
+- `src/opencode_status_bar/analytics/indexer/queries.py`
+- `src/opencode_status_bar/analytics/indexer/parsers.py`
 
 **Acceptance Criteria**:
 - [ ] Batch processing functions fully typed
@@ -334,7 +334,7 @@ uv run mypy src/opencode_monitor/dashboard/sections/security.py --strict
 
 **Verification**:
 ```bash
-uv run mypy src/opencode_monitor/analytics/indexer/ --strict
+uv run mypy src/opencode_status_bar/analytics/indexer/ --strict
 ```
 
 ---
@@ -346,8 +346,8 @@ uv run mypy src/opencode_monitor/analytics/indexer/ --strict
 **Story Points**: 2
 
 **Files to Modify**:
-- `src/opencode_monitor/analytics/queries/*.py`
-- `src/opencode_monitor/api/routes/*.py`
+- `src/opencode_status_bar/analytics/queries/*.py`
+- `src/opencode_status_bar/api/routes/*.py`
 - Any remaining files with errors
 
 **Acceptance Criteria**:
@@ -358,7 +358,7 @@ uv run mypy src/opencode_monitor/analytics/indexer/ --strict
 
 **Verification**:
 ```bash
-uv run mypy src/opencode_monitor --strict
+uv run mypy src/opencode_status_bar --strict
 ```
 
 ---
@@ -518,13 +518,13 @@ uv run bandit -r src -ll -f txt
 ### Type Checking
 ```bash
 # Full strict check
-uv run mypy src/opencode_monitor --strict
+uv run mypy src/opencode_status_bar --strict
 
 # Single file
 uv run mypy path/to/file.py --strict
 
 # Show error codes
-uv run mypy src/opencode_monitor --strict --show-error-codes
+uv run mypy src/opencode_status_bar --strict --show-error-codes
 ```
 
 ### Test Suite
@@ -533,7 +533,7 @@ uv run mypy src/opencode_monitor --strict --show-error-codes
 uv run pytest -n 8
 
 # With coverage
-uv run pytest -n 8 --cov=src/opencode_monitor --cov-report=term-missing
+uv run pytest -n 8 --cov=src/opencode_status_bar --cov-report=term-missing
 
 # Specific module
 uv run pytest tests/analytics/ -v
@@ -544,7 +544,7 @@ uv run pytest tests/analytics/ -v
 # All-in-one verification
 uv run pip-audit && \
 uv run bandit -r src -ll && \
-uv run mypy src/opencode_monitor --strict && \
+uv run mypy src/opencode_status_bar --strict && \
 uv run pytest -n 8
 ```
 

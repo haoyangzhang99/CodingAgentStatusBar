@@ -26,7 +26,7 @@ def mock_api_client():
     mock_client.get_stats.return_value = {"sessions": 0}
     mock_client.get_sync_status.return_value = {"backfill_active": False}
 
-    with patch("opencode_monitor.api.get_api_client") as mock_get:
+    with patch("opencode_status_bar.api.get_api_client") as mock_get:
         mock_get.return_value = mock_client
         yield mock_client
 
@@ -34,7 +34,7 @@ def mock_api_client():
 @contextmanager
 def patched_dashboard_window():
     """Context manager for DashboardWindow with all fetch methods patched."""
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
 
     with (
         patch.object(DashboardWindow, "_fetch_monitoring_data"),
@@ -67,7 +67,7 @@ class TestSyncChecker:
 
     def test_constants_have_correct_values_and_relationships(self):
         """SyncChecker poll constants are correctly defined."""
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         # Verify constant values
         assert SyncChecker.POLL_FAST_MS == 2000
@@ -80,7 +80,7 @@ class TestSyncChecker:
 
     def test_initialization_and_cleanup(self, qapp, mock_api_client):
         """SyncChecker initializes correctly and cleans up on stop."""
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         callback_calls = []
         checker = SyncChecker(on_sync_detected=lambda: callback_calls.append(True))
@@ -101,7 +101,7 @@ class TestSyncChecker:
 
     def test_detects_session_count_changes(self, qapp, mock_api_client):
         """SyncChecker triggers callback when session count changes."""
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         callback_calls = []
         checker = SyncChecker(on_sync_detected=lambda: callback_calls.append(True))
@@ -143,7 +143,7 @@ class TestDashboardReadOnly:
         """DashboardWindow uses SyncChecker, not legacy sync attributes."""
         # New architecture: has SyncChecker
         assert hasattr(dashboard_window, "_sync_checker")
-        from opencode_monitor.dashboard.window import SyncChecker
+        from opencode_status_bar.dashboard.window import SyncChecker
 
         assert isinstance(dashboard_window._sync_checker, SyncChecker)
 
@@ -173,7 +173,7 @@ class TestDataSignals:
 
     def test_has_required_signals_not_legacy(self):
         """DataSignals has all required update signals but not legacy ones."""
-        from opencode_monitor.dashboard.window import DataSignals
+        from opencode_status_bar.dashboard.window import DataSignals
 
         signals = DataSignals()
 
@@ -197,7 +197,7 @@ class TestSyncCheckerIntegration:
 
     def test_triggers_dashboard_refresh_on_change(self, qapp, mock_api_client):
         """SyncChecker triggers dashboard refresh when sync detected."""
-        from opencode_monitor.dashboard.window import DashboardWindow, SyncChecker
+        from opencode_status_bar.dashboard.window import DashboardWindow, SyncChecker
 
         refresh_calls = []
 

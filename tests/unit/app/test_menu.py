@@ -31,11 +31,11 @@ else:
     sys.modules["rumps"].MenuItem = MockMenuItem
 
 # Now import the menu module
-from opencode_monitor.ui.menu import (
+from opencode_status_bar.ui.menu import (
     truncate_with_tooltip,
     MenuBuilder,
 )
-from opencode_monitor.core.models import (
+from opencode_status_bar.core.models import (
     State,
     Instance,
     Agent,

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from opencode_monitor.api.routes.security import security_bp
+from opencode_status_bar.api.routes.security import security_bp
 
 
 # =============================================================================
@@ -122,7 +122,7 @@ class TestSecurityEndpoint:
 
     def test_returns_stats_and_data(self, client, mock_auditor):
         """Endpoint returns success with stats, commands, files, critical_items."""
-        with patch("opencode_monitor.security.auditor.get_auditor") as mock_get_auditor:
+        with patch("opencode_status_bar.security.auditor.get_auditor") as mock_get_auditor:
             mock_get_auditor.return_value = mock_auditor
 
             response = client.get("/api/security")
@@ -175,7 +175,7 @@ class TestSecurityEndpoint:
 
     def test_respects_limits(self, client, mock_auditor):
         """Endpoint respects row_limit and top_limit query parameters."""
-        with patch("opencode_monitor.security.auditor.get_auditor") as mock_get_auditor:
+        with patch("opencode_status_bar.security.auditor.get_auditor") as mock_get_auditor:
             mock_get_auditor.return_value = mock_auditor
 
             # Request with specific limits
@@ -192,7 +192,7 @@ class TestSecurityEndpoint:
 
     def test_default_limits(self, client, mock_auditor):
         """Endpoint uses default limits when not specified."""
-        with patch("opencode_monitor.security.auditor.get_auditor") as mock_get_auditor:
+        with patch("opencode_status_bar.security.auditor.get_auditor") as mock_get_auditor:
             mock_get_auditor.return_value = mock_auditor
 
             response = client.get("/api/security")
@@ -205,7 +205,7 @@ class TestSecurityEndpoint:
 
     def test_handles_auditor_error(self, client):
         """Endpoint returns error response when auditor fails."""
-        with patch("opencode_monitor.security.auditor.get_auditor") as mock_get_auditor:
+        with patch("opencode_status_bar.security.auditor.get_auditor") as mock_get_auditor:
             mock_get_auditor.side_effect = Exception("Database error")
 
             response = client.get("/api/security")
@@ -217,7 +217,7 @@ class TestSecurityEndpoint:
 
     def test_files_sorted_by_score(self, client, mock_auditor):
         """Files are sorted by risk score descending."""
-        with patch("opencode_monitor.security.auditor.get_auditor") as mock_get_auditor:
+        with patch("opencode_status_bar.security.auditor.get_auditor") as mock_get_auditor:
             mock_get_auditor.return_value = mock_auditor
 
             response = client.get("/api/security")

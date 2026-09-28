@@ -4,14 +4,14 @@ from datetime import datetime
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.db import AnalyticsDB
 
 
 class TestBuildToolsBySession:
     def test_returns_error_field_with_all_tool_fields(
         self, analytics_db_real: AnalyticsDB
     ):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = analytics_db_real.connect()
         now = datetime.now()
@@ -52,7 +52,7 @@ class TestBuildToolsBySession:
         assert tool["created_at"] is not None
 
     def test_success_tool_has_none_error(self, analytics_db_real: AnalyticsDB):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = analytics_db_real.connect()
         now = datetime.now()
@@ -85,7 +85,7 @@ class TestBuildToolsBySession:
         assert result["sess-001"][0]["error"] is None
 
     def test_include_tools_false_returns_empty(self, analytics_db_real: AnalyticsDB):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = analytics_db_real.connect()
         now = datetime.now()
@@ -117,7 +117,7 @@ class TestBuildToolsBySession:
         assert result == {}
 
     def test_empty_session_ids_returns_empty(self, analytics_db_real: AnalyticsDB):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = analytics_db_real.connect()
 
@@ -126,7 +126,7 @@ class TestBuildToolsBySession:
         assert result == {}
 
     def test_filters_out_task_tool(self, analytics_db_real: AnalyticsDB):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = analytics_db_real.connect()
         now = datetime.now()
@@ -176,7 +176,7 @@ class TestBuildToolsBySession:
         assert "bash" in tool_names
 
     def test_multiple_sessions_grouped_correctly(self, analytics_db_real: AnalyticsDB):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = analytics_db_real.connect()
         now = datetime.now()
@@ -217,7 +217,7 @@ class TestBuildToolsByMessage:
     def test_returns_error_field_grouped_by_message(
         self, analytics_db_real: AnalyticsDB
     ):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_message
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_message
 
         conn = analytics_db_real.connect()
         now = datetime.now()
@@ -277,7 +277,7 @@ class TestErrorMessagePreservation:
     def test_preserves_error_message_exactly(
         self, analytics_db_real: AnalyticsDB, error_message
     ):
-        from opencode_monitor.api.routes.tracing.builders import build_tools_by_session
+        from opencode_status_bar.api.routes.tracing.builders import build_tools_by_session
 
         conn = analytics_db_real.connect()
         now = datetime.now()

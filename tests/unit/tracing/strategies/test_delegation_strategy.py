@@ -1,10 +1,10 @@
 """Unit tests for DelegationSpanStrategy and is_delegation_span."""
 
 import pytest
-from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies import (
+from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies import (
     TreeNodeData,
 )
-from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies.delegation import (
+from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies.delegation import (
     DelegationSpanStrategy,
     is_delegation_span,
 )

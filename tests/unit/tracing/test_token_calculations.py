@@ -11,7 +11,7 @@ Tests verify that:
 import pytest
 from unittest.mock import MagicMock
 
-from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
     SessionOverviewPanel,
     extract_session_data,
 )
@@ -326,7 +326,7 @@ class TestSessionOverviewPanelFilesLoading:
         }
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             files_list = panel._load_files_from_api("ses_test")
@@ -348,7 +348,7 @@ class TestSessionOverviewPanelFilesLoading:
         mock_client.is_available = False
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             files_list = panel._load_files_from_api("ses_test")
@@ -366,7 +366,7 @@ class TestSessionOverviewPanelFilesLoading:
         mock_client.get_session_files.return_value = None
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             files_list = panel._load_files_from_api("ses_test")

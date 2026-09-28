@@ -13,8 +13,8 @@ import pytest
 from PyQt6.QtWidgets import QStackedWidget
 from PyQt6.QtCore import QTimer
 
-from opencode_monitor.dashboard.widgets import Sidebar
-from opencode_monitor.dashboard.sections import (
+from opencode_status_bar.dashboard.widgets import Sidebar
+from opencode_status_bar.dashboard.sections import (
     MonitoringSection,
     SecuritySection,
     AnalyticsSection,
@@ -41,7 +41,7 @@ class TestDashboardWindowLifecycle:
         assert dashboard_window.isVisible(), "Window should be visible after show()"
 
         # Title
-        assert dashboard_window.windowTitle() == "OpenCode Monitor"
+        assert dashboard_window.windowTitle() == "OpenCode Status Bar"
 
         # Minimum size constraints (as defined in dimensions.py)
         min_width = dashboard_window.minimumWidth()

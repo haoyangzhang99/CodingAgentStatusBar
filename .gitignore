@@ -53,3 +53,6 @@ audit-reports/
 reports/*.md
 
 .sisyphus/
+
+# Python virtual environment
+.venv/

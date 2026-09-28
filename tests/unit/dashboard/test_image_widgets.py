@@ -18,7 +18,7 @@ class TestImageThumbnail:
 
     def test_valid_image_shows_widget(self, qtbot):
         """Widget should be visible when valid image is set."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -34,7 +34,7 @@ class TestImageThumbnail:
 
     def test_invalid_url_hides_widget(self, qtbot):
         """Widget should be hidden for invalid URL."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -46,7 +46,7 @@ class TestImageThumbnail:
 
     def test_empty_url_hides_widget(self, qtbot):
         """Widget should be hidden for empty URL."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -58,7 +58,7 @@ class TestImageThumbnail:
 
     def test_none_url_hides_widget(self, qtbot):
         """Widget should be hidden for None URL."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -70,7 +70,7 @@ class TestImageThumbnail:
 
     def test_data_url_property(self, qtbot):
         """Should return the stored data URL."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -82,7 +82,7 @@ class TestImageThumbnail:
 
     def test_click_emits_signal(self, qtbot):
         """Click should emit signal with data URL."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -97,7 +97,7 @@ class TestImageThumbnail:
 
     def test_tooltip_shows_image_info(self, qtbot):
         """Tooltip should show image dimensions."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -110,7 +110,7 @@ class TestImageThumbnail:
 
     def test_custom_size(self, qtbot):
         """Should respect custom size parameter."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -127,7 +127,7 @@ class TestThumbnailCache:
 
     def test_get_thumbnail_returns_none_for_uncached(self):
         """Should return None for uncached images."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
 
@@ -138,7 +138,7 @@ class TestThumbnailCache:
 
     def test_cache_stores_thumbnail(self, qapp):
         """Should store and retrieve thumbnails."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
         from PyQt6.QtGui import QPixmap
@@ -156,7 +156,7 @@ class TestThumbnailCache:
 
     def test_make_key_includes_size(self):
         """Cache key should include size for different resolutions."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
 
@@ -168,7 +168,7 @@ class TestThumbnailCache:
 
     def test_clear_empties_cache(self, qapp):
         """Clear should remove all cached items."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
         from PyQt6.QtGui import QPixmap
@@ -187,7 +187,7 @@ class TestImagePreviewDialog:
 
     def test_dialog_creates_with_valid_image(self, qtbot):
         """Dialog should create successfully with valid image."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImagePreviewDialog,
         )
 
@@ -200,7 +200,7 @@ class TestImagePreviewDialog:
 
     def test_escape_closes_dialog(self, qtbot):
         """ESC key should close the dialog."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImagePreviewDialog,
         )
         from PyQt6.QtCore import Qt
@@ -216,7 +216,7 @@ class TestImagePreviewDialog:
 
     def test_dialog_with_invalid_image(self, qtbot):
         """Dialog should handle invalid image data gracefully."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImagePreviewDialog,
         )
 
@@ -230,7 +230,7 @@ class TestImagePreviewDialog:
 
     def test_dialog_with_large_image(self, qtbot):
         """Dialog should scale large images to fit MAX_SIZE."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImagePreviewDialog,
         )
         from PyQt6.QtGui import QImage, QPixmap
@@ -265,7 +265,7 @@ class TestImageThumbnailErrorHandling:
 
     def test_corrupted_base64_hides_widget(self, qtbot):
         """Widget should hide on corrupted base64 data."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -280,7 +280,7 @@ class TestImageThumbnailErrorHandling:
 
     def test_valid_base64_invalid_image_hides_widget(self, qtbot):
         """Widget should hide when base64 decodes but isn't a valid image."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
         import base64
@@ -297,7 +297,7 @@ class TestImageThumbnailErrorHandling:
 
     def test_click_without_data_url_does_nothing(self, qtbot):
         """Click on empty thumbnail should not emit signal."""
-        from opencode_monitor.dashboard.sections.tracing.image_widgets import (
+        from opencode_status_bar.dashboard.sections.tracing.image_widgets import (
             ImageThumbnail,
         )
 
@@ -317,7 +317,7 @@ class TestThumbnailCacheAdvanced:
 
     def test_get_thumbnail_cache_returns_singleton(self):
         """get_thumbnail_cache should return same instance."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             get_thumbnail_cache,
         )
 
@@ -328,7 +328,7 @@ class TestThumbnailCacheAdvanced:
 
     def test_cache_evicts_oldest_when_full(self, qtbot):
         """Cache should evict oldest entries when MAX_CACHE_SIZE exceeded."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
         from PyQt6.QtGui import QPixmap
@@ -363,7 +363,7 @@ class TestThumbnailCacheAdvanced:
 
     def test_on_decoded_emits_signal(self, qtbot):
         """_on_decoded should emit thumbnail_ready signal."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
         from PyQt6.QtGui import QPixmap
@@ -379,7 +379,7 @@ class TestThumbnailCacheAdvanced:
 
     def test_on_decoded_handles_null_pixmap(self):
         """_on_decoded should handle null pixmap gracefully."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
         from PyQt6.QtGui import QPixmap
@@ -395,7 +395,7 @@ class TestThumbnailCacheAdvanced:
 
     def test_make_key_handles_empty_data_url(self):
         """_make_key should handle empty/None data URLs."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
 
@@ -409,7 +409,7 @@ class TestThumbnailCacheAdvanced:
 
     def test_request_thumbnail_skips_if_already_cached(self, qtbot):
         """request_thumbnail should emit immediately if already cached."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailCache,
         )
         from PyQt6.QtGui import QPixmap
@@ -434,7 +434,7 @@ class TestThumbnailWorker:
 
     def test_worker_stop(self):
         """Worker stop() should set _running to False."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailWorker,
         )
 
@@ -448,7 +448,7 @@ class TestThumbnailWorker:
 
     def test_worker_add_task(self):
         """add_task should add to task queue."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailWorker,
         )
 
@@ -466,7 +466,7 @@ class TestThumbnailWorker:
 
     def test_worker_decode_thumbnail_valid(self, qtbot):
         """_decode_thumbnail should decode valid PNG (needs Qt context)."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailWorker,
         )
         from PyQt6.QtWidgets import QWidget
@@ -482,7 +482,7 @@ class TestThumbnailWorker:
 
     def test_worker_decode_thumbnail_invalid(self, qtbot):
         """_decode_thumbnail should return null pixmap for invalid data."""
-        from opencode_monitor.dashboard.sections.tracing.image_cache import (
+        from opencode_status_bar.dashboard.sections.tracing.image_cache import (
             ThumbnailWorker,
         )
         from PyQt6.QtWidgets import QWidget

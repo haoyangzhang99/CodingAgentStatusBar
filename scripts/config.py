@@ -6,5 +6,5 @@ Centralized configuration to avoid duplication across backfill and bulk enrichme
 
 from pathlib import Path
 
-DEFAULT_DB_PATH = Path.home() / ".config" / "opencode-monitor" / "analytics.duckdb"
+DEFAULT_DB_PATH = Path.home() / ".config" / "opencode-status-bar" / "analytics.duckdb"
 DEFAULT_STORAGE_PATH = Path.home() / ".local" / "share" / "opencode" / "storage"

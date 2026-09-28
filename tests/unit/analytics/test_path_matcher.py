@@ -2,7 +2,7 @@
 
 import pytest
 
-from opencode_monitor.analytics.path_matcher import (
+from opencode_status_bar.analytics.path_matcher import (
     DiffPathMatcher,
     DiffStats,
     build_diff_stats_map,

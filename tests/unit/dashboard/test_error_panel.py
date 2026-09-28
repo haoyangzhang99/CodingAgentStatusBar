@@ -46,7 +46,7 @@ class TestClassifyErrorType:
     def test_returns_correct_type_and_label(
         self, message, expected_type, expected_label
     ):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             classify_error_type,
             COLORS,
         )
@@ -58,7 +58,7 @@ class TestClassifyErrorType:
         assert color in COLORS.values(), f"Color {color} not in design system"
 
     def test_is_case_insensitive(self):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             classify_error_type,
         )
 
@@ -83,7 +83,7 @@ class TestErrorInfo:
     def test_stores_all_fields_without_modification(
         self, timestamp, tool_name, message
     ):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorInfo,
         )
 
@@ -97,7 +97,7 @@ class TestErrorInfo:
 
 class TestErrorItemWidget:
     def test_initializes_collapsed(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorItemWidget,
             ErrorInfo,
         )
@@ -112,7 +112,7 @@ class TestErrorItemWidget:
         assert widget._arrow.text() == "▶"
 
     def test_toggle_expand_shows_full_message(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorItemWidget,
             ErrorInfo,
         )
@@ -129,7 +129,7 @@ class TestErrorItemWidget:
         assert widget._full_message.text() == full_msg
 
     def test_double_toggle_returns_to_collapsed(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorItemWidget,
             ErrorInfo,
         )
@@ -150,7 +150,7 @@ class TestErrorItemWidget:
 
 class TestErrorsWidget:
     def test_initializes_empty_and_collapsed(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorsWidget,
         )
 
@@ -162,7 +162,7 @@ class TestErrorsWidget:
         assert widget._container_layout.count() == 0
 
     def test_load_errors_populates_container(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorsWidget,
             ErrorInfo,
             ErrorItemWidget,
@@ -183,7 +183,7 @@ class TestErrorsWidget:
         assert first_item._error is errors[0]
 
     def test_load_empty_list_hides_widget(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorsWidget,
         )
 
@@ -195,7 +195,7 @@ class TestErrorsWidget:
         assert widget.isHidden() is True
 
     def test_toggle_without_errors_stays_collapsed(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorsWidget,
         )
 
@@ -205,7 +205,7 @@ class TestErrorsWidget:
         assert widget._is_expanded is False
 
     def test_toggle_with_errors_expands_scroll(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorsWidget,
             ErrorInfo,
         )
@@ -220,7 +220,7 @@ class TestErrorsWidget:
         assert widget._arrow.text() == "▼"
 
     def test_reload_clears_previous_items(self, qapp, widget_parent):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorsWidget,
             ErrorInfo,
         )
@@ -250,7 +250,7 @@ class TestErrorsWidget:
     def test_assigns_correct_tree_prefixes(
         self, qapp, widget_parent, error_count, expected_prefixes
     ):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             ErrorsWidget,
             ErrorInfo,
             ErrorItemWidget,
@@ -283,7 +283,7 @@ class TestExtractFromNode:
     def test_extracts_tool_error_with_fallback_chain(
         self, error_value, display_info, expected_message
     ):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             _extract_from_node,
             SessionData,
         )
@@ -307,7 +307,7 @@ class TestExtractFromNode:
         assert data.errors[0].timestamp == "2025-01-10T10:30:00"
 
     def test_extracts_non_tool_error(self):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             _extract_from_node,
             SessionData,
         )
@@ -329,7 +329,7 @@ class TestExtractFromNode:
         assert data.errors[0].message == "Agent crashed"
 
     def test_extracts_errors_recursively_from_children(self):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             _extract_from_node,
             SessionData,
         )
@@ -369,7 +369,7 @@ class TestExtractFromNode:
         assert [e.tool_name for e in data.errors] == ["bash", "webfetch"]
 
     def test_ignores_successful_tools(self):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             _extract_from_node,
             SessionData,
         )
@@ -387,7 +387,7 @@ class TestExtractFromNode:
         assert len(data.errors) == 0
 
     def test_preserves_full_message_without_truncation(self):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
             _extract_from_node,
             SessionData,
         )

@@ -1,12 +1,12 @@
 """
-Tests for opencode_monitor.core.models
+Tests for opencode_status_bar.core.models
 
 Coverage target: 100% for all model classes
 Uses parametrized tests for enum values and edge cases.
 """
 
 import pytest
-from opencode_monitor.core.models import (
+from opencode_status_bar.core.models import (
     SessionStatus,
     TodoStatus,
     Tool,

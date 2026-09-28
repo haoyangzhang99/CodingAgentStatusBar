@@ -242,7 +242,7 @@ class TestDiffExportToClipboard:
         process_qt_events()
 
         mock_clipboard = MagicMock()
-        target_module = "opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview"
+        target_module = "opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview"
         with patch(f"{target_module}.Path.home", return_value=tmp_path):
             with patch.object(QApplication, "clipboard", return_value=mock_clipboard):
                 qtbot.mouseClick(files_widget._export_btn, Qt.MouseButton.LeftButton)
@@ -318,7 +318,7 @@ class TestDiffExportToClipboard:
         mock_storage.mkdir(parents=True)
 
         error_raised = False
-        target_module = "opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview"
+        target_module = "opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview"
         try:
             with patch(f"{target_module}.Path.home", return_value=tmp_path):
                 qtbot.mouseClick(files_widget._export_btn, Qt.MouseButton.LeftButton)
@@ -362,7 +362,7 @@ class TestDiffExportToClipboard:
         process_qt_events()
 
         mock_clipboard = MagicMock()
-        target_module = "opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview"
+        target_module = "opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview"
         with patch(f"{target_module}.Path.home", return_value=tmp_path):
             with patch.object(QApplication, "clipboard", return_value=mock_clipboard):
                 qtbot.mouseClick(files_widget._export_btn, Qt.MouseButton.LeftButton)
@@ -420,7 +420,7 @@ class TestDiffExportToClipboard:
         process_qt_events()
 
         mock_clipboard = MagicMock()
-        target_module = "opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview"
+        target_module = "opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview"
         with patch(f"{target_module}.Path.home", return_value=tmp_path):
             with patch.object(QApplication, "clipboard", return_value=mock_clipboard):
                 qtbot.mouseClick(files_widget._export_btn, Qt.MouseButton.LeftButton)
@@ -496,7 +496,7 @@ class TestDiffExportToClipboard:
         process_qt_events()
 
         mock_clipboard = MagicMock()
-        target_module = "opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview"
+        target_module = "opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview"
         with patch(f"{target_module}.Path.home", return_value=tmp_path):
             with patch.object(QApplication, "clipboard", return_value=mock_clipboard):
                 qtbot.mouseClick(files_widget._export_btn, Qt.MouseButton.LeftButton)

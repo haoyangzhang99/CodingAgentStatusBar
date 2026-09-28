@@ -167,14 +167,14 @@ def mock_analyzer():
     analyzer = MagicMock()
 
     def analyze_command(cmd):
-        from opencode_monitor.security.analyzer import RiskResult
+        from opencode_status_bar.security.analyzer import RiskResult
 
         if "rm -rf" in cmd:
             return RiskResult(score=70, level="high", reason="Recursive delete")
         return RiskResult(score=10, level="low", reason="Safe command")
 
     def analyze_file_path(path, write_mode=False):
-        from opencode_monitor.security.analyzer import RiskResult
+        from opencode_status_bar.security.analyzer import RiskResult
 
         if "/etc/passwd" in path:
             return RiskResult(score=80, level="critical", reason="System file")
@@ -188,7 +188,7 @@ def mock_analyzer():
         return RiskResult(score=10, level="low", reason="Normal file")
 
     def analyze_url(url):
-        from opencode_monitor.security.analyzer import RiskResult
+        from opencode_status_bar.security.analyzer import RiskResult
 
         if "pastebin" in url:
             return RiskResult(score=85, level="critical", reason="Paste site")
@@ -213,7 +213,7 @@ class TestEnrichmentWorkerNoFileIO:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """enrich_batch should query parts table, not read files from disk."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -239,7 +239,7 @@ class TestEnrichmentWorkerNoFileIO:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """Worker should extract command/filePath/url from arguments JSON column."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
         worker.enrich_batch(limit=10)
@@ -271,7 +271,7 @@ class TestEnrichmentResults:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """Enriched parts should have risk_score, risk_level, risk_reason set."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
         worker.enrich_batch(limit=10)
@@ -292,7 +292,7 @@ class TestEnrichmentResults:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """Enriched parts should have security_enriched_at timestamp set."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -313,7 +313,7 @@ class TestEnrichmentResults:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """Only bash/read/write/edit/webfetch should be enriched."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
         worker.enrich_batch(limit=10)
@@ -351,7 +351,7 @@ class TestIncrementalEnrichment:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """Parts with security_enriched_at set should be skipped."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         conn = enrichment_db.connect()
 
@@ -378,7 +378,7 @@ class TestIncrementalEnrichment:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """enrich_batch returns 0 when nothing left to enrich."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         conn = enrichment_db.connect()
 
@@ -397,7 +397,7 @@ class TestIncrementalEnrichment:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """Worker should detect and enrich new parts added by indexer."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -437,7 +437,7 @@ class TestEnrichmentProgress:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """get_progress should return enriched/pending/total counts."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -468,7 +468,7 @@ class TestBatchProcessing:
         self, enrichment_db, sample_unenriched_parts, mock_analyzer
     ):
         """enrich_batch should only process up to limit parts."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -493,7 +493,7 @@ class TestErrorHandling:
 
     def test_handles_invalid_json_arguments(self, enrichment_db, mock_analyzer):
         """Worker should skip parts with invalid JSON in arguments."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         conn = enrichment_db.connect()
 
@@ -519,7 +519,7 @@ class TestErrorHandling:
 
     def test_handles_missing_command_field(self, enrichment_db, mock_analyzer):
         """Worker should handle bash parts without command field."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         conn = enrichment_db.connect()
 
@@ -552,7 +552,7 @@ class TestWorkerLifecycle:
 
     def test_worker_can_start_and_stop(self, enrichment_db, mock_analyzer):
         """Worker should start background thread and stop cleanly."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -566,7 +566,7 @@ class TestWorkerLifecycle:
 
     def test_worker_is_idempotent(self, enrichment_db, mock_analyzer):
         """Multiple start/stop calls should be safe."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -586,7 +586,7 @@ class TestWorkerLifecycle:
 
     def test_default_poll_interval(self, enrichment_db, mock_analyzer):
         """Default poll interval should be 10 seconds (not aggressive)."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(db=enrichment_db, analyzer=mock_analyzer)
 
@@ -594,7 +594,7 @@ class TestWorkerLifecycle:
 
     def test_custom_poll_interval(self, enrichment_db, mock_analyzer):
         """Should allow custom poll_interval."""
-        from opencode_monitor.security.enrichment import SecurityEnrichmentWorker
+        from opencode_status_bar.security.enrichment import SecurityEnrichmentWorker
 
         worker = SecurityEnrichmentWorker(
             db=enrichment_db, analyzer=mock_analyzer, poll_interval=5.0

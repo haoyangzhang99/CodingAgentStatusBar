@@ -1,6 +1,6 @@
 # Sprint - UI Modernization (Janvier 2026)
 
-Modernisation progressive de l'interface du dashboard OpenCode Monitor.
+Modernisation progressive de l'interface du dashboard OpenCode Status Bar.
 
 ## Objectifs
 
@@ -132,7 +132,7 @@ Modernisation progressive de l'interface du dashboard OpenCode Monitor.
 ## Fichiers modifiés (récap)
 
 ```
-src/opencode_monitor/dashboard/
+src/opencode_status_bar/dashboard/
 ├── styles/
 │   ├── colors.py          # Palette améliorée
 │   └── dimensions.py      # Typography, spacing

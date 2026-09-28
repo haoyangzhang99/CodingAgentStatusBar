@@ -15,7 +15,7 @@ from typing import cast
 from unittest.mock import MagicMock, patch
 
 # Import RiskLevel at module level for parametrized tests
-from opencode_monitor.security.analyzer import RiskLevel
+from opencode_status_bar.security.analyzer import RiskLevel
 
 pytestmark = pytest.mark.xdist_group(name="app_tests_sequential")
 
@@ -126,8 +126,8 @@ def setup_rumps_mock():
 
     if original_rumps is not None:
         sys.modules["rumps"] = original_rumps
-        if "opencode_monitor.app" in sys.modules:
-            del sys.modules["opencode_monitor.app"]
+        if "opencode_status_bar.app" in sys.modules:
+            del sys.modules["opencode_status_bar.app"]
 
 
 @pytest.fixture
@@ -160,30 +160,30 @@ def mock_dependencies():
     # Patch at SOURCE level (where functions are defined)
     # Then reload the app module so imports resolve to mocks
     with (
-        patch("opencode_monitor.ui.menu.MenuBuilder", mock_menu_builder),
-        patch("opencode_monitor.utils.settings.get_settings", mock_get_settings),
-        patch("opencode_monitor.utils.settings.save_settings", mock_save_settings),
-        patch("opencode_monitor.ui.terminal.focus_iterm2", mock_focus_iterm2),
-        patch("opencode_monitor.core.monitor.bridge.read_bridge_state", mock_read_state),
-        patch("opencode_monitor.utils.logger.info", mock_info),
-        patch("opencode_monitor.utils.logger.error", mock_error),
-        patch("opencode_monitor.utils.logger.debug", mock_debug),
+        patch("opencode_status_bar.ui.menu.MenuBuilder", mock_menu_builder),
+        patch("opencode_status_bar.utils.settings.get_settings", mock_get_settings),
+        patch("opencode_status_bar.utils.settings.save_settings", mock_save_settings),
+        patch("opencode_status_bar.ui.terminal.focus_iterm2", mock_focus_iterm2),
+        patch("opencode_status_bar.core.monitor.bridge.read_bridge_state", mock_read_state),
+        patch("opencode_status_bar.utils.logger.info", mock_info),
+        patch("opencode_status_bar.utils.logger.error", mock_error),
+        patch("opencode_status_bar.utils.logger.debug", mock_debug),
     ):
         # Remove ALL cached app modules so they get re-imported with mocks
         # The app package has: __init__, core, menu, handlers
         # NOTE: Do NOT remove indexer modules - we need the mock to stay applied
         modules_to_remove = [
-            "opencode_monitor.app",
-            "opencode_monitor.app.core",
-            "opencode_monitor.app.menu",
-            "opencode_monitor.app.handlers",
+            "opencode_status_bar.app",
+            "opencode_status_bar.app.core",
+            "opencode_status_bar.app.menu",
+            "opencode_status_bar.app.handlers",
         ]
         for mod_name in modules_to_remove:
             if mod_name in sys.modules:
                 del sys.modules[mod_name]
 
         # Now import the app module - imports will resolve to mocks
-        import opencode_monitor.app  # noqa: F401
+        import opencode_status_bar.app  # noqa: F401
 
         yield {
             "menu_builder": mock_menu_builder,
@@ -206,7 +206,7 @@ def mock_dependencies():
 
 def create_app_with_mocks(mock_dependencies, skip_monitor=True):
     """Helper to create OpenCodeApp with proper mocking."""
-    from opencode_monitor.app import OpenCodeApp
+    from opencode_status_bar.app import OpenCodeApp
 
     if skip_monitor:
         with patch.object(OpenCodeApp, "_run_monitor_loop"):
@@ -232,7 +232,7 @@ class TestOpenCodeAppInit:
 
     def test_init_full(self, mock_dependencies):
         """App should initialize state and the monitor thread, and nothing else."""
-        from opencode_monitor.app import OpenCodeApp
+        from opencode_status_bar.app import OpenCodeApp
 
         app = create_app_with_mocks(mock_dependencies)
 
@@ -262,7 +262,7 @@ def test_app_import_skips_heavy_optional_features():
     """Starting the menu bar app must not load the dashboard, analytics or HTTP stack."""
     src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "src"))
     script = (
-        "import sys, opencode_monitor.app\n"
+        "import sys, opencode_status_bar.app\n"
         "heavy = [m for m in ('PyQt6', 'duckdb', 'aiohttp', 'flask', 'watchdog') if m in sys.modules]\n"
         "print(','.join(heavy))\n"
     )
@@ -351,7 +351,7 @@ class TestBuildMenu:
         assert app.menu[0].title == "Show OpenCode"
         app._build_menu()
         assert app.menu[0] is app._open_opencode_item
-        with patch("opencode_monitor.app.handlers.subprocess.run") as run:
+        with patch("opencode_status_bar.app.handlers.subprocess.run") as run:
             app.menu[0].callback(None)
         run.assert_called_once_with(
             ["/usr/bin/open", "-b", "ai.opencode.desktop"],
@@ -360,8 +360,8 @@ class TestBuildMenu:
 
     def test_open_opencode_failure_does_not_crash_menu(self, mock_dependencies):
         app = create_app_with_mocks(mock_dependencies)
-        with patch("opencode_monitor.app.handlers.subprocess.run", side_effect=OSError("Unavailable")), \
-             patch("opencode_monitor.app.handlers.error") as log_error:
+        with patch("opencode_status_bar.app.handlers.subprocess.run", side_effect=OSError("Unavailable")), \
+             patch("opencode_status_bar.app.handlers.error") as log_error:
             app._open_opencode(None)
         log_error.assert_called_once()
 
@@ -405,7 +405,7 @@ class TestUpdateTitleUsage:
         self, mock_dependencies, utilization
     ):
         """Usage levels should not affect the compact status label."""
-        from opencode_monitor.core.models import State, Usage, UsagePeriod, Todos
+        from opencode_status_bar.core.models import State, Usage, UsagePeriod, Todos
 
         app = create_app_with_mocks(mock_dependencies)
         app._state = State(todos=Todos(), connected=True)
@@ -439,7 +439,7 @@ class TestUpdateTitleDefault:
     )
     def test_update_title_default(self, mock_dependencies, state_config):
         """Should distinguish disconnected state from connected without sessions."""
-        from opencode_monitor.core.models import State, Usage, UsagePeriod, Todos
+        from opencode_status_bar.core.models import State, Usage, UsagePeriod, Todos
 
         app = create_app_with_mocks(mock_dependencies)
 
@@ -484,7 +484,7 @@ class TestUpdateTitlePermission:
         self, mock_dependencies, tool_name, elapsed_ms, expected_lock
     ):
         """Existing permission signals should take priority over busy status."""
-        from opencode_monitor.core.models import (
+        from opencode_status_bar.core.models import (
             State,
             Instance,
             Agent,
@@ -544,7 +544,7 @@ class TestNativeStatusTitle:
         connected, title, symbol,
     ):
         """Use native colors; child attention wins without inflating counts."""
-        from opencode_monitor.core.models import Agent, Instance, SessionStatus, State, Tool
+        from opencode_status_bar.core.models import Agent, Instance, SessionStatus, State, Tool
 
         app = create_app_with_mocks(mock_dependencies)
         agents = [
@@ -649,7 +649,7 @@ class TestUpdateTitleIdle:
         self, mock_dependencies, idle_count
     ):
         """Empty instances must not dilute the busy status."""
-        from opencode_monitor.core.models import (
+        from opencode_status_bar.core.models import (
             State,
             Instance,
             Agent,
@@ -701,7 +701,7 @@ class TestAddSecurityAlert:
     )
     def test_add_security_alert_full(self, mock_dependencies, level, expected_log_text):
         """Should store alerts, limit max, prevent duplicates, set critical flag, and log."""
-        from opencode_monitor.security.analyzer import SecurityAlert, RiskLevel
+        from opencode_status_bar.security.analyzer import SecurityAlert, RiskLevel
 
         app = create_app_with_mocks(mock_dependencies)
         app._max_alerts = 5
@@ -755,7 +755,7 @@ class TestMain:
 
     def test_main_creates_and_runs_app(self, mock_dependencies):
         """Should create OpenCodeApp instance and call run()."""
-        from opencode_monitor.app import main, OpenCodeApp
+        from opencode_status_bar.app import main, OpenCodeApp
 
         with (
             patch.object(OpenCodeApp, "_run_monitor_loop"),
@@ -794,8 +794,8 @@ class TestMonitorLoop:
             app._needs_refresh = False
 
         with (
-            patch("opencode_monitor.app.core.read_bridge_state", side_effect=read),
-            patch("opencode_monitor.app.core.time.sleep", side_effect=sleep),
+            patch("opencode_status_bar.app.core.read_bridge_state", side_effect=read),
+            patch("opencode_status_bar.app.core.time.sleep", side_effect=sleep),
         ):
             app._running = True
             app._run_monitor_loop()
@@ -803,7 +803,7 @@ class TestMonitorLoop:
 
     @staticmethod
     def _state(status, updated, title="Private title"):
-        from opencode_monitor.core.models import Agent, Instance, SessionStatus, State
+        from opencode_status_bar.core.models import Agent, Instance, SessionStatus, State
 
         agent = Agent(
             id="ses_1", title=title, dir="p", full_dir="/private/p",
@@ -871,7 +871,7 @@ class TestThreadSafetyAndRefresh:
 
     def test_state_access_and_refresh(self, mock_dependencies):
         """State/usage access should use lock, and refresh should set flag and log."""
-        from opencode_monitor.core.models import State, Usage, UsagePeriod
+        from opencode_status_bar.core.models import State, Usage, UsagePeriod
 
         app = create_app_with_mocks(mock_dependencies)
 
@@ -908,7 +908,7 @@ class TestAdditionalCoverage:
 
     def test_title_with_all_elements_and_edge_cases(self, mock_dependencies):
         """Should handle complex title, empty instances, and focus terminal."""
-        from opencode_monitor.core.models import (
+        from opencode_status_bar.core.models import (
             State,
             Instance,
             Agent,
@@ -955,7 +955,7 @@ class TestAdditionalCoverage:
 
     def test_max_alerts(self, mock_dependencies):
         """Should handle max alerts boundary correctly."""
-        from opencode_monitor.security.analyzer import SecurityAlert, RiskLevel
+        from opencode_status_bar.security.analyzer import SecurityAlert, RiskLevel
 
         app = create_app_with_mocks(mock_dependencies)
 

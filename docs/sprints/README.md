@@ -1,4 +1,4 @@
-# Sprints - OpenCode Monitor
+# Sprints - OpenCode Status Bar
 
 Sprint records and current work tracking.
 

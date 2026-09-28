@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from opencode_monitor.utils import settings
-from opencode_monitor.utils.settings import Settings, get_settings, save_settings
+from opencode_status_bar.utils import settings
+from opencode_status_bar.utils.settings import Settings, get_settings, save_settings
 
 
 class TestSettingsDataclass:

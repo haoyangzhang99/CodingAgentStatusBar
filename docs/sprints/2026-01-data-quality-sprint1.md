@@ -69,9 +69,9 @@ CREATE INDEX idx_messages_root_path ON messages(root_path);
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - Add root_path column
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Extract root_path
-- `src/opencode_monitor/analytics/migrations/add_root_path.sql` - NEW
+- `src/opencode_status_bar/analytics/db.py` - Add root_path column
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Extract root_path
+- `src/opencode_status_bar/analytics/migrations/add_root_path.sql` - NEW
 - `tests/test_root_path_extraction.py` - NEW
 
 **Tasks**:
@@ -138,9 +138,9 @@ def classify_error(error_data: dict) -> str:
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/indexer/error_classifier.py` - NEW
-- `src/opencode_monitor/analytics/db.py` - Add error_category column
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Use classifier
+- `src/opencode_status_bar/analytics/indexer/error_classifier.py` - NEW
+- `src/opencode_status_bar/analytics/db.py` - Add error_category column
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Use classifier
 - `tests/test_error_classification.py` - NEW
 
 **Tasks**:
@@ -208,8 +208,8 @@ GROUP BY tool_name;
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - Add execution_time_ms column
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Extract timing
+- `src/opencode_status_bar/analytics/db.py` - Add execution_time_ms column
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Extract timing
 - `tests/test_tool_execution_times.py` - NEW
 
 **Tasks**:
@@ -270,8 +270,8 @@ CREATE INDEX idx_parts_git_commit ON parts(git_commit);
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - Add git columns
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Extract git metadata
+- `src/opencode_status_bar/analytics/db.py` - Add git columns
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Extract git metadata
 - `tests/test_git_metadata.py` - NEW
 
 **Tasks**:
@@ -416,7 +416,7 @@ Sprint 0 (P0 fixes) ──► DQ-006 (root_path) ───┐
 - **Epic**: [epic-data-quality.md](../epics/epic-data-quality.md)
 - **Sprint 0**: [2026-01-data-quality-sprint0.md](2026-01-data-quality-sprint0.md)
 - **Audit Report**: [data-audit-comprehensive-2026-01-10.md](../../audit-reports/data-audit-comprehensive-2026-01-10.md)
-- **Architecture**: `src/opencode_monitor/analytics/`
+- **Architecture**: `src/opencode_status_bar/analytics/`
 
 ---
 
@@ -474,7 +474,7 @@ make test-backfill
 ### Key Files
 
 ```
-src/opencode_monitor/analytics/
+src/opencode_status_bar/analytics/
 ├── db.py                           # Schema changes (all stories)
 ├── indexer/
 │   ├── parsers.py                 # Extraction logic (all stories)

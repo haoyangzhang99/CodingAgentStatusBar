@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 from PyQt6.QtCore import QModelIndex
 
-from opencode_monitor.dashboard.sections.tracing.tree_model import TracingTreeModel
+from opencode_status_bar.dashboard.sections.tracing.tree_model import TracingTreeModel
 
 
 class TestTracingTreeModelPagination:

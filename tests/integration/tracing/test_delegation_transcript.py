@@ -31,7 +31,7 @@ def create_session_prompts_data():
 class TestDelegationTranscriptPanelDisplay:
     @pytest.fixture
     def panel(self, qapp):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components import (
             DelegationTranscriptPanel,
         )
 
@@ -55,7 +55,7 @@ class TestDelegationTranscriptPanelDisplay:
         THEN prompt section appears with correct header
         """
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -83,7 +83,7 @@ class TestDelegationTranscriptPanelDisplay:
         THEN prompt content appears in QTextEdit widget
         """
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -110,7 +110,7 @@ class TestDelegationTranscriptPanelDisplay:
         THEN response section is displayed with correct header
         """
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -133,7 +133,7 @@ class TestDelegationTranscriptPanelDisplay:
         THEN response content appears in QTextEdit widget
         """
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -157,7 +157,7 @@ class TestDelegationTranscriptPanelDisplay:
         THEN prompt section appears before response section
         """
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -187,7 +187,7 @@ class TestDelegationTranscriptPanelDisplay:
         THEN two QTextEdit widgets are created for content display
         """
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -206,7 +206,7 @@ class TestDelegationTranscriptPanelDisplay:
 class TestDelegationTranscriptPanelEdgeCases:
     @pytest.fixture
     def panel(self, qapp):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components import (
             DelegationTranscriptPanel,
         )
 
@@ -228,7 +228,7 @@ class TestDelegationTranscriptPanelEdgeCases:
         mock_client = MockAnalyticsAPIClient(responses)
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -263,7 +263,7 @@ class TestDelegationTranscriptPanelEdgeCases:
         mock_client = MockAnalyticsAPIClient(responses)
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -312,7 +312,7 @@ class TestDelegationTranscriptPanelEdgeCases:
         mock_client.set_available(False)
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -338,7 +338,7 @@ class TestDelegationTranscriptPanelContentDisplay:
 
     @pytest.fixture
     def panel(self, qapp):
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.components import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.components import (
             DelegationTranscriptPanel,
         )
 
@@ -366,7 +366,7 @@ class TestDelegationTranscriptPanelContentDisplay:
         mock_client = MockAnalyticsAPIClient(responses)
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {
@@ -404,7 +404,7 @@ class TestDelegationTranscriptPanelContentDisplay:
         mock_client = MockAnalyticsAPIClient(responses)
 
         with patch(
-            "opencode_monitor.api.get_api_client",
+            "opencode_status_bar.api.get_api_client",
             return_value=mock_client,
         ):
             delegation_data = {

@@ -2,7 +2,7 @@
 
 ## Contexte
 
-L'application menu bar OpenCode Monitor utilise actuellement des valeurs fixes pour plusieurs parametres :
+L'application menu bar OpenCode Status Bar utilise actuellement des valeurs fixes pour plusieurs parametres :
 - Frequence de rafraichissement de l'usage API Anthropic (60 secondes)
 - Alertes sonores activees par defaut sans possibilite de les desactiver
 - Autres parametres potentiels non configurables
@@ -74,7 +74,7 @@ Ajouter un panneau de configuration accessible depuis le menu, permettant a l'ut
 
 **Ce qui se passe en interne** :
 - Les preferences sont sauvegardees dans un fichier de configuration
-- Emplacement suggere : `~/.config/opencode-monitor/settings.json` ou equivalent
+- Emplacement suggere : `~/.config/opencode-status-bar/settings.json` ou equivalent
 - Les preferences sont chargees au demarrage de l'application
 
 **Ce que l'utilisateur observe** :

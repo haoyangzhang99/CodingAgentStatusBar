@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from opencode_monitor.security.scope import ScopeDetector, ScopeVerdict
+from opencode_status_bar.security.scope import ScopeDetector, ScopeVerdict
 
 
 class TestScopeDetectorWithRealPaths:

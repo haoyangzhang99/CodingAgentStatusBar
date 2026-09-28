@@ -15,7 +15,7 @@ class TestRootSessionDetection:
 
     def test_true_root_session_is_detected_as_root(self):
         """A true root session (parent_agent=None, agent_type=user) should be root."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies import (
             TreeNodeData,
             get_strategy_factory,
         )
@@ -57,7 +57,7 @@ class TestRootSessionDetection:
         This is the BUG case: sessions delegated by user to an agent.
         They have parent_agent='user' but should show tabs, not overview.
         """
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies import (
             TreeNodeData,
             get_strategy_factory,
         )
@@ -98,7 +98,7 @@ class TestRootSessionDetection:
 
     def test_true_delegation_between_agents_is_not_root(self):
         """A delegation from one agent to another should NOT be root."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies import (
             TreeNodeData,
             get_strategy_factory,
         )
@@ -132,7 +132,7 @@ class TestRootSessionDetection:
 
     def test_root_session_without_agent_type_is_root(self):
         """A session with no agent_type and no parent_agent is definitely root."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies import (
             TreeNodeData,
             get_strategy_factory,
         )
@@ -162,7 +162,7 @@ class TestRootSessionDetection:
 
     def test_is_tree_root_flag_takes_priority_over_heuristic(self):
         """Le flag _is_tree_root doit prendre priorité sur l'heuristique agent_type/parent_agent."""
-        from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies import (
+        from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies import (
             TreeNodeData,
         )
 

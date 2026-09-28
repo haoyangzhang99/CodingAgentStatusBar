@@ -1,60 +1,63 @@
-# Local Desktop Status Bridge
+# Integration Details
 
-The current desktop backend requires private, per-launch API credentials.
-The bundled monitor cannot discover it through unauthenticated port probes.
+Two pieces connect the OpenCode desktop app to the menu bar. `install.sh` builds and installs both.
 
-`opencode-monitor.js` is a local OpenCode plugin. It uses OpenCode's injected
-client to query session status and pending questions/permissions, then writes
-owner-only snapshots under `~/.config/opencode-monitor/bridge/`. It does not
-export credentials, prompts, messages, tool arguments, or tool output.
-Snapshots include session IDs, titles, directories, activity and attention flags.
+## Status Plugin (`opencode-status-bar.js`)
 
-The monitor reads snapshots without connecting to the protected desktop API.
-It ignores snapshots older than 15 seconds or belonging to a stopped process.
-Busy and retry sessions count as working. Recently active idle sessions remain
-visible for 60 seconds. Native pending questions and approvals supply the bell
-and lock indicators. This bridge does not populate analytics or running tools.
+OpenCode Desktop's local server requires a password generated at each launch, so outside
+programs can't discover or query it. This plugin runs inside OpenCode and uses the client
+OpenCode gives every plugin.
 
-The installed entry point is:
-`~/.config/opencode/plugins/opencode-monitor.js`
+Every 2 seconds, for each open project directory, it:
 
-Fully quit and restart OpenCode after installing or updating the plugin.
-Restart Monitor after updating its Python code. This integration does not
-configure automatic launching or login items.
+- reads session status (`busy`, `retry`, `idle`), pending questions (`/question`) and pending
+  permission requests (`/permission`), plus sessions updated in the last 60 seconds;
+- writes `~/.config/opencode-status-bar/bridge/<pid>-<sha256(directory)>.json` atomically,
+  with file mode `0600` in a `0700` directory.
 
-## Trimmed Menu Bar Build
+Snapshot format:
 
-The menu bar app reads only these bridge snapshots. It no longer starts or
-imports the PyQt6 dashboard, DuckDB analytics indexer, security auditor and
-enrichment worker, local API server (port 19876), Claude usage polling, or
-legacy port scanning. The dropdown's Dashboard and Preferences entries were
-removed with them. Their source remains in the repository, unloaded.
-
-Measured on macOS 26 with one active session: footprint fell from 79 MB to
-36 MB, and threads from 36 to 5.
-
-Logging records startup, each change of the menu bar status (with session,
-working, and attention counts, but no titles or paths), and errors. A repeated
-identical error is logged once until polling succeeds again.
-
-## Native Launcher
-
-`launcher.m` embeds the existing virtual environment's Python runtime inside
-the app bundle's native executable. A shell launcher that executes a bare
-Python binary loses the bundle identity and can fail to create status-item
-scenes on macOS 26. The launcher supports `--check` to verify its bundle
-identity and Python imports without starting another monitor.
-
-The installed binary links to the uv-managed Python 3.12.14 runtime. If that
-runtime is removed or replaced, rebuild the launcher against the new runtime.
-
-To disable the bridge, remove its installed entry point and restart OpenCode.
-The plugin's disposal hook removes its live snapshot; stale files are ignored
-even if a process exits without cleanup.
-
-Verification:
-
-```sh
-node --test tests/opencode-monitor-plugin.test.mjs
-uv run --with pytest --with pytest-asyncio --with pytest-xdist --with pytest-qt --with pytest-timeout --with faker --with aioresponses --with pytest-mock --no-dev pytest tests/unit/core/test_monitor_bridge.py tests/unit/core/test_monitor.py tests/unit/core/test_models.py tests/unit/app/test_app.py -q -n 2
+```json
+{"version": 1, "pid": 1234, "updated": 1790000000000, "directory": "/path/to/project",
+ "sessions": [{"id": "ses_...", "title": "...", "directory": "/path/to/project",
+               "parentID": "ses_...", "status": "busy", "tools": [],
+               "question": false, "permission": true}]}
 ```
+
+`parentID` appears only for sub-agent sessions. `tools` is always empty: tool names and
+arguments are never exported.
+
+Behavior details:
+
+- Polls never overlap, and each has a 5-second timeout.
+- A failed poll never refreshes the snapshot's timestamp, so the app treats stale data as offline.
+- When OpenCode closes a project context (`dispose` hook or `server.instance.disposed` event), the
+  plugin stops polling and deletes its snapshot.
+- Plugin startup never fails because the snapshot folder is unavailable.
+
+The injected v1 SDK client has no methods for questions or permissions, so the plugin calls those
+endpoints through `client._client.get`, an internal API that may change between OpenCode releases.
+
+The installed file `~/.config/opencode/plugins/opencode-status-bar.js` only re-exports this file,
+so `git pull` updates the plugin the next time OpenCode starts.
+
+## Menu Bar App
+
+`src/opencode_status_bar/core/monitor/bridge.py` reads the snapshots. It skips files that are
+malformed, older than 15 seconds, or written by a process that is no longer running, and it
+merges duplicate sessions. Busy and retry sessions count as working.
+
+The app redraws and logs only when the status changes. Its footprint is about 36 MB with 5
+threads (measured on macOS 26), because it does not import the inherited dashboard (PyQt6),
+analytics (DuckDB), local API (Flask), or port-scanning (aiohttp) code.
+
+## Native Launcher (`launcher.m`)
+
+The app bundle's executable embeds Python rather than running a separate `python` process.
+A script that starts a bare Python interpreter loses the app's identity, and on macOS 26 the
+menu bar item then fails to appear.
+
+`install.sh` compiles `launcher.m` against the uv-managed Python in `.venv`, which provides the
+required shared `libpython`. Running the executable with `--check` prints the bundle identifier
+and verifies the Python imports without starting the app. Launcher output goes to
+`~/Library/Logs/OpenCodeStatusBar/launcher.log`.

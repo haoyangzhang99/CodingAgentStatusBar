@@ -2,9 +2,9 @@ import pytest
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QTreeView, QLabel
 
-from opencode_monitor.dashboard.widgets import EmptyState
-from opencode_monitor.dashboard.sections.tracing import TracingSection
-from opencode_monitor.dashboard.sections.tracing.detail_panel import TraceDetailPanel
+from opencode_status_bar.dashboard.widgets import EmptyState
+from opencode_status_bar.dashboard.sections.tracing import TracingSection
+from opencode_status_bar.dashboard.sections.tracing.detail_panel import TraceDetailPanel
 
 from ..conftest import SECTION_TRACING
 from ..fixtures import MockAPIResponses

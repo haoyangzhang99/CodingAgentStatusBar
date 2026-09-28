@@ -1,6 +1,6 @@
 {
-  "name": "opencode-monitor",
-  "version": "2.11.0",
+  "name": "opencode-status-bar",
+  "version": "0.1.0",
   "private": true,
   "description": "Dev tools for code quality analysis",
   "scripts": {

@@ -3,7 +3,7 @@
 ## Contexte
 
 Le projet utilise actuellement une architecture hybride :
-- **Backend Python** (`bin/opencode-monitord`) : daemon async performant qui collecte les donnees des instances OpenCode et de l'API Anthropic
+- **Backend Python** (`bin/opencode-status-bard`) : daemon async performant qui collecte les donnees des instances OpenCode et de l'API Anthropic
 - **Frontend SwiftBar** (`plugins/opencode.2s.sh`) : plugin Bash qui lit les fichiers JSON et genere l'affichage
 
 Cette architecture presente des limitations :
@@ -112,18 +112,18 @@ Avantages attendus :
 ### 6. Integration avec le backend existant
 
 **Reutilisation du code** :
-- Module `opencode_monitor.client` : requetes HTTP async vers les instances
-- Module `opencode_monitor.monitor` : detection des instances OpenCode
-- Module `opencode_monitor.state` : agregation du state global
-- Module `opencode_monitor.usage` : collecte usage API Anthropic
-- Module `opencode_monitor.sounds` : notifications sonores
-- Module `opencode_monitor.logger` : logging structure
+- Module `opencode_status_bar.client` : requetes HTTP async vers les instances
+- Module `opencode_status_bar.monitor` : detection des instances OpenCode
+- Module `opencode_status_bar.state` : agregation du state global
+- Module `opencode_status_bar.usage` : collecte usage API Anthropic
+- Module `opencode_status_bar.sounds` : notifications sonores
+- Module `opencode_status_bar.logger` : logging structure
 
 **Architecture cible** :
 ```
 bin/
-  opencode-menubar        # Application rumps (nouveau point d'entree)
-  opencode_monitor/
+  opencode-status-bar        # Application rumps (nouveau point d'entree)
+  opencode_status_bar/
     __init__.py
     app.py                # NOUVEAU: classe rumps.App principale
     client.py             # existant
@@ -138,7 +138,7 @@ bin/
 ### 7. Demarrage et arret
 
 **Ce que l'utilisateur fait** :
-- Lance l'application avec `./bin/opencode-menubar`
+- Lance l'application avec `./bin/opencode-status-bar`
 - Ou via launchd pour demarrage automatique
 - Arrete via le menu "Quitter" ou signal SIGTERM
 
@@ -150,14 +150,14 @@ bin/
 ### 8. Mode debug et logging
 
 **Comportement attendu** :
-- `OPENCODE_DEBUG=1 ./bin/opencode-menubar` active les logs detailles
-- Les logs vont dans `/tmp/opencode-monitor.log` (comme avant)
+- `OPENCODE_DEBUG=1 ./bin/opencode-status-bar` active les logs detailles
+- Les logs vont dans `/tmp/opencode-status-bar.log` (comme avant)
 - Option de menu "Voir les logs" qui ouvre le fichier dans Console.app
 
 ### 9. Compatibilite et transition
 
 **Phase de transition** :
-- Le daemon `opencode-monitord` reste disponible pour usage standalone
+- Le daemon `opencode-status-bard` reste disponible pour usage standalone
 - Le plugin SwiftBar peut continuer a fonctionner si l'utilisateur prefere
 - Les fichiers JSON peuvent etre ecrits en option (pour debugging ou outils tiers)
 
@@ -168,7 +168,7 @@ bin/
 ## Checklist de validation
 
 ### Installation et demarrage
-- [ ] L'application se lance avec `./bin/opencode-menubar`
+- [ ] L'application se lance avec `./bin/opencode-status-bar`
 - [ ] Une icone apparait dans la menu bar macOS
 - [ ] L'application ne crash pas au demarrage
 - [ ] L'application s'arrete proprement via le menu "Quitter"

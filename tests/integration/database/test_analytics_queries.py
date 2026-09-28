@@ -2,9 +2,9 @@ from datetime import datetime
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.models import Todo, Project
-from opencode_monitor.analytics.queries import AnalyticsQueries
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.models import Todo, Project
+from opencode_status_bar.analytics.queries import AnalyticsQueries
 from tests.fixtures.builders import SessionDataFactory, MessageDataFactory
 
 

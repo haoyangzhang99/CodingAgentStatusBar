@@ -7,7 +7,7 @@ This module provides:
 - Pre-populated database fixtures for different test scenarios
 
 IMPORTANT: Tests must NEVER access the real DuckDB database at
-~/.config/opencode-monitor/analytics.duckdb. All test databases
+~/.config/opencode-status-bar/analytics.duckdb. All test databases
 use in-memory instances or temp directories.
 
 Usage:
@@ -41,7 +41,7 @@ def create_test_analytics_db(tmp_path: Optional[Path] = None):
         db = create_test_analytics_db()  # In-memory
         db = create_test_analytics_db(tmp_path)  # File-based in tmp dir
     """
-    from opencode_monitor.analytics.db import AnalyticsDB
+    from opencode_status_bar.analytics.db import AnalyticsDB
 
     if tmp_path is None:
         # Use in-memory database (most isolated)

@@ -16,8 +16,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.tracing import (
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.tracing import (
     TracingDataService,
 )
 

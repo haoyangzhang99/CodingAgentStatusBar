@@ -23,7 +23,7 @@ Quand l'utilisateur sélectionne une session ou trace, le panneau de droite affi
 **Header avec métriques clés** :
 ```
 ┌─────────────────────────────────────────────┐
-│ 🌳 opencode-monitor                         │
+│ 🌳 opencode-status-bar                         │
 │ ─────────────────────────────────────────── │
 │ ⏱ 2m 34s   🎫 15.2K tokens   🔧 42 tools    │
 │ 📁 12 files   🤖 3 agents   ✅ Completed    │

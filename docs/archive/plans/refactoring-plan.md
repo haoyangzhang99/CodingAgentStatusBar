@@ -4,7 +4,7 @@
 
 ## Contexte
 
-Analyse Radon du projet OpenCode Monitor identifiant 3 fonctions de complexite E (score > 30).
+Analyse Radon du projet OpenCode Status Bar identifiant 3 fonctions de complexite E (score > 30).
 Ces fonctions sont difficiles a maintenir, tester et deboguer.
 
 **Objectif** : Reduire la complexite de E (>30) a C (<=20) via extraction de methodes et separation des responsabilites.
@@ -17,7 +17,7 @@ Ces fonctions sont difficiles a maintenir, tester et deboguer.
 
 | Champ | Valeur |
 |-------|--------|
-| **Fichier** | `src/opencode_monitor/ui/menu.py` |
+| **Fichier** | `src/opencode_status_bar/ui/menu.py` |
 | **Fonction** | `_add_critical_items` |
 | **Lignes** | 470-578 (~108 lignes) |
 | **Score actuel** | E (35) |
@@ -115,7 +115,7 @@ def _add_critical_items(self, menu: rumps.MenuItem, auditor) -> None:
 
 ```bash
 # Verification complexite
-radon cc src/opencode_monitor/ui/menu.py -a -s | grep "_add_critical_items\|_format_security\|_add_category"
+radon cc src/opencode_status_bar/ui/menu.py -a -s | grep "_add_critical_items\|_format_security\|_add_category"
 
 # Tests unitaires
 pytest tests/test_menu.py -v -k "security"
@@ -129,7 +129,7 @@ pytest tests/test_menu.py -v -k "security"
 
 | Champ | Valeur |
 |-------|--------|
-| **Fichier** | `src/opencode_monitor/analytics/loaders/traces.py` |
+| **Fichier** | `src/opencode_status_bar/analytics/loaders/traces.py` |
 | **Fonction** | `extract_root_sessions` |
 | **Lignes** | 131-315 (~185 lignes) |
 | **Score actuel** | E (32) |
@@ -240,13 +240,13 @@ def extract_root_sessions(
 
 ```bash
 # Verification complexite
-radon cc src/opencode_monitor/analytics/loaders/traces.py -a -s | grep "extract_root\|_collect\|_create"
+radon cc src/opencode_status_bar/analytics/loaders/traces.py -a -s | grep "extract_root\|_collect\|_create"
 
 # Tests unitaires
 pytest tests/test_traces.py -v -k "root_session"
 
 # Test performance (optionnel)
-time python -c "from opencode_monitor.analytics.loaders.traces import extract_root_sessions; ..."
+time python -c "from opencode_status_bar.analytics.loaders.traces import extract_root_sessions; ..."
 ```
 
 ---
@@ -257,7 +257,7 @@ time python -c "from opencode_monitor.analytics.loaders.traces import extract_ro
 
 | Champ | Valeur |
 |-------|--------|
-| **Fichier** | `src/opencode_monitor/analytics/loaders/traces.py` |
+| **Fichier** | `src/opencode_status_bar/analytics/loaders/traces.py` |
 | **Fonction** | `load_traces` |
 | **Lignes** | 428-582 (~155 lignes) |
 | **Score actuel** | E (31) |
@@ -373,7 +373,7 @@ def load_traces(db: AnalyticsDB, storage_path: Path, max_days: int = 30) -> int:
 
 ```bash
 # Verification complexite
-radon cc src/opencode_monitor/analytics/loaders/traces.py -a -s | grep "load_traces\|_ensure\|_resolve\|_enrich\|_insert"
+radon cc src/opencode_status_bar/analytics/loaders/traces.py -a -s | grep "load_traces\|_ensure\|_resolve\|_enrich\|_insert"
 
 # Tests unitaires
 pytest tests/test_traces.py -v -k "load"
@@ -405,11 +405,11 @@ pytest tests/test_traces.py -v -k "integration"
 
 ```bash
 # Verification globale complexite
-radon cc src/opencode_monitor/ui/menu.py src/opencode_monitor/analytics/loaders/traces.py -a -s
+radon cc src/opencode_status_bar/ui/menu.py src/opencode_status_bar/analytics/loaders/traces.py -a -s
 
 # Tests complets
-pytest tests/test_menu.py tests/test_traces.py -v --cov=src/opencode_monitor
+pytest tests/test_menu.py tests/test_traces.py -v --cov=src/opencode_status_bar
 
 # Linting
-ruff check src/opencode_monitor/ui/menu.py src/opencode_monitor/analytics/loaders/traces.py
+ruff check src/opencode_status_bar/ui/menu.py src/opencode_status_bar/analytics/loaders/traces.py
 ```

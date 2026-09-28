@@ -1,12 +1,12 @@
 import pytest
 from PyQt6.QtGui import QColor
 
-from opencode_monitor.dashboard.sections.tracing.tree_formatters import (
+from opencode_status_bar.dashboard.sections.tracing.tree_formatters import (
     get_display_text,
     get_foreground_color,
     get_tooltip,
 )
-from opencode_monitor.dashboard.styles import COLORS
+from opencode_status_bar.dashboard.styles import COLORS
 
 
 class TestGetDisplayTextNameColumn:

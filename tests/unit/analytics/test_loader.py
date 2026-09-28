@@ -22,8 +22,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.loader import (
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.loader import (
     get_opencode_storage_path,
     load_sessions_fast,
     load_messages_fast,
@@ -850,13 +850,13 @@ class TestLoadOpencodeData:
         (storage_path / "session").mkdir()
 
         with patch(
-            "opencode_monitor.analytics.loaders.get_opencode_storage_path"
+            "opencode_status_bar.analytics.loaders.get_opencode_storage_path"
         ) as mock_path:
             mock_path.return_value = Path("/non/existent/path")
             load_opencode_data(db=temp_db)
             mock_path.assert_called_once()
 
-        with patch("opencode_monitor.analytics.loaders.AnalyticsDB") as mock_db_class:
+        with patch("opencode_status_bar.analytics.loaders.AnalyticsDB") as mock_db_class:
             mock_db = MagicMock()
             mock_db.connect.return_value = MagicMock()
             mock_db_class.return_value = mock_db

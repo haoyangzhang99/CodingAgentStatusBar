@@ -1,7 +1,7 @@
 """Unit tests for ExchangeStrategy."""
 
 import pytest
-from opencode_monitor.dashboard.sections.tracing.detail_panel.strategies import (
+from opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies import (
     TreeNodeData,
     ExchangeStrategy,
 )

@@ -44,7 +44,7 @@ def create_mock_analyzer(
     Returns:
         MagicMock configured as RiskAnalyzer
     """
-    from opencode_monitor.security.analyzer import RiskResult
+    from opencode_status_bar.security.analyzer import RiskResult
 
     analyzer = MagicMock()
     analyzer.analyze_file_path.return_value = RiskResult(

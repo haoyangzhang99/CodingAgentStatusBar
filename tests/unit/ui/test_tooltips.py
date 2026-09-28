@@ -22,7 +22,7 @@ def mock_menu_item():
 
 def _get_truncate_function():
     """Import the function under test (after mocking rumps)."""
-    from opencode_monitor.app import _truncate_with_tooltip
+    from opencode_status_bar.app import _truncate_with_tooltip
 
     return _truncate_with_tooltip
 
@@ -189,7 +189,7 @@ class TestTruncationConstants:
     @pytest.mark.parametrize("constant_name,expected_value", CONSTANTS)
     def test_truncation_constants(self, constant_name, expected_value):
         """Verify truncation constants have correct values."""
-        from opencode_monitor import app
+        from opencode_status_bar import app
 
         actual = getattr(app, constant_name)
         assert actual == expected_value
@@ -204,7 +204,7 @@ class TestRealWorldScenarios:
     SCENARIOS = [
         # Long file path (tool)
         (
-            "Read: /Users/developer/projects/opencode-swiftbar-monitor/src/opencode_monitor/app.py",
+            "Read: /Users/developer/projects/opencode-swiftbar-monitor/src/opencode_status_bar/app.py",
             TOOL_ARG_MAX_LENGTH,
             "    ",
             True,

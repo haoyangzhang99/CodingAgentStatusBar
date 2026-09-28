@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from opencode_monitor.utils.threading import run_in_background, start_background_task
+from opencode_status_bar.utils.threading import run_in_background, start_background_task
 
 
 class TestRunInBackground:

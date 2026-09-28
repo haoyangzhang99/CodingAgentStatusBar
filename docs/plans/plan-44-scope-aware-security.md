@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-OpenCode Monitor's current security detection analyzes commands and file accesses in isolation, without awareness of the project context. This plan introduces **Scope-Aware Security Detection** - a system that understands the boundaries of the current project and flags accesses outside that scope.
+OpenCode Status Bar's current security detection analyzes commands and file accesses in isolation, without awareness of the project context. This plan introduces **Scope-Aware Security Detection** - a system that understands the boundaries of the current project and flags accesses outside that scope.
 
 ### Problem Statement
 
@@ -357,8 +357,8 @@ def get_scope_violations(session_id: str):
 ### Phase 1: Core ScopeAnalyzer (Day 1)
 
 **Files to create:**
-- `src/opencode_monitor/security/scope/__init__.py`
-- `src/opencode_monitor/security/scope/analyzer.py`
+- `src/opencode_status_bar/security/scope/__init__.py`
+- `src/opencode_status_bar/security/scope/analyzer.py`
 
 **Tasks:**
 1. Implement `ScopeAnalyzer` class with path resolution
@@ -397,8 +397,8 @@ class TestScopeAnalyzer:
 ### Phase 2: Integration with EnrichmentWorker (Day 2)
 
 **Files to modify:**
-- `src/opencode_monitor/security/enrichment/worker.py`
-- `src/opencode_monitor/db/schema.py` (add columns)
+- `src/opencode_status_bar/security/enrichment/worker.py`
+- `src/opencode_status_bar/db/schema.py` (add columns)
 
 **Tasks:**
 1. Add scope analysis to enrichment pipeline
@@ -409,7 +409,7 @@ class TestScopeAnalyzer:
 ### Phase 3: Path Extraction from Commands (Day 3)
 
 **Files to create/modify:**
-- `src/opencode_monitor/security/scope/path_extractor.py`
+- `src/opencode_status_bar/security/scope/path_extractor.py`
 
 **Tasks:**
 1. Extract file paths from bash commands
@@ -442,7 +442,7 @@ class PathExtractor:
 ### Phase 4: Dashboard Integration (Day 4)
 
 **Files to modify:**
-- `src/opencode_monitor/dashboard/` (if exists)
+- `src/opencode_status_bar/dashboard/` (if exists)
 - API endpoints
 
 **Tasks:**
@@ -466,7 +466,7 @@ class PathExtractor:
 ### 4.1 User Configuration (Future)
 
 ```yaml
-# ~/.config/opencode-monitor/scope.yaml
+# ~/.config/opencode-status-bar/scope.yaml
 scope:
   # Additional allowed paths (e.g., monorepo siblings)
   allowed_paths:
@@ -587,7 +587,7 @@ class MonorepoDetector:
 ## Appendix A: Complete File List
 
 ```
-src/opencode_monitor/security/scope/
+src/opencode_status_bar/security/scope/
 ├── __init__.py
 ├── analyzer.py          # ScopeAnalyzer class
 ├── path_extractor.py    # Extract paths from commands

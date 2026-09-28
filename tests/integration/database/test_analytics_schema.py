@@ -1,6 +1,6 @@
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.db import AnalyticsDB
 
 
 class TestDatabaseSchema:

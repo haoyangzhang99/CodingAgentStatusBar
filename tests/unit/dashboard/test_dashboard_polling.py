@@ -24,7 +24,7 @@ class TestDashboardPolling:
     def test_monitoring_refreshes_every_cycle(self, qapp):
         """Monitoring data fetch is called on every refresh cycle."""
         import threading
-        from opencode_monitor.dashboard.window.main import DashboardWindow
+        from opencode_status_bar.dashboard.window.main import DashboardWindow
 
         monitoring_calls = []
         call_events = []
@@ -60,7 +60,7 @@ class TestDashboardPolling:
     def test_secondary_data_refreshes_every_fifth_cycle(self, qapp):
         """Secondary data (security, analytics, tracing) refreshes every 5th cycle."""
         import threading
-        from opencode_monitor.dashboard.window.main import DashboardWindow
+        from opencode_status_bar.dashboard.window.main import DashboardWindow
 
         security_calls = []
         analytics_calls = []
@@ -110,7 +110,7 @@ class TestDashboardPolling:
     def test_refresh_count_increments(self, qapp):
         """_refresh_count increments after each refresh cycle."""
         import threading
-        from opencode_monitor.dashboard.window.main import DashboardWindow
+        from opencode_status_bar.dashboard.window.main import DashboardWindow
 
         refresh_done = []
 
@@ -159,7 +159,7 @@ class TestHealthCheckCache:
 
     def test_health_check_uses_cache(self):
         """is_available uses cached result within HEALTH_CHECK_CACHE_DURATION."""
-        from opencode_monitor.api.client import (
+        from opencode_status_bar.api.client import (
             AnalyticsAPIClient,
             HEALTH_CHECK_CACHE_DURATION,
         )
@@ -190,7 +190,7 @@ class TestHealthCheckCache:
 
     def test_health_check_cache_expires(self):
         """is_available makes new request after cache expires."""
-        from opencode_monitor.api.client import (
+        from opencode_status_bar.api.client import (
             AnalyticsAPIClient,
             HEALTH_CHECK_CACHE_DURATION,
         )
@@ -213,13 +213,13 @@ class TestHealthCheckCache:
 
     def test_health_check_cache_duration_is_5_seconds(self):
         """Verify HEALTH_CHECK_CACHE_DURATION is 5 seconds as specified."""
-        from opencode_monitor.api.client import HEALTH_CHECK_CACHE_DURATION
+        from opencode_status_bar.api.client import HEALTH_CHECK_CACHE_DURATION
 
         assert HEALTH_CHECK_CACHE_DURATION == 5
 
     def test_health_check_updates_timestamp(self):
         """health_check updates _last_health_check timestamp."""
-        from opencode_monitor.api.client import AnalyticsAPIClient
+        from opencode_status_bar.api.client import AnalyticsAPIClient
 
         client = AnalyticsAPIClient()
 

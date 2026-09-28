@@ -95,16 +95,16 @@ def patched_api_client(mock_api_client):
     all data through the API client, not directly to DuckDB.
     """
     with patch(
-        "opencode_monitor.api.client.get_api_client", return_value=mock_api_client
+        "opencode_status_bar.api.client.get_api_client", return_value=mock_api_client
     ):
-        with patch("opencode_monitor.api.get_api_client", return_value=mock_api_client):
+        with patch("opencode_status_bar.api.get_api_client", return_value=mock_api_client):
             yield mock_api_client
 
 
 @pytest.fixture
 def patched_monitoring():
     """Patch monitoring fetch to avoid real network calls."""
-    from opencode_monitor.core.models import State, Todos
+    from opencode_status_bar.core.models import State, Todos
 
     async def mock_fetch():
         return State(
@@ -113,7 +113,7 @@ def patched_monitoring():
 
     mock = MagicMock(side_effect=lambda: mock_fetch())
 
-    with patch("opencode_monitor.core.monitor.fetch_all_instances", mock):
+    with patch("opencode_status_bar.core.monitor.fetch_all_instances", mock):
         yield
 
 
@@ -139,7 +139,7 @@ def patched_security():
     mock_auditor.get_risky_webfetches.return_value = []
 
     with patch(
-        "opencode_monitor.security.auditor.get_auditor", return_value=mock_auditor
+        "opencode_status_bar.security.auditor.get_auditor", return_value=mock_auditor
     ):
         yield mock_auditor
 
@@ -160,7 +160,7 @@ def dashboard_window(qtbot, patched_api_client, patched_monitoring, patched_secu
     Yields:
         DashboardWindow: Fully mocked dashboard window
     """
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
 
     window = DashboardWindow()
     qtbot.addWidget(window)
@@ -192,7 +192,7 @@ def dashboard_window_hidden(
     qtbot, patched_api_client, patched_monitoring, patched_security
 ):
     """Create a dashboard window without showing it."""
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
 
     window = DashboardWindow()
     qtbot.addWidget(window)
@@ -221,7 +221,7 @@ def dashboard_window_with_timers(
     For all other tests, use dashboard_window which stops timers to avoid
     interference with manually emitted data.
     """
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
 
     window = DashboardWindow()
     qtbot.addWidget(window)
@@ -249,7 +249,7 @@ def dashboard_window_hidden_with_timers(
 
     Use this fixture ONLY for tests that verify timer behavior on hidden windows.
     """
-    from opencode_monitor.dashboard.window import DashboardWindow
+    from opencode_status_bar.dashboard.window import DashboardWindow
 
     window = DashboardWindow()
     qtbot.addWidget(window)
@@ -343,7 +343,7 @@ def duckdb_memory():
 @pytest.fixture
 def analytics_db_real(tmp_path):
     from pathlib import Path
-    from opencode_monitor.analytics.db import AnalyticsDB
+    from opencode_status_bar.analytics.db import AnalyticsDB
 
     db_path = Path(tmp_path) / "test_analytics.duckdb"
     db = AnalyticsDB(db_path=db_path, read_only=False)
@@ -383,7 +383,7 @@ def analytics_db_real(tmp_path):
 def flask_app_real(analytics_db_real):
     import threading
     from flask import Flask
-    from opencode_monitor.api.routes import (
+    from opencode_status_bar.api.routes import (
         health_bp,
         stats_bp,
         sessions_bp,
@@ -391,8 +391,8 @@ def flask_app_real(analytics_db_real):
         delegations_bp,
         security_bp,
     )
-    from opencode_monitor.api.routes._context import RouteContext
-    from opencode_monitor.analytics import TracingDataService
+    from opencode_status_bar.api.routes._context import RouteContext
+    from opencode_status_bar.analytics import TracingDataService
     from unittest.mock import patch
 
     app = Flask(__name__)
@@ -407,11 +407,11 @@ def flask_app_real(analytics_db_real):
     context.configure(db_lock=threading.Lock(), get_service=lambda: service)
 
     with patch(
-        "opencode_monitor.api.routes.sessions.get_analytics_db",
+        "opencode_status_bar.api.routes.sessions.get_analytics_db",
         return_value=analytics_db_real,
     ):
         with patch(
-            "opencode_monitor.api.routes.stats.get_analytics_db",
+            "opencode_status_bar.api.routes.stats.get_analytics_db",
             return_value=analytics_db_real,
         ):
             app.register_blueprint(health_bp)

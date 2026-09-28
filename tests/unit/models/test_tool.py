@@ -1,5 +1,5 @@
 import pytest
-from opencode_monitor.core.models import Tool
+from opencode_status_bar.core.models import Tool
 
 
 def test_tool_creation():

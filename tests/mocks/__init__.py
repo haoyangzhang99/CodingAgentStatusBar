@@ -1,5 +1,5 @@
 """
-Centralized mock factories for opencode_monitor tests.
+Centralized mock factories for opencode_status_bar tests.
 
 This module provides:
 - MockAnalyticsAPIClient: Mock API client for integration tests

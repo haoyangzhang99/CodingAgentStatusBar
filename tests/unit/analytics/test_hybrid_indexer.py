@@ -9,8 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.indexer.hybrid import HybridIndexer, IndexerRegistry
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.indexer.hybrid import HybridIndexer, IndexerRegistry
 
 
 def create_session_json(session_id: str, title: str = "Test Session") -> dict:
@@ -167,9 +167,9 @@ class TestHybridIndexerStats:
 
 class TestHybridIndexerProcessFile:
     def test_process_session_file(self, temp_storage, temp_db_path):
-        from opencode_monitor.analytics.indexer.tracker import FileTracker
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.tracker import FileTracker
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
 
         indexer = HybridIndexer(storage_path=temp_storage, db_path=temp_db_path)
         indexer._db = AnalyticsDB(temp_db_path)
@@ -198,9 +198,9 @@ class TestHybridIndexerProcessFile:
 
     def test_process_part_creates_file_operation(self, temp_storage, temp_db_path):
         """Test that processing a read/write/edit part creates a file_operation entry."""
-        from opencode_monitor.analytics.indexer.tracker import FileTracker
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.tracker import FileTracker
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
 
         indexer = HybridIndexer(storage_path=temp_storage, db_path=temp_db_path)
         indexer._db = AnalyticsDB(temp_db_path)
@@ -247,9 +247,9 @@ class TestHandlerErrorCases:
     def test_session_handler_returns_none_on_invalid_data(
         self, temp_storage, temp_db_path
     ):
-        from opencode_monitor.analytics.indexer.handlers import SessionHandler
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.handlers import SessionHandler
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
 
         db = AnalyticsDB(temp_db_path)
         conn = db.connect()
@@ -270,9 +270,9 @@ class TestHandlerErrorCases:
     def test_message_handler_returns_none_on_invalid_data(
         self, temp_storage, temp_db_path
     ):
-        from opencode_monitor.analytics.indexer.handlers import MessageHandler
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.handlers import MessageHandler
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
 
         db = AnalyticsDB(temp_db_path)
         conn = db.connect()
@@ -293,9 +293,9 @@ class TestHandlerErrorCases:
     def test_part_handler_returns_none_on_invalid_data(
         self, temp_storage, temp_db_path
     ):
-        from opencode_monitor.analytics.indexer.handlers import PartHandler
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.handlers import PartHandler
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
 
         db = AnalyticsDB(temp_db_path)
         conn = db.connect()
@@ -317,9 +317,9 @@ class TestHandlerErrorCases:
         self, temp_storage, temp_db_path
     ):
         """Test that PartHandler inserts child_session_id for task parts."""
-        from opencode_monitor.analytics.indexer.handlers import PartHandler
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.handlers import PartHandler
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
         from datetime import datetime
 
         db = AnalyticsDB(temp_db_path)
@@ -375,9 +375,9 @@ class TestMessageHandlerProcess:
 
     def test_process_message_file(self, temp_storage, temp_db_path):
         """Test that processing a message file creates a message entry."""
-        from opencode_monitor.analytics.indexer.tracker import FileTracker
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.tracker import FileTracker
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
 
         indexer = HybridIndexer(storage_path=temp_storage, db_path=temp_db_path)
         indexer._db = AnalyticsDB(temp_db_path)
@@ -414,9 +414,9 @@ class TestMessageHandlerProcess:
 
     def test_process_message_with_tokens(self, temp_storage, temp_db_path):
         """Test that message tokens are correctly parsed."""
-        from opencode_monitor.analytics.indexer.tracker import FileTracker
-        from opencode_monitor.analytics.indexer.parsers import FileParser
-        from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
+        from opencode_status_bar.analytics.indexer.tracker import FileTracker
+        from opencode_status_bar.analytics.indexer.parsers import FileParser
+        from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
 
         indexer = HybridIndexer(storage_path=temp_storage, db_path=temp_db_path)
         indexer._db = AnalyticsDB(temp_db_path)

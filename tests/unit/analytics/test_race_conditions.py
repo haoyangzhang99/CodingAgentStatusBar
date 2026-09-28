@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 import pytest
 
-from opencode_monitor.analytics.indexer.file_processing import FileProcessingState
+from opencode_status_bar.analytics.indexer.file_processing import FileProcessingState
 
 
 class TestFileProcessingState:

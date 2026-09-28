@@ -11,13 +11,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from opencode_monitor.security.auditor import (
+from opencode_status_bar.security.auditor import (
     SecurityAuditor,
     get_auditor,
     start_auditor,
     stop_auditor,
 )
-from opencode_monitor.security.db import (
+from opencode_status_bar.security.db import (
     AuditedCommand,
     AuditedFileRead,
     AuditedFileWrite,
@@ -457,7 +457,7 @@ class TestGlobalFunctions:
     @pytest.fixture(autouse=True)
     def reset_singleton(self):
         """Reset auditor singleton before and after each test."""
-        from opencode_monitor.security.auditor import core as auditor_core
+        from opencode_status_bar.security.auditor import core as auditor_core
 
         auditor_core._auditor = None
         yield
@@ -465,7 +465,7 @@ class TestGlobalFunctions:
 
     def test_get_auditor_creates_singleton(self):
         """get_auditor creates and returns singleton."""
-        from opencode_monitor.security.auditor import core as auditor_core
+        from opencode_status_bar.security.auditor import core as auditor_core
 
         with patch.object(auditor_core, "SecurityAuditor") as mock_cls:
             mock_inst = MagicMock()
@@ -479,7 +479,7 @@ class TestGlobalFunctions:
 
     def test_start_auditor_starts_singleton(self):
         """start_auditor starts the singleton."""
-        from opencode_monitor.security.auditor import core as auditor_core
+        from opencode_status_bar.security.auditor import core as auditor_core
 
         with patch.object(auditor_core, "SecurityAuditor") as mock_cls:
             mock_inst = MagicMock()
@@ -490,7 +490,7 @@ class TestGlobalFunctions:
 
     def test_stop_auditor_stops_and_clears_singleton(self):
         """stop_auditor stops and clears singleton."""
-        from opencode_monitor.security.auditor import core as auditor_core
+        from opencode_status_bar.security.auditor import core as auditor_core
 
         with patch.object(auditor_core, "SecurityAuditor") as mock_cls:
             mock_inst = MagicMock()
@@ -505,7 +505,7 @@ class TestGlobalFunctions:
 
     def test_stop_auditor_when_none_is_safe(self):
         """stop_auditor is safe to call when no auditor exists."""
-        from opencode_monitor.security.auditor import core as auditor_core
+        from opencode_status_bar.security.auditor import core as auditor_core
 
         stop_auditor()
         assert auditor_core._auditor is None

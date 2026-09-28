@@ -6,7 +6,7 @@ import subprocess
 from unittest.mock import MagicMock, patch
 
 
-from opencode_monitor.ui.terminal import focus_iterm2
+from opencode_status_bar.ui.terminal import focus_iterm2
 
 
 class TestFocusIterm2:
@@ -18,7 +18,7 @@ class TestFocusIterm2:
 
     def test_focus_iterm2_adds_dev_prefix_when_missing(self):
         """TTY without /dev/ prefix should have it added."""
-        with patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock()
 
             result = focus_iterm2("ttys001")
@@ -32,7 +32,7 @@ class TestFocusIterm2:
 
     def test_focus_iterm2_keeps_dev_prefix_when_present(self):
         """TTY with /dev/ prefix should be kept as-is."""
-        with patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock()
 
             result = focus_iterm2("/dev/ttys002")
@@ -52,7 +52,7 @@ class TestFocusIterm2:
 
     def test_focus_iterm2_calls_osascript_with_correct_args(self):
         """Should call osascript with correct arguments."""
-        with patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock()
 
             focus_iterm2("ttys001")
@@ -66,7 +66,7 @@ class TestFocusIterm2:
 
     def test_focus_iterm2_returns_true_on_success(self):
         """Should return True when subprocess succeeds."""
-        with patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock()
 
             result = focus_iterm2("ttys001")
@@ -80,8 +80,8 @@ class TestFocusIterm2:
     def test_focus_iterm2_returns_false_on_timeout(self):
         """Should return False and log error when subprocess times out."""
         with (
-            patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run,
-            patch("opencode_monitor.ui.terminal.error") as mock_error,
+            patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run,
+            patch("opencode_status_bar.ui.terminal.error") as mock_error,
         ):
             mock_run.side_effect = subprocess.TimeoutExpired(cmd="osascript", timeout=5)
 
@@ -94,8 +94,8 @@ class TestFocusIterm2:
     def test_focus_iterm2_returns_false_on_subprocess_error(self):
         """Should return False and log error when subprocess raises an error."""
         with (
-            patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run,
-            patch("opencode_monitor.ui.terminal.error") as mock_error,
+            patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run,
+            patch("opencode_status_bar.ui.terminal.error") as mock_error,
         ):
             mock_run.side_effect = subprocess.SubprocessError("Command failed")
 
@@ -108,8 +108,8 @@ class TestFocusIterm2:
     def test_focus_iterm2_returns_false_on_file_not_found(self):
         """Should return False when osascript is not found."""
         with (
-            patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run,
-            patch("opencode_monitor.ui.terminal.error") as mock_error,
+            patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run,
+            patch("opencode_status_bar.ui.terminal.error") as mock_error,
         ):
             mock_run.side_effect = FileNotFoundError("osascript not found")
 
@@ -121,8 +121,8 @@ class TestFocusIterm2:
     def test_focus_iterm2_returns_false_on_generic_exception(self):
         """Should return False on any generic exception."""
         with (
-            patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run,
-            patch("opencode_monitor.ui.terminal.error") as mock_error,
+            patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run,
+            patch("opencode_status_bar.ui.terminal.error") as mock_error,
         ):
             mock_run.side_effect = Exception("Unexpected error")
 
@@ -138,7 +138,7 @@ class TestFocusIterm2:
 
     def test_focus_iterm2_script_contains_iterm2_commands(self):
         """AppleScript should contain iTerm2 specific commands."""
-        with patch("opencode_monitor.ui.terminal.subprocess.run") as mock_run:
+        with patch("opencode_status_bar.ui.terminal.subprocess.run") as mock_run:
             mock_run.return_value = MagicMock()
 
             focus_iterm2("ttys001")

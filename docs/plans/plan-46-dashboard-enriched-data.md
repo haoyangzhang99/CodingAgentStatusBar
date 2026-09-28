@@ -23,7 +23,7 @@ Integrate the enriched data fields from Plan 45 into existing dashboard componen
 ### 1. Session List/Cards
 - **Current**: Shows title, directory, timestamps
 - **Enhancement**: Add `summary_title` as subtitle when available
-- **File**: `src/opencode_monitor/dashboard/sections/tracing/session_list.py`
+- **File**: `src/opencode_status_bar/dashboard/sections/tracing/session_list.py`
 
 ### 2. Timeline Tool Items  
 - **Current**: Shows `tool_name` and status
@@ -31,24 +31,24 @@ Integrate the enriched data fields from Plan 45 into existing dashboard componen
   - Use `title` as primary label (fallback to tool_name)
   - Add `result_summary` as tooltip on hover
   - Show `cost`/`tokens` in detail view
-- **File**: `src/opencode_monitor/dashboard/sections/tracing/views/timeline.py`
+- **File**: `src/opencode_status_bar/dashboard/sections/tracing/views/timeline.py`
 
 ### 3. Message Items
 - **Current**: Shows role and content
 - **Enhancement**:
   - Add agent badge (main/executor/subagent)
   - Add error indicator icon for failed messages
-- **File**: `src/opencode_monitor/dashboard/sections/tracing/views/timeline.py`
+- **File**: `src/opencode_status_bar/dashboard/sections/tracing/views/timeline.py`
 
 ### 4. Session Detail Header
 - **Current**: Shows session title
 - **Enhancement**: Add `root_path` as project indicator
-- **File**: `src/opencode_monitor/dashboard/sections/tracing/detail_panel/panel.py`
+- **File**: `src/opencode_status_bar/dashboard/sections/tracing/detail_panel/panel.py`
 
 ### 5. File Attachments (NEW)
 - **Current**: Not displayed
 - **Enhancement**: Show thumbnail for image attachments
-- **File**: `src/opencode_monitor/dashboard/sections/tracing/views/timeline.py`
+- **File**: `src/opencode_status_bar/dashboard/sections/tracing/views/timeline.py`
 
 ## Agent Workflow
 
@@ -146,7 +146,7 @@ Phase 5: Validation
 ## Files to Modify
 
 ```
-src/opencode_monitor/dashboard/sections/tracing/
+src/opencode_status_bar/dashboard/sections/tracing/
 ├── session_list.py          # Story 1: Session card enrichment
 ├── detail_panel/
 │   └── panel.py             # Story 4: Session header with root_path

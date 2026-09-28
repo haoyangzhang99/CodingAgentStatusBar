@@ -1,7 +1,7 @@
 import pytest
 from PyQt6.QtWidgets import QWidget
 
-from opencode_monitor.dashboard.sections.tracing.detail_panel.components.session_overview import (
+from opencode_status_bar.dashboard.sections.tracing.detail_panel.components.session_overview import (
     ExchangeGroupWidget,
 )
 

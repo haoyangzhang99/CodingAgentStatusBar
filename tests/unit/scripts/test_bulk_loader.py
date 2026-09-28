@@ -26,7 +26,7 @@ import pytest
 # Add scripts to path for bulk_loader import
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts"))
 
-from opencode_monitor.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.db import AnalyticsDB
 from bulk_loader import BulkLoader, BulkLoadResult
 
 

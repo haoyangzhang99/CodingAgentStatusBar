@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Callable
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.indexer.file_processing import FileProcessingState
-from opencode_monitor.utils.logger import info, debug, error
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.indexer.file_processing import FileProcessingState
+from opencode_status_bar.utils.logger import info, debug, error
 from bulk_queries import (
     LOAD_SESSIONS_SQL,
     LOAD_MESSAGES_SQL,
@@ -427,7 +427,7 @@ class BulkLoader:
         Returns:
             Number of file operations enriched
         """
-        from opencode_monitor.analytics.loaders.files import (
+        from opencode_status_bar.analytics.loaders.files import (
             enrich_file_operations_with_diff_stats,
         )
 

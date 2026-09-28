@@ -30,7 +30,7 @@
 
 ### 1.1 Current Situation
 
-OpenCode Monitor's analytics platform processes **~232K JSON files** (877 sessions, 43,060 messages, 187,331 parts) representing **2GB of data**. Following a comprehensive audit on January 10, 2026, we've identified critical gaps in data quality and availability:
+OpenCode Status Bar's analytics platform processes **~232K JSON files** (877 sessions, 43,060 messages, 187,331 parts) representing **2GB of data**. Following a comprehensive audit on January 10, 2026, we've identified critical gaps in data quality and availability:
 
 | Metric | Current State | Issue |
 |--------|--------------|-------|
@@ -378,8 +378,8 @@ Each sprint has a **milestone gate** with specific exit criteria:
 **Acceptance**: 95%+ sessions have real token counts (not 0)
 
 **Files Modified**:
-- `src/opencode_monitor/analytics/indexer/parsers.py`
-- `src/opencode_monitor/analytics/db.py`
+- `src/opencode_status_bar/analytics/indexer/parsers.py`
+- `src/opencode_status_bar/analytics/db.py`
 - `tests/test_token_calculation.py` (NEW)
 
 ---
@@ -455,9 +455,9 @@ Each sprint has a **milestone gate** with specific exit criteria:
 **Acceptance**: 0 file loss or duplication in 10 test runs with overlap
 
 **Files**:
-- `src/opencode_monitor/analytics/indexer/sync_state.py` (NEW)
-- `src/opencode_monitor/analytics/indexer/bulk_loader.py`
-- `src/opencode_monitor/analytics/indexer/watcher.py`
+- `src/opencode_status_bar/analytics/indexer/sync_state.py` (NEW)
+- `src/opencode_status_bar/analytics/indexer/bulk_loader.py`
+- `src/opencode_status_bar/analytics/indexer/watcher.py`
 - `tests/test_race_condition.py` (NEW)
 
 ---
@@ -1897,8 +1897,8 @@ Dashboard: [link]
 
 | Term | Definition |
 |------|-----------|
-| **Plan 45** | OpenCode Monitor's advanced tracing architecture featuring exchanges (user↔assistant turns) and hierarchical timeline views |
-| **DuckDB** | In-process SQL database optimized for analytics, used for OpenCode Monitor analytics storage |
+| **Plan 45** | OpenCode Status Bar's advanced tracing architecture featuring exchanges (user↔assistant turns) and hierarchical timeline views |
+| **DuckDB** | In-process SQL database optimized for analytics, used for OpenCode Status Bar analytics storage |
 | **Bulk Loader** | Initial data ingestion process that loads all historical JSON files into the database |
 | **Real-time Watcher** | Continuous monitoring process that loads new JSON files as they're created |
 | **Race Condition** | Potential data loss or duplication when bulk loading transitions to real-time watching without proper synchronization |
@@ -1912,9 +1912,9 @@ Dashboard: [link]
 ### Appendix E: Related Documentation
 
 **Code Documentation**:
-- `src/opencode_monitor/analytics/README.md` - Analytics architecture overview
-- `src/opencode_monitor/analytics/db.py` - Database schema documentation
-- `src/opencode_monitor/analytics/indexer/README.md` - Data pipeline architecture
+- `src/opencode_status_bar/analytics/README.md` - Analytics architecture overview
+- `src/opencode_status_bar/analytics/db.py` - Database schema documentation
+- `src/opencode_status_bar/analytics/indexer/README.md` - Data pipeline architecture
 
 **Audit Reports**:
 - `audit-reports/data-audit-comprehensive-2026-01-10.md` - Complete data audit

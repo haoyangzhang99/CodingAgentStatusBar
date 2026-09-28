@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Bulk backfill script for OpenCode Monitor.
+Bulk backfill script for OpenCode Status Bar.
 
 Loads all historical data into the analytics database.
 Must be run when the app is NOT running (DB must not be locked).
@@ -15,14 +15,14 @@ import sys
 import time
 from pathlib import Path
 
-# Add src to path for opencode_monitor imports
+# Add src to path for opencode_status_bar imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 # Add scripts to path for local bulk_loader import
 sys.path.insert(0, str(Path(__file__).parent))
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
-from opencode_monitor.analytics.materialization import MaterializedTableManager
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
+from opencode_status_bar.analytics.materialization import MaterializedTableManager
 from bulk_loader import BulkLoader
 from bulk_enrichment import bulk_enrich
 from config import DEFAULT_DB_PATH, DEFAULT_STORAGE_PATH
@@ -46,7 +46,7 @@ def check_db_lock(db_path: Path) -> bool:
 
 def run_backfill() -> int:
     print("=" * 60)
-    print("OpenCode Monitor - Bulk Backfill")
+    print("OpenCode Status Bar - Bulk Backfill")
     print("=" * 60)
 
     db_path = DEFAULT_DB_PATH
@@ -56,7 +56,7 @@ def run_backfill() -> int:
         print("ERROR: Database is locked!")
         print()
         print("The app is probably running. Stop it first:")
-        print("  pkill -f opencode_monitor")
+        print("  pkill -f opencode_status_bar")
         print()
         print("Then run backfill again:")
         print("  make backfill")

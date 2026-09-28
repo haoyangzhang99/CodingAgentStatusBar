@@ -202,8 +202,8 @@ For completeness, here are the indexes that already existed:
 
 ## Migration Information
 
-**Migration File**: `src/opencode_monitor/analytics/migrations/002_add_composite_indexes.sql`  
-**Applied to**: `src/opencode_monitor/analytics/db.py` in `_create_schema()` method  
+**Migration File**: `src/opencode_status_bar/analytics/migrations/002_add_composite_indexes.sql`  
+**Applied to**: `src/opencode_status_bar/analytics/db.py` in `_create_schema()` method  
 **Lines**: 566-606
 
 ### Idempotency
@@ -290,7 +290,7 @@ GROUP BY table_name;
 
 - [Plan 47: Data Quality Improvement](../plans/plan-47-data-quality-improvement.md)
 - [Sprint 0: Database Indexing](../sprints/2026-01-data-quality-sprint0.md)
-- [Database Schema](../../src/opencode_monitor/analytics/db.py)
+- [Database Schema](../../src/opencode_status_bar/analytics/db.py)
 
 ---
 

@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from PyQt6.QtWidgets import QApplication
-from opencode_monitor.dashboard.window import DashboardWindow
+from opencode_status_bar.dashboard.window import DashboardWindow
 
 
 def profile_dashboard_startup(duration_seconds: int = 30) -> tuple[pstats.Stats, tuple]:

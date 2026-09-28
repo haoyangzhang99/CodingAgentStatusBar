@@ -17,9 +17,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.indexer.trace_builder.builder import TraceBuilder
-from opencode_monitor.analytics.indexer.parsers import ParsedDelegation, ParsedPart
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.indexer.trace_builder.builder import TraceBuilder
+from opencode_status_bar.analytics.indexer.parsers import ParsedDelegation, ParsedPart
 
 
 # === Fixtures ===

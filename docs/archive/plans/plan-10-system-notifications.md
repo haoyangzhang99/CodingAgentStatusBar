@@ -2,7 +2,7 @@
 
 ## Contexte
 
-L'application OpenCode Monitor dispose actuellement de notifications sonores (plan-02) pour alerter l'utilisateur d'evenements importants. Cependant, quand l'utilisateur n'est pas devant son ecran ou que le volume est coupe, ces alertes peuvent passer inapercues.
+L'application OpenCode Status Bar dispose actuellement de notifications sonores (plan-02) pour alerter l'utilisateur d'evenements importants. Cependant, quand l'utilisateur n'est pas devant son ecran ou que le volume est coupe, ces alertes peuvent passer inapercues.
 
 Les notifications systeme macOS (Centre de notifications) offrent plusieurs avantages complementaires :
 - Visibilite meme quand l'application n'est pas au premier plan
@@ -145,7 +145,7 @@ Ajouter des notifications systeme macOS natives pour les evenements importants, 
 
 **Apparence de la notification** :
 - L'icone de l'application apparait dans la notification
-- Le nom "OpenCode Monitor" identifie la source
+- Le nom "OpenCode Status Bar" identifie la source
 - Coherence visuelle avec l'application
 
 ### 9. Permissions systeme

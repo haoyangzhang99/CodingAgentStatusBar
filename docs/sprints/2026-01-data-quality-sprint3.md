@@ -294,13 +294,13 @@ def save_health_check_history(results):
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/validation/` - NEW (validation module)
+- `src/opencode_status_bar/analytics/validation/` - NEW (validation module)
   - `__init__.py`
   - `checks.py` - All validation check functions
   - `health_check.py` - Daily health check script
   - `report_generator.py` - Generate HTML/Markdown reports
   - `alerting.py` - Slack/email alerting
-- `src/opencode_monitor/analytics/db.py` - Add health_check_history table
+- `src/opencode_status_bar/analytics/db.py` - Add health_check_history table
 - `scripts/run_daily_health_check.sh` - Cron job script
 - `tests/test_validation.py` - NEW
 
@@ -468,7 +468,7 @@ indexer_status = Gauge('indexer_status', 'Indexer running status (1=running, 0=s
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/monitoring/` - NEW (monitoring module)
+- `src/opencode_status_bar/analytics/monitoring/` - NEW (monitoring module)
   - `__init__.py`
   - `metrics.py` - Prometheus metrics
   - `dashboards/` - Grafana dashboard configs

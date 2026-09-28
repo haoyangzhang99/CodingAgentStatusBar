@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from opencode_monitor.dashboard.sections.tracing.views.timeline import EVENT_TYPE_CONFIG
+from opencode_status_bar.dashboard.sections.tracing.views.timeline import EVENT_TYPE_CONFIG
 
 
 class TestEventTypeConfig:
@@ -42,7 +42,7 @@ class TestEventTypeConfig:
 
 class TestTimelineEventContent:
     def test_delegation_result_extracts_result_summary(self):
-        from opencode_monitor.dashboard.sections.tracing.views.timeline import (
+        from opencode_status_bar.dashboard.sections.tracing.views.timeline import (
             TimelineEventWidget,
         )
 
@@ -60,7 +60,7 @@ class TestTimelineEventContent:
             assert "Task completed successfully" in content
 
     def test_delegation_result_truncates_long_content(self):
-        from opencode_monitor.dashboard.sections.tracing.views.timeline import (
+        from opencode_status_bar.dashboard.sections.tracing.views.timeline import (
             TimelineEventWidget,
         )
 

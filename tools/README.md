@@ -1,6 +1,6 @@
 # Performance Profiling Tools
 
-These tools help identify and measure performance bottlenecks in OpenCode Monitor.
+These tools help identify and measure performance bottlenecks in OpenCode Status Bar.
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ Analyzes common database queries and shows execution plans.
 ```bash
 python tools/analyze_queries.py
 
-python tools/analyze_queries.py --db ~/.config/opencode-monitor/analytics.duckdb
+python tools/analyze_queries.py --db ~/.config/opencode-status-bar/analytics.duckdb
 ```
 
 **Output**:
@@ -66,7 +66,7 @@ python tools/analyze_queries.py --db ~/.config/opencode-monitor/analytics.duckdb
 ### API Endpoints
 
 ```python
-from opencode_monitor.utils.profiling import profile_api_endpoint
+from opencode_status_bar.utils.profiling import profile_api_endpoint
 
 @stats_bp.route("/api/stats")
 @profile_api_endpoint
@@ -77,7 +77,7 @@ def get_stats():
 ### Dashboard Methods
 
 ```python
-from opencode_monitor.utils.profiling import profile_dashboard_fetch
+from opencode_status_bar.utils.profiling import profile_dashboard_fetch
 
 @profile_dashboard_fetch("monitoring")
 def _fetch_monitoring_data(self):
@@ -87,7 +87,7 @@ def _fetch_monitoring_data(self):
 ### Database Queries
 
 ```python
-from opencode_monitor.utils.profiling import QueryProfiler
+from opencode_status_bar.utils.profiling import QueryProfiler
 
 with QueryProfiler("fetch_traces") as profiler:
     result = conn.execute("SELECT ...").fetchall()
@@ -97,7 +97,7 @@ with QueryProfiler("fetch_traces") as profiler:
 ### Memory Tracking
 
 ```python
-from opencode_monitor.utils.profiling import MemoryProfiler
+from opencode_status_bar.utils.profiling import MemoryProfiler
 
 with MemoryProfiler("tree_building"):
     build_large_tree()
@@ -108,7 +108,7 @@ with MemoryProfiler("tree_building"):
 Collect metrics over time and generate reports:
 
 ```python
-from opencode_monitor.utils.profiling import get_performance_report
+from opencode_status_bar.utils.profiling import get_performance_report
 
 report = get_performance_report()
 
@@ -170,7 +170,7 @@ LSP type checking errors - ignore them. Scripts work at runtime:
 
 ```bash
 # Verify imports work
-python -c "from opencode_monitor.dashboard.window import DashboardWindow"
+python -c "from opencode_status_bar.dashboard.window import DashboardWindow"
 ```
 
 ### "Connection refused"

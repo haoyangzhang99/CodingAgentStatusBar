@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-OpenCode Monitor's security detection system provides solid foundational pattern matching with MITRE ATT&CK mapping, but analysis reveals significant gaps in detecting AI-specific attack vectors, sophisticated evasion techniques, and context-aware risk assessment. This plan proposes targeted improvements to increase detection coverage from ~40% to ~75% of relevant ATT&CK techniques while reducing false positive rates by 30%.
+OpenCode Status Bar's security detection system provides solid foundational pattern matching with MITRE ATT&CK mapping, but analysis reveals significant gaps in detecting AI-specific attack vectors, sophisticated evasion techniques, and context-aware risk assessment. This plan proposes targeted improvements to increase detection coverage from ~40% to ~75% of relevant ATT&CK techniques while reducing false positive rates by 30%.
 
 ### Key Findings
 
@@ -467,7 +467,7 @@ ADDITIONAL_KILL_CHAINS = [
 4. Add 5 new MITRE technique patterns (T1136, T1543, T1547, T1567, T1611)
 
 **Files to modify**:
-- `src/opencode_monitor/security/analyzer/patterns.py`
+- `src/opencode_status_bar/security/analyzer/patterns.py`
 
 #### Phase 2: False Positive Reduction (Days 3-4)
 
@@ -479,7 +479,7 @@ ADDITIONAL_KILL_CHAINS = [
 4. Update tests to validate score changes
 
 **Files to modify**:
-- `src/opencode_monitor/security/analyzer/patterns.py`
+- `src/opencode_status_bar/security/analyzer/patterns.py`
 - `tests/test_risk_analyzer.py`
 
 #### Phase 3: Kill Chain Expansion (Days 5-6)
@@ -492,8 +492,8 @@ ADDITIONAL_KILL_CHAINS = [
 4. Add cross-session high-risk file tracking (design only)
 
 **Files to modify**:
-- `src/opencode_monitor/security/sequences.py`
-- `src/opencode_monitor/security/correlator.py`
+- `src/opencode_status_bar/security/sequences.py`
+- `src/opencode_status_bar/security/correlator.py`
 - `tests/test_sequences.py`
 - `tests/test_correlator.py`
 
@@ -507,7 +507,7 @@ ADDITIONAL_KILL_CHAINS = [
 4. Performance validation
 
 **Files to modify**:
-- `src/opencode_monitor/security/analyzer/patterns.py`
+- `src/opencode_status_bar/security/analyzer/patterns.py`
 - `tests/test_risk_analyzer.py`
 - `docs/` (new MITRE coverage documentation)
 

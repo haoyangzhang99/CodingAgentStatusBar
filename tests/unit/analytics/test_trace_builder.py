@@ -10,9 +10,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import tempfile
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.indexer.trace_builder import TraceBuilder
-from opencode_monitor.analytics.indexer.trace_builder.helpers import extract_prompt
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.indexer.trace_builder import TraceBuilder
+from opencode_status_bar.analytics.indexer.trace_builder.helpers import extract_prompt
 
 
 class TestExtractPrompt:

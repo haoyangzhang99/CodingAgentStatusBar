@@ -89,7 +89,7 @@ def analytics_db(worker_db_path):
     
     Each test gets a fresh database to ensure isolation.
     """
-    from opencode_monitor.analytics.db import AnalyticsDB
+    from opencode_status_bar.analytics.db import AnalyticsDB
     
     db = AnalyticsDB(db_path=worker_db_path, read_only=False)
     
@@ -112,7 +112,7 @@ def enrichment_db(worker_db_path):
     """
     Function-scoped database with security enrichment schema.
     """
-    from opencode_monitor.analytics.db import AnalyticsDB
+    from opencode_status_bar.analytics.db import AnalyticsDB
     
     db = AnalyticsDB(db_path=worker_db_path, read_only=False)
     
@@ -557,7 +557,7 @@ def test_with_resource_tracking(resource_tracker, temp_storage):
 ```python
 def test_with_mocks(mock_registry):
     """Test with centralized mock management."""
-    from opencode_monitor.api.client import APIClient
+    from opencode_status_bar.api.client import APIClient
     
     # Create mock
     mock_client = MagicMock(spec=APIClient)
@@ -593,7 +593,7 @@ class TestDashboardUI:
     """Group UI tests to share QApplication."""
     
     def test_window_creation(self, qapp, qtbot, mock_api_client):
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
         
         window = DashboardWindow(api_client=mock_api_client)
         qtbot.addWidget(window)
@@ -601,7 +601,7 @@ class TestDashboardUI:
         assert window is not None
     
     def test_widget_interaction(self, qapp, qtbot, mock_api_client):
-        from opencode_monitor.dashboard.window import DashboardWindow
+        from opencode_status_bar.dashboard.window import DashboardWindow
         
         window = DashboardWindow(api_client=mock_api_client)
         qtbot.addWidget(window)
@@ -614,7 +614,7 @@ class TestDashboardUI:
 ### Pattern 5: Singleton Registration
 
 ```python
-# In your application code (e.g., src/opencode_monitor/cache.py)
+# In your application code (e.g., src/opencode_status_bar/cache.py)
 class CacheManager:
     """Singleton cache manager."""
     
@@ -640,7 +640,7 @@ class CacheManager:
 
 
 # In tests/conftest.py (at module level)
-from opencode_monitor.cache import CacheManager
+from opencode_status_bar.cache import CacheManager
 
 register_singleton('cache_manager', CacheManager, CacheManager.reset)
 ```

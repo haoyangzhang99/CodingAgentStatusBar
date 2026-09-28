@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from opencode_monitor.analytics.db import AnalyticsDB
+    from opencode_status_bar.analytics.db import AnalyticsDB
 
 
 class TraceBuilder:

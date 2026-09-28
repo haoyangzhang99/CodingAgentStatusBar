@@ -2,7 +2,7 @@
 
 import pytest
 
-from opencode_monitor.dashboard.sections.tracing.enriched_helpers import (
+from opencode_status_bar.dashboard.sections.tracing.enriched_helpers import (
     get_tool_display_label,
     format_result_tooltip,
     get_agent_color,

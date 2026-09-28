@@ -6,7 +6,7 @@
 
 ## Problem Statement
 
-OpenCode Monitor currently runs the menu bar and dashboard as **separate processes**, communicating via HTTP API. This adds unnecessary complexity and overhead:
+OpenCode Status Bar currently runs the menu bar and dashboard as **separate processes**, communicating via HTTP API. This adds unnecessary complexity and overhead:
 
 | Overhead | Impact |
 |----------|--------|
@@ -88,7 +88,7 @@ PyQt6 can run in a non-main thread if we:
 3. Use signals/slots for cross-thread communication
 
 ```python
-# src/opencode_monitor/dashboard/thread.py
+# src/opencode_status_bar/dashboard/thread.py
 import threading
 from PyQt6.QtWidgets import QApplication
 from .window.main import DashboardWindow
@@ -124,7 +124,7 @@ class DashboardThread(threading.Thread):
 The dashboard imports the service directly instead of using HTTP:
 
 ```python
-# src/opencode_monitor/services/shared.py
+# src/opencode_status_bar/services/shared.py
 from ..analytics.tracing.service import TracingDataService
 
 # Singleton instance shared between menu bar and dashboard
@@ -143,8 +143,8 @@ def get_shared_service() -> TracingDataService:
 Replace HTTP client with direct service calls:
 
 ```python
-# src/opencode_monitor/dashboard/data_source.py
-from opencode_monitor.services.shared import get_shared_service
+# src/opencode_status_bar/dashboard/data_source.py
+from opencode_status_bar.services.shared import get_shared_service
 
 class DirectDataSource:
     """Data source using shared service (no HTTP)."""
@@ -170,7 +170,7 @@ class DirectDataSource:
 Launch dashboard as thread instead of subprocess:
 
 ```python
-# src/opencode_monitor/app/handlers.py
+# src/opencode_status_bar/app/handlers.py
 from ..dashboard.thread import DashboardThread
 from ..services.shared import get_shared_service
 
@@ -221,10 +221,10 @@ class TracingDataService:
 
 **Files to create:**
 ```
-src/opencode_monitor/dashboard/thread.py
-src/opencode_monitor/dashboard/data_source.py
-src/opencode_monitor/services/__init__.py
-src/opencode_monitor/services/shared.py
+src/opencode_status_bar/dashboard/thread.py
+src/opencode_status_bar/dashboard/data_source.py
+src/opencode_status_bar/services/__init__.py
+src/opencode_status_bar/services/shared.py
 ```
 
 ### Phase 2: Refactor Dashboard (1-2 days)
@@ -235,9 +235,9 @@ src/opencode_monitor/services/shared.py
 
 **Files to modify:**
 ```
-src/opencode_monitor/dashboard/window/main.py
-src/opencode_monitor/dashboard/window/sync.py
-src/opencode_monitor/dashboard/sections/*.py
+src/opencode_status_bar/dashboard/window/main.py
+src/opencode_status_bar/dashboard/window/sync.py
+src/opencode_status_bar/dashboard/sections/*.py
 ```
 
 ### Phase 3: Integrate with Menu Bar (1 day)
@@ -248,8 +248,8 @@ src/opencode_monitor/dashboard/sections/*.py
 
 **Files to modify:**
 ```
-src/opencode_monitor/app/handlers.py
-src/opencode_monitor/dashboard/window/launcher.py (delete)
+src/opencode_status_bar/app/handlers.py
+src/opencode_status_bar/dashboard/window/launcher.py (delete)
 ```
 
 ### Phase 4: Cleanup (1 day)
@@ -260,9 +260,9 @@ src/opencode_monitor/dashboard/window/launcher.py (delete)
 
 **Files to potentially remove:**
 ```
-src/opencode_monitor/api/server.py
-src/opencode_monitor/api/client.py
-src/opencode_monitor/api/routes/
+src/opencode_status_bar/api/server.py
+src/opencode_status_bar/api/client.py
+src/opencode_status_bar/api/routes/
 ```
 
 ## Risks & Mitigations

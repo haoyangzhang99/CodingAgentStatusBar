@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from opencode_monitor.utils.logger import (
+from opencode_status_bar.utils.logger import (
     setup_logger,
     setup_logging,
     get_logger,
@@ -137,7 +137,7 @@ class TestBackwardCompatibility:
 
     def test_import_debug_info_warn_error(self):
         """Can import debug, info, warn, error from logger module."""
-        from opencode_monitor.utils.logger import debug, info, warn, error
+        from opencode_status_bar.utils.logger import debug, info, warn, error
 
         assert callable(debug)
         assert callable(info)
@@ -146,7 +146,7 @@ class TestBackwardCompatibility:
 
     def test_import_setup_logger(self):
         """Can import setup_logger from logger module."""
-        from opencode_monitor.utils.logger import setup_logger
+        from opencode_status_bar.utils.logger import setup_logger
 
         assert callable(setup_logger)
         result = setup_logger()
@@ -154,7 +154,7 @@ class TestBackwardCompatibility:
 
     def test_module_import_functions(self):
         """Can use module.function style like old code."""
-        from opencode_monitor.utils import logger as logger_module
+        from opencode_status_bar.utils import logger as logger_module
 
         assert hasattr(logger_module, "debug")
         assert hasattr(logger_module, "info")

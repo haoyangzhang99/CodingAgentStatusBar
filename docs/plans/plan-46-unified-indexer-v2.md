@@ -394,7 +394,7 @@ Résultats attendus sur MacBook Pro M1:
 
 ### B. Requêtes SQL optimisées
 
-Voir `src/opencode_monitor/analytics/indexer/queries_v2.py`
+Voir `src/opencode_status_bar/analytics/indexer/queries_v2.py`
 
 ### C. Schéma de données complet
 

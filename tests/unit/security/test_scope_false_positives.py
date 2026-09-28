@@ -2,7 +2,7 @@
 
 import pytest
 from pathlib import Path
-from opencode_monitor.security.scope import ScopeDetector, ScopeVerdict
+from opencode_status_bar.security.scope import ScopeDetector, ScopeVerdict
 
 
 class TestPackageManagerCaches:

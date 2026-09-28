@@ -7,8 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from opencode_monitor.analytics.db import AnalyticsDB
-from opencode_monitor.analytics.materialization import MaterializedTableManager
+from opencode_status_bar.analytics.db import AnalyticsDB
+from opencode_status_bar.analytics.materialization import MaterializedTableManager
 
 
 def main():

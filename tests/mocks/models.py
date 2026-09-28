@@ -27,7 +27,7 @@ def create_agent(
     Returns:
         Agent instance
     """
-    from opencode_monitor.core.models import Agent, SessionStatus
+    from opencode_status_bar.core.models import Agent, SessionStatus
 
     status_map = {
         "busy": SessionStatus.BUSY,
@@ -58,7 +58,7 @@ def create_instance(
     Returns:
         Instance instance
     """
-    from opencode_monitor.core.models import Instance
+    from opencode_status_bar.core.models import Instance
 
     if agents is None:
         agents = [create_agent()]
@@ -83,7 +83,7 @@ def create_todos(
     Returns:
         Todos instance
     """
-    from opencode_monitor.core.models import Todos
+    from opencode_status_bar.core.models import Todos
 
     return Todos(pending=pending, in_progress=in_progress)
 
@@ -103,7 +103,7 @@ def create_state(
     Returns:
         State instance
     """
-    from opencode_monitor.core.models import State, Todos
+    from opencode_status_bar.core.models import State, Todos
 
     if instances is None:
         instances = [create_instance()]

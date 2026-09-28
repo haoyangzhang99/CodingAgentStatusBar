@@ -52,7 +52,7 @@ Apres refactoring :
 **Structure proposee :**
 
 ```
-src/opencode_monitor/
+src/opencode_status_bar/
   database.py         # SecurityDatabase - Repository pattern SQLite
   risk_analyzer.py    # RiskAnalyzer - Analyse file paths et URLs
   reporter.py         # SecurityReporter - Generation rapports texte
@@ -85,7 +85,7 @@ src/opencode_monitor/
 **Structure proposee :**
 
 ```
-src/opencode_monitor/
+src/opencode_status_bar/
   app.py              # OpenCodeApp - Orchestration principale (~350 lignes)
   menu_builder.py     # MenuBuilder - Construction du menu rumps
   exporter.py         # DataExporter - Export fichiers et rapports
@@ -154,7 +154,7 @@ src/opencode_monitor/
 ## Structure finale proposee
 
 ```
-src/opencode_monitor/
+src/opencode_status_bar/
   __init__.py
   
   # Core

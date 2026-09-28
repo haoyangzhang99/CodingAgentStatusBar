@@ -148,11 +148,11 @@ WHERE dc.cost > b.avg_cost + (2 * b.stddev_cost);  -- Anomaly: >2 std dev
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - Add resource metrics schema
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Extract token counts
-- `src/opencode_monitor/analytics/indexer/cost_calculator.py` - NEW
-- `src/opencode_monitor/analytics/indexer/aggregator.py` - NEW
-- `src/opencode_monitor/analytics/migrations/add_resource_metrics.sql` - NEW
+- `src/opencode_status_bar/analytics/db.py` - Add resource metrics schema
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Extract token counts
+- `src/opencode_status_bar/analytics/indexer/cost_calculator.py` - NEW
+- `src/opencode_status_bar/analytics/indexer/aggregator.py` - NEW
+- `src/opencode_status_bar/analytics/migrations/add_resource_metrics.sql` - NEW
 - `tests/test_cost_calculation.py` - NEW
 - `tests/test_resource_aggregation.py` - NEW
 
@@ -361,11 +361,11 @@ GROUP BY error_category;
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - New normalized schema
-- `src/opencode_monitor/analytics/migrations/denormalize_parts.sql` - NEW
-- `src/opencode_monitor/analytics/migrations/rollback_denormalization.sql` - NEW
-- `src/opencode_monitor/analytics/indexer/parsers.py` - Update to insert into new tables
-- `src/opencode_monitor/analytics/queries/` - Update all query files
+- `src/opencode_status_bar/analytics/db.py` - New normalized schema
+- `src/opencode_status_bar/analytics/migrations/denormalize_parts.sql` - NEW
+- `src/opencode_status_bar/analytics/migrations/rollback_denormalization.sql` - NEW
+- `src/opencode_status_bar/analytics/indexer/parsers.py` - Update to insert into new tables
+- `src/opencode_status_bar/analytics/queries/` - Update all query files
 - `tests/test_denormalization.py` - NEW
 - `tests/test_migration_integrity.py` - NEW
 
@@ -597,7 +597,7 @@ python scripts/rollback_migration.py
 ### Key Files
 
 ```
-src/opencode_monitor/analytics/
+src/opencode_status_bar/analytics/
 ├── db.py                           # New schema (DQ-011)
 ├── indexer/
 │   ├── parsers.py                 # Updated for new tables

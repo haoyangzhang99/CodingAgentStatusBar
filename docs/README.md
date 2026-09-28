@@ -1,4 +1,4 @@
-# OpenCode Monitor - Documentation
+# OpenCode Status Bar - Documentation
 
 ## Quick Links
 

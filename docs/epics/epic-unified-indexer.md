@@ -103,7 +103,7 @@ THEN le record est mis à jour (upsert) sans créer de doublon
 #### Files
 
 ```
-src/opencode_monitor/analytics/
+src/opencode_status_bar/analytics/
 ├── db.py                        # Ajouter schema indexed_files
 ├── indexer/
 │   ├── migrations/
@@ -319,7 +319,7 @@ THEN les fichiers pending sont envoyés avant l'arrêt
 #### Files
 
 ```
-src/opencode_monitor/analytics/indexer/
+src/opencode_status_bar/analytics/indexer/
 ├── batch_collector.py    # NEW
 tests/
 └── test_batch_collector.py  # NEW
@@ -539,7 +539,7 @@ THEN le thread s'arrête proprement sous 5 secondes
 #### Files
 
 ```
-src/opencode_monitor/analytics/indexer/
+src/opencode_status_bar/analytics/indexer/
 ├── reconciler.py        # NEW
 tests/
 └── test_reconciler.py   # NEW
@@ -761,7 +761,7 @@ AND les fichiers pending sont traités
 #### Files
 
 ```
-src/opencode_monitor/analytics/indexer/
+src/opencode_status_bar/analytics/indexer/
 ├── unified_v2.py          # NEW
 ├── config.py              # Feature flag
 ├── __init__.py            # Update factory
@@ -910,7 +910,7 @@ THEN le throughput est >= 5,000 files/sec
 #### Files
 
 ```
-src/opencode_monitor/analytics/indexer/
+src/opencode_status_bar/analytics/indexer/
 ├── unified_v2.py          # Add _process_batch
 ├── queries_v2.py          # NEW - Batch INSERT queries
 ```
@@ -1089,7 +1089,7 @@ AND aucune régression fonctionnelle
 #### Files to Delete
 
 ```
-src/opencode_monitor/analytics/indexer/
+src/opencode_status_bar/analytics/indexer/
 ├── hybrid.py              # DELETE
 ├── bulk_loader.py         # DELETE (logic moved to unified)
 ├── config.py              # SIMPLIFY (remove flags)

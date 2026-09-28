@@ -1,5 +1,5 @@
 """
-Tests for opencode_monitor.core.usage module.
+Tests for opencode_status_bar.core.usage module.
 Coverage target: 100%
 Refactored for high assertion density (target ratio > 4.0).
 """
@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
-from opencode_monitor.core.usage import fetch_usage, read_auth_token
+from opencode_status_bar.core.usage import fetch_usage, read_auth_token
 
 
 # =============================================================================
@@ -27,7 +27,7 @@ def mock_usage_api(api_response: dict, token: str = "valid-token"):
     mock_response.__enter__ = MagicMock(return_value=mock_response)
     mock_response.__exit__ = MagicMock(return_value=False)
 
-    with patch("opencode_monitor.core.usage.read_auth_token", return_value=token):
+    with patch("opencode_status_bar.core.usage.read_auth_token", return_value=token):
         with patch("urllib.request.urlopen", return_value=mock_response):
             yield mock_response
 
@@ -113,7 +113,7 @@ class TestFetchUsage:
 
     def test_returns_error_when_no_token(self):
         """No auth token should return Usage with error message and zero usage."""
-        with patch("opencode_monitor.core.usage.read_auth_token", return_value=None):
+        with patch("opencode_status_bar.core.usage.read_auth_token", return_value=None):
             result = fetch_usage()
 
         # Verify error state
@@ -138,7 +138,7 @@ class TestFetchUsage:
     def test_returns_appropriate_error_on_http_errors(self, http_code, expected_error):
         """HTTP errors should return appropriate error messages with zero usage."""
         with patch(
-            "opencode_monitor.core.usage.read_auth_token",
+            "opencode_status_bar.core.usage.read_auth_token",
             return_value="valid-token",
         ):
             http_error = urllib.error.HTTPError(
@@ -180,7 +180,7 @@ class TestFetchUsage:
     def test_returns_error_on_network_exceptions(self, exception, expected_error):
         """Network exceptions should return error string with zero usage."""
         with patch(
-            "opencode_monitor.core.usage.read_auth_token",
+            "opencode_status_bar.core.usage.read_auth_token",
             return_value="valid-token",
         ):
             with patch("urllib.request.urlopen", side_effect=exception):

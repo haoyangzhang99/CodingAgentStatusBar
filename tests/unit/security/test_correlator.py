@@ -2,8 +2,8 @@
 
 import time
 import pytest
-from opencode_monitor.security.sequences import SecurityEvent, EventType
-from opencode_monitor.security.correlator import EventCorrelator, Correlation
+from opencode_status_bar.security.sequences import SecurityEvent, EventType
+from opencode_status_bar.security.correlator import EventCorrelator, Correlation
 
 
 @pytest.fixture

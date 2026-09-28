@@ -44,7 +44,7 @@ make mutation
 
 ## Overview
 
-Le projet opencode-monitor a accumulé une dette technique significative dans sa suite de tests. Avec 992 fonctions de test pour 35,623 lignes de code test contre 31,398 lignes de code source (ratio 1.13), les tests sont plus volumineux que le code qu'ils testent. Paradoxalement, la couverture du module `core/` n'est que de 25%.
+Le projet opencode-status-bar a accumulé une dette technique significative dans sa suite de tests. Avec 992 fonctions de test pour 35,623 lignes de code test contre 31,398 lignes de code source (ratio 1.13), les tests sont plus volumineux que le code qu'ils testent. Paradoxalement, la couverture du module `core/` n'est que de 25%.
 
 Cet epic vise à améliorer la qualité et l'efficacité des tests plutôt que leur quantité, en introduisant le mutation testing comme métrique de qualité réelle.
 
@@ -82,14 +82,14 @@ En tant que développeur, je veux valider l'intégration de mutmut sur un module
 
 #### Scope
 
-- Module cible : `src/opencode_monitor/analytics/` (module critique)
+- Module cible : `src/opencode_status_bar/analytics/` (module critique)
 - Configuration initiale mutmut
 - Rapport de baseline
 
 #### Acceptance Criteria
 
 ```gherkin
-GIVEN le projet opencode-monitor avec pytest configuré
+GIVEN le projet opencode-status-bar avec pytest configuré
 WHEN je lance mutmut sur le module analytics/
 THEN mutmut génère un rapport avec le mutation score
 
@@ -263,7 +263,7 @@ En tant que mainteneur, je veux augmenter la couverture du module core/ de 25% �
 #### Scope
 
 ```
-src/opencode_monitor/core/
+src/opencode_status_bar/core/
 ├── client.py      # ~0% coverage
 ├── monitor/       # ~0% coverage
 ├── models.py      # 100% coverage ✓
@@ -339,7 +339,7 @@ THEN seuls les modules modifiés sont testés (incremental)
 ```toml
 # pyproject.toml
 [tool.mutmut]
-paths_to_mutate = "src/opencode_monitor/"
+paths_to_mutate = "src/opencode_status_bar/"
 tests_dir = "tests/"
 runner = "python -m pytest -x --tb=no -q"
 ```
@@ -350,7 +350,7 @@ runner = "python -m pytest -x --tb=no -q"
 .PHONY: mutation-test mutation-report
 
 mutation-test:
-	mutmut run --paths-to-mutate=src/opencode_monitor/analytics/
+	mutmut run --paths-to-mutate=src/opencode_status_bar/analytics/
 
 mutation-report:
 	mutmut html

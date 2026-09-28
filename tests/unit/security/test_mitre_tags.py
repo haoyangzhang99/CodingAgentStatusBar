@@ -1,7 +1,7 @@
 """Tests for MITRE ATT&CK tagging in Security Analyzer."""
 
 import pytest
-from opencode_monitor.security.analyzer import (
+from opencode_status_bar.security.analyzer import (
     analyze_command,
     RiskAnalyzer,
     DANGEROUS_PATTERNS,

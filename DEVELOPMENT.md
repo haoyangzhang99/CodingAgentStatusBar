@@ -17,7 +17,7 @@ make coverage
 
 ### Multi-Process Architecture
 
-OpenCode Monitor consists of two main components:
+OpenCode Status Bar consists of two main components:
 
 1. **Menu Bar App** (rumps) - Real-time monitoring
 2. **PyQt6 Dashboard** - Analytics and tracing visualization
@@ -176,11 +176,11 @@ uv run python -m pytest tests/test_risk_analyzer.py -v
 
 ```bash
 # Run and watch logs
-uv run python3 bin/opencode-menubar
+uv run python3 bin/opencode-status-bar
 
 # Test usage API
 uv run python3 -c "
-from opencode_monitor.core.usage import fetch_usage
+from opencode_status_bar.core.usage import fetch_usage
 u = fetch_usage()
 print(f'Session: {u.five_hour.utilization}%')
 "
@@ -188,21 +188,21 @@ print(f'Session: {u.five_hour.utilization}%')
 # Test instance detection
 uv run python3 -c "
 import asyncio
-from opencode_monitor.core.monitor import fetch_instances
+from opencode_status_bar.core.monitor import fetch_instances
 state = asyncio.run(fetch_instances())
 print(f'Instances: {state.instance_count}')
 "
 
 # Test security analyzer
 uv run python3 -c "
-from opencode_monitor.security.analyzer import analyze_command
+from opencode_status_bar.security.analyzer import analyze_command
 alert = analyze_command('rm -rf /')
 print(f'Score: {alert.score}, Level: {alert.level}')
 "
 
 # Test analytics
 uv run python3 -c "
-from opencode_monitor.analytics import AnalyticsDB, load_opencode_data, generate_report
+from opencode_status_bar.analytics import AnalyticsDB, load_opencode_data, generate_report
 db = AnalyticsDB()
 load_opencode_data(db)
 report = generate_report(days=7, db=db)
@@ -216,38 +216,38 @@ The project includes built-in CLI tools for Python code analysis in `tools/pycod
 
 ```bash
 # Navigation - goto definition, find references, hover, symbols
-uv run python -m tools.pycode goto src/opencode_monitor/app.py:50:4
-uv run python -m tools.pycode refs src/opencode_monitor/app.py:50:4
-uv run python -m tools.pycode hover src/opencode_monitor/app.py:50:4
-uv run python -m tools.pycode symbols src/opencode_monitor/app.py
+uv run python -m tools.pycode goto src/opencode_status_bar/app.py:50:4
+uv run python -m tools.pycode refs src/opencode_status_bar/app.py:50:4
+uv run python -m tools.pycode hover src/opencode_status_bar/app.py:50:4
+uv run python -m tools.pycode symbols src/opencode_status_bar/app.py
 
 # Diagnostics - lint and format check
 uv run python -m tools.pycode lint src/
 uv run python -m tools.pycode check src/
 
 # Metrics - complexity and maintainability
-uv run python -m tools.pycode complexity src/opencode_monitor/
-uv run python -m tools.pycode maintainability src/opencode_monitor/
+uv run python -m tools.pycode complexity src/opencode_status_bar/
+uv run python -m tools.pycode maintainability src/opencode_status_bar/
 
 # Dead code detection
 uv run python -m tools.pycode dead-code src/
 
 # Combined report
-uv run python -m tools.pycode report src/opencode_monitor/utils/
+uv run python -m tools.pycode report src/opencode_status_bar/utils/
 
 # JSON output for parsing
-uv run python -m tools.pycode --json symbols src/opencode_monitor/app.py
+uv run python -m tools.pycode --json symbols src/opencode_status_bar/app.py
 ```
 
 ### Check Settings & Database
 
 ```bash
 # Settings
-cat ~/.config/opencode-monitor/settings.json
+cat ~/.config/opencode-status-bar/settings.json
 
 # Database stats (unified DuckDB)
 uv run python3 -c "
-from opencode_monitor.analytics import AnalyticsDB
+from opencode_status_bar.analytics import AnalyticsDB
 db = AnalyticsDB()
 stats = db.get_stats()
 for table, count in stats.items():
@@ -265,18 +265,18 @@ curl -s http://127.0.0.1:19876/api/security | jq '.data.stats'
 In `utils/logger.py`, debug messages go to stderr. Run the app from terminal to see them:
 
 ```bash
-uv run python3 bin/opencode-menubar 2>&1 | tee /tmp/opencode-debug.log
+uv run python3 bin/opencode-status-bar 2>&1 | tee /tmp/opencode-debug.log
 ```
 
 ### Common Issues
 
 **App not appearing in menu bar:**
 - Check if another instance is running: `pgrep -f opencode`
-- Kill and restart: `pkill -f opencode_monitor && make run`
+- Kill and restart: `pkill -f opencode_status_bar && make run`
 
 **Usage not updating:**
 - Check auth file: `cat ~/.local/share/opencode/auth.json`
-- Check settings interval: `cat ~/.config/opencode-monitor/settings.json`
+- Check settings interval: `cat ~/.config/opencode-status-bar/settings.json`
 
 **Instances not detected:**
 - Verify OpenCode is running: `lsof -i :4096`

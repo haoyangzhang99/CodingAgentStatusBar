@@ -60,8 +60,8 @@ CREATE INDEX IF NOT EXISTS idx_indexed_files_status ON indexed_files(status);
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/db.py` - Add schema
-- `src/opencode_monitor/analytics/indexer/repository.py` - NEW
+- `src/opencode_status_bar/analytics/db.py` - Add schema
+- `src/opencode_status_bar/analytics/indexer/repository.py` - NEW
 - `tests/test_indexed_files.py` - NEW
 
 **Tasks**:
@@ -110,7 +110,7 @@ class BatchCollector:
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/indexer/batch_collector.py` - NEW
+- `src/opencode_status_bar/analytics/indexer/batch_collector.py` - NEW
 - `tests/test_batch_collector.py` - NEW
 
 **Tasks**:
@@ -183,7 +183,7 @@ LIMIT 10000
 ```
 
 **Files**:
-- `src/opencode_monitor/analytics/indexer/reconciler.py` - NEW
+- `src/opencode_status_bar/analytics/indexer/reconciler.py` - NEW
 - `tests/test_reconciler.py` - NEW
 
 **Tasks**:
@@ -301,7 +301,7 @@ make test-watch  # ou pytest-watch
 ### File Structure After Sprint
 
 ```
-src/opencode_monitor/analytics/indexer/
+src/opencode_status_bar/analytics/indexer/
 ├── __init__.py
 ├── hybrid.py               # Existing (will keep for now)
 ├── bulk_loader.py          # Existing

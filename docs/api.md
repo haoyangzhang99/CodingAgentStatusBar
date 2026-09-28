@@ -1,4 +1,4 @@
-# OpenCode Monitor API Documentation
+# OpenCode Status Bar API Documentation
 
 REST API for accessing analytics and tracing data.
 

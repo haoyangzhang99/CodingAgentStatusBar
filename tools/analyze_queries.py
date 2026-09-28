@@ -17,13 +17,13 @@ from typing import List, Tuple
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
-    from opencode_monitor.analytics.db import get_db_path
+    from opencode_status_bar.analytics.db import get_db_path
 except ImportError:
 
     def get_db_path():
         from pathlib import Path
 
-        return Path.home() / ".config" / "opencode-monitor" / "analytics.duckdb"
+        return Path.home() / ".config" / "opencode-status-bar" / "analytics.duckdb"
 
 
 def analyze_query(conn: duckdb.DuckDBPyConnection, name: str, query: str) -> None:

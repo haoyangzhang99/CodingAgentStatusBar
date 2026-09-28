@@ -1,6 +1,6 @@
 # Logging System
 
-Professional logging system for OpenCode Monitor with human-readable and JSON formats, automatic file rotation, context tracking, and crash handling.
+Professional logging system for OpenCode Status Bar with human-readable and JSON formats, automatic file rotation, context tracking, and crash handling.
 
 ## Table of Contents
 
@@ -28,9 +28,9 @@ The logging system provides:
 All logs are stored in the standard macOS logs directory:
 
 ```
-~/Library/Logs/OpenCodeMonitor/
-├── opencode-monitor.log       # Human-readable format
-├── opencode-monitor.json      # JSON Lines format
+~/Library/Logs/OpenCodeStatusBar/
+├── opencode-status-bar.log       # Human-readable format
+├── opencode-status-bar.json      # JSON Lines format
 └── crash.log                  # Crash reports
 ```
 
@@ -38,11 +38,11 @@ All logs are stored in the standard macOS logs directory:
 
 | File | Max Size | Backups | Total Max |
 |------|----------|---------|-----------|
-| `opencode-monitor.log` | 10 MB | 5 | ~60 MB |
-| `opencode-monitor.json` | 20 MB | 3 | ~80 MB |
+| `opencode-status-bar.log` | 10 MB | 5 | ~60 MB |
+| `opencode-status-bar.json` | 20 MB | 3 | ~80 MB |
 | `crash.log` | No rotation | - | - |
 
-When a log file reaches its maximum size, it's renamed with a numeric suffix (e.g., `opencode-monitor.log.1`) and a new file is created. Oldest backups are deleted when the backup count is exceeded.
+When a log file reaches its maximum size, it's renamed with a numeric suffix (e.g., `opencode-status-bar.log.1`) and a new file is created. Oldest backups are deleted when the backup count is exceeded.
 
 ## Log Formats
 
@@ -88,7 +88,7 @@ JSON fields:
 Import the convenience functions for simple logging:
 
 ```python
-from opencode_monitor.utils.logger import debug, info, warn, error
+from opencode_status_bar.utils.logger import debug, info, warn, error
 
 # Simple messages
 debug("Processing started")
@@ -102,7 +102,7 @@ error("Failed to connect to database")
 Create a named logger for your component to improve log organization:
 
 ```python
-from opencode_monitor.utils.logger import get_logger
+from opencode_status_bar.utils.logger import get_logger
 
 logger = get_logger("mycomponent")
 
@@ -117,7 +117,7 @@ logger.error("Operation failed", exc_info=True)
 Use context managers to automatically include correlation IDs in all logs:
 
 ```python
-from opencode_monitor.utils.logger import log_context, info
+from opencode_status_bar.utils.logger import log_context, info
 
 # All logs within this block will include the request_id
 with log_context(request_id="abc-123"):
@@ -136,7 +136,7 @@ with log_context(session_id="user-456"):
 Include additional structured data in your logs:
 
 ```python
-from opencode_monitor.utils.logger import info
+from opencode_status_bar.utils.logger import info
 
 info("User action", extra={
     "user_id": "12345",
@@ -150,7 +150,7 @@ info("User action", extra={
 Capture full stack traces when logging errors:
 
 ```python
-from opencode_monitor.utils.logger import error
+from opencode_status_bar.utils.logger import error
 
 try:
     risky_operation()
@@ -181,7 +181,7 @@ export OPENCODE_LOG_LEVEL=warning
 export OPENCODE_LOG_CONSOLE=true
 
 # Combine settings
-OPENCODE_DEBUG=1 OPENCODE_LOG_CONSOLE=1 python -m opencode_monitor
+OPENCODE_DEBUG=1 OPENCODE_LOG_CONSOLE=1 python -m opencode_status_bar
 ```
 
 ## Log Level Guidelines
@@ -269,8 +269,8 @@ Use for:
 
 1. Open **Console.app** (in `/Applications/Utilities/`)
 2. Click **File** > **Open...** (or press `Cmd+O`)
-3. Navigate to `~/Library/Logs/OpenCodeMonitor/`
-4. Select `opencode-monitor.log`
+3. Navigate to `~/Library/Logs/OpenCodeStatusBar/`
+4. Select `opencode-status-bar.log`
 
 Console.app provides filtering, search, and live updates.
 
@@ -280,33 +280,33 @@ Console.app provides filtering, search, and live updates.
 
 ```bash
 # Human-readable logs
-tail -f ~/Library/Logs/OpenCodeMonitor/opencode-monitor.log
+tail -f ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.log
 
 # JSON logs
-tail -f ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json
+tail -f ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json
 ```
 
 **View recent logs:**
 
 ```bash
 # Last 100 lines
-tail -n 100 ~/Library/Logs/OpenCodeMonitor/opencode-monitor.log
+tail -n 100 ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.log
 
 # Last 50 lines with line numbers
-tail -n 50 ~/Library/Logs/OpenCodeMonitor/opencode-monitor.log | nl
+tail -n 50 ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.log | nl
 ```
 
 **Search logs:**
 
 ```bash
 # Find all errors
-grep "ERROR" ~/Library/Logs/OpenCodeMonitor/opencode-monitor.log
+grep "ERROR" ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.log
 
 # Find logs from specific component
-grep "opencode.api" ~/Library/Logs/OpenCodeMonitor/opencode-monitor.log
+grep "opencode.api" ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.log
 
 # Case-insensitive search
-grep -i "timeout" ~/Library/Logs/OpenCodeMonitor/opencode-monitor.log
+grep -i "timeout" ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.log
 ```
 
 ### JSON Log Analysis with jq
@@ -316,41 +316,41 @@ The `jq` tool is powerful for analyzing JSON logs. Install with `brew install jq
 **Pretty-print JSON:**
 
 ```bash
-tail -n 1 ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq .
+tail -n 1 ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq .
 ```
 
 **Filter by log level:**
 
 ```bash
 # Show only errors
-cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq 'select(.level == "ERROR")'
+cat ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq 'select(.level == "ERROR")'
 
 # Show warnings and above
-cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq 'select(.level == "WARNING" or .level == "ERROR" or .level == "CRITICAL")'
+cat ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq 'select(.level == "WARNING" or .level == "ERROR" or .level == "CRITICAL")'
 ```
 
 **Filter by component:**
 
 ```bash
-cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq 'select(.logger | startswith("opencode.api"))'
+cat ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq 'select(.logger | startswith("opencode.api"))'
 ```
 
 **Filter by request ID:**
 
 ```bash
-cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq 'select(.request_id == "abc-123")'
+cat ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq 'select(.request_id == "abc-123")'
 ```
 
 **Extract specific fields:**
 
 ```bash
-cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq '{time: .timestamp, level: .level, msg: .message}'
+cat ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq '{time: .timestamp, level: .level, msg: .message}'
 ```
 
 **Count errors by component:**
 
 ```bash
-cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq -s 'map(select(.level == "ERROR")) | group_by(.logger) | map({logger: .[0].logger, count: length})'
+cat ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq -s 'map(select(.level == "ERROR")) | group_by(.logger) | map({logger: .[0].logger, count: length})'
 ```
 
 **Time-based filtering (last hour):**
@@ -358,7 +358,7 @@ cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq -s 'map(select(.le
 ```bash
 # Requires GNU date or gdate on macOS
 SINCE=$(gdate -d '1 hour ago' -Iseconds)
-cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq --arg since "$SINCE" 'select(.timestamp > $since)'
+cat ~/Library/Logs/OpenCodeStatusBar/opencode-status-bar.json | jq --arg since "$SINCE" 'select(.timestamp > $since)'
 ```
 
 ## Troubleshooting
@@ -367,13 +367,13 @@ cat ~/Library/Logs/OpenCodeMonitor/opencode-monitor.json | jq --arg since "$SINC
 
 1. **Check log directory exists:**
    ```bash
-   ls -la ~/Library/Logs/OpenCodeMonitor/
+   ls -la ~/Library/Logs/OpenCodeStatusBar/
    ```
 
 2. **Check file permissions:**
    ```bash
    # Should be writable by your user
-   touch ~/Library/Logs/OpenCodeMonitor/test.txt && rm ~/Library/Logs/OpenCodeMonitor/test.txt
+   touch ~/Library/Logs/OpenCodeStatusBar/test.txt && rm ~/Library/Logs/OpenCodeStatusBar/test.txt
    ```
 
 3. **Verify log level setting:**
@@ -400,8 +400,8 @@ If logs grow unexpectedly large:
 2. Review log rotation settings
 3. Manually clean old backups:
    ```bash
-   rm ~/Library/Logs/OpenCodeMonitor/*.log.[0-9]*
-   rm ~/Library/Logs/OpenCodeMonitor/*.json.[0-9]*
+   rm ~/Library/Logs/OpenCodeStatusBar/*.log.[0-9]*
+   rm ~/Library/Logs/OpenCodeStatusBar/*.json.[0-9]*
    ```
 
 ### Crash logs not created
@@ -414,5 +414,5 @@ The crash handler may not capture:
 Check `crash.log` for Python exceptions:
 
 ```bash
-cat ~/Library/Logs/OpenCodeMonitor/crash.log
+cat ~/Library/Logs/OpenCodeStatusBar/crash.log
 ```

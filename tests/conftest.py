@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures for opencode_monitor tests.
+Pytest configuration and shared fixtures for opencode_status_bar tests.
 
 This module provides:
 - rumps mocking infrastructure for UI tests
@@ -165,10 +165,10 @@ def pytest_runtest_setup(item):
                 # Only clear modules that actually import rumps (not all ui/app modules)
                 # This prevents breaking unrelated tests like test_terminal
                 rumps_dependent_modules = [
-                    "opencode_monitor.ui.menu",
-                    "opencode_monitor.app",
-                    "opencode_monitor.app.core",
-                    "opencode_monitor.app.menu",
+                    "opencode_status_bar.ui.menu",
+                    "opencode_status_bar.app",
+                    "opencode_status_bar.app.core",
+                    "opencode_status_bar.app.menu",
                 ]
                 for mod in rumps_dependent_modules:
                     if mod in sys.modules:
@@ -296,7 +296,7 @@ def tool_content_factory():
 @pytest.fixture
 def sample_agent():
     """Create a sample Agent for testing."""
-    from opencode_monitor.core.models import Agent, SessionStatus
+    from opencode_status_bar.core.models import Agent, SessionStatus
 
     return Agent(
         id="agent-test-1",
@@ -310,7 +310,7 @@ def sample_agent():
 @pytest.fixture
 def sample_idle_agent():
     """Create a sample idle Agent for testing."""
-    from opencode_monitor.core.models import Agent, SessionStatus
+    from opencode_status_bar.core.models import Agent, SessionStatus
 
     return Agent(
         id="agent-idle-1",
@@ -324,7 +324,7 @@ def sample_idle_agent():
 @pytest.fixture
 def sample_instance(sample_agent, available_port):
     """Create a sample Instance with one agent."""
-    from opencode_monitor.core.models import Instance
+    from opencode_status_bar.core.models import Instance
 
     return Instance(
         port=available_port,
@@ -336,7 +336,7 @@ def sample_instance(sample_agent, available_port):
 @pytest.fixture
 def sample_state(sample_instance):
     """Create a sample State with one instance."""
-    from opencode_monitor.core.models import State, Todos
+    from opencode_status_bar.core.models import State, Todos
 
     return State(
         instances=[sample_instance],
@@ -405,13 +405,13 @@ def analytics_db(tmp_path: Path):
     """Create a fresh AnalyticsDB (DuckDB) for each test.
 
     IMPORTANT: This fixture creates an ISOLATED database in tmp_path.
-    Tests NEVER connect to ~/.config/opencode-monitor/analytics.duckdb.
+    Tests NEVER connect to ~/.config/opencode-status-bar/analytics.duckdb.
 
     This fixture is shared across all tests needing AnalyticsDB.
     Uses a unique path per test to ensure isolation.
     """
-    from opencode_monitor.analytics.db import AnalyticsDB
-    import opencode_monitor.analytics.db as db_module
+    from opencode_status_bar.analytics.db import AnalyticsDB
+    import opencode_status_bar.analytics.db as db_module
 
     db_path = tmp_path / "test_analytics.duckdb"
     db = AnalyticsDB(db_path)
@@ -569,7 +569,7 @@ def sample_data_generator():
 @pytest.fixture
 def tracing_service(analytics_db):
     """Create a TracingDataService instance with analytics_db."""
-    from opencode_monitor.analytics.tracing import TracingDataService
+    from opencode_status_bar.analytics.tracing import TracingDataService
 
     return TracingDataService(db=analytics_db)
 
@@ -582,7 +582,7 @@ def tracing_service(analytics_db):
 @pytest.fixture
 def risk_analyzer():
     """Create a fresh RiskAnalyzer for security tests."""
-    from opencode_monitor.security.analyzer import RiskAnalyzer
+    from opencode_status_bar.security.analyzer import RiskAnalyzer
 
     return RiskAnalyzer()
 
@@ -710,7 +710,7 @@ def part_builder(analytics_db):
 def sessions_app():
     """Create Flask test app with sessions blueprint."""
     from flask import Flask
-    from opencode_monitor.api.routes.sessions import sessions_bp
+    from opencode_status_bar.api.routes.sessions import sessions_bp
 
     app = Flask(__name__)
     app.config["TESTING"] = True
@@ -750,13 +750,13 @@ def api_mocks(mock_tracing_service):
         def __enter__(self):
             self._stack = ExitStack()
             mock_lock = self._stack.enter_context(
-                patch("opencode_monitor.api.routes.sessions.get_db_lock")
+                patch("opencode_status_bar.api.routes.sessions.get_db_lock")
             )
             mock_lock.return_value.__enter__ = MagicMock()
             mock_lock.return_value.__exit__ = MagicMock()
             self._stack.enter_context(
                 patch(
-                    "opencode_monitor.api.routes.sessions.get_service",
+                    "opencode_status_bar.api.routes.sessions.get_service",
                     return_value=self._service,
                 )
             )
@@ -843,137 +843,137 @@ def reset_global_singletons():
     import sys
 
     # Reset BEFORE test
-    if "opencode_monitor.analytics.db" in sys.modules:
-        import opencode_monitor.analytics.db as db_module
+    if "opencode_status_bar.analytics.db" in sys.modules:
+        import opencode_status_bar.analytics.db as db_module
 
         db_module._db_instance = None
 
-    if "opencode_monitor.analytics.indexer.hybrid" in sys.modules:
-        import opencode_monitor.analytics.indexer.hybrid as indexer_module
+    if "opencode_status_bar.analytics.indexer.hybrid" in sys.modules:
+        import opencode_status_bar.analytics.indexer.hybrid as indexer_module
 
         if hasattr(indexer_module, "IndexerRegistry"):
             indexer_module.IndexerRegistry._instance = None
 
-    if "opencode_monitor.api.routes._context" in sys.modules:
-        import opencode_monitor.api.routes._context as context_module
+    if "opencode_status_bar.api.routes._context" in sys.modules:
+        import opencode_status_bar.api.routes._context as context_module
 
         if hasattr(context_module, "RouteContext"):
             context_module.RouteContext._instance = None
 
-    if "opencode_monitor.dashboard.sections.tracing.image_cache" in sys.modules:
-        import opencode_monitor.dashboard.sections.tracing.image_cache as cache_module
+    if "opencode_status_bar.dashboard.sections.tracing.image_cache" in sys.modules:
+        import opencode_status_bar.dashboard.sections.tracing.image_cache as cache_module
 
         cache_module._thumbnail_cache = None
 
-    if "opencode_monitor.security.auditor.core" in sys.modules:
-        import opencode_monitor.security.auditor.core as auditor_core
+    if "opencode_status_bar.security.auditor.core" in sys.modules:
+        import opencode_status_bar.security.auditor.core as auditor_core
 
         auditor_core._auditor = None
 
     # Reset settings singleton
-    if "opencode_monitor.utils.settings" in sys.modules:
-        import opencode_monitor.utils.settings as settings_module
+    if "opencode_status_bar.utils.settings" in sys.modules:
+        import opencode_status_bar.utils.settings as settings_module
 
         settings_module._settings = None
 
     # Reset risk analyzer singleton
-    if "opencode_monitor.security.analyzer.risk" in sys.modules:
-        import opencode_monitor.security.analyzer.risk as risk_module
+    if "opencode_status_bar.security.analyzer.risk" in sys.modules:
+        import opencode_status_bar.security.analyzer.risk as risk_module
 
         risk_module._analyzer = None
 
     # Reset API client singleton
-    if "opencode_monitor.api.client" in sys.modules:
-        import opencode_monitor.api.client as client_module
+    if "opencode_status_bar.api.client" in sys.modules:
+        import opencode_status_bar.api.client as client_module
 
         client_module._api_client = None
 
     # Reset API server singleton
-    if "opencode_monitor.api.server" in sys.modules:
-        import opencode_monitor.api.server as server_module
+    if "opencode_status_bar.api.server" in sys.modules:
+        import opencode_status_bar.api.server as server_module
 
         server_module._api_server = None
 
     # Reset dashboard process singleton
-    if "opencode_monitor.dashboard.window.launcher" in sys.modules:
-        import opencode_monitor.dashboard.window.launcher as launcher_module
+    if "opencode_status_bar.dashboard.window.launcher" in sys.modules:
+        import opencode_status_bar.dashboard.window.launcher as launcher_module
 
         launcher_module._dashboard_process = None
 
     # Reset factory singleton
     if (
-        "opencode_monitor.dashboard.sections.tracing.detail_panel.strategies"
+        "opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies"
         in sys.modules
     ):
-        import opencode_monitor.dashboard.sections.tracing.detail_panel.strategies as strategies_module
+        import opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies as strategies_module
 
         strategies_module._factory_instance = None
 
     yield
 
     # Reset AFTER test (even if test crashes)
-    if "opencode_monitor.analytics.db" in sys.modules:
-        import opencode_monitor.analytics.db as db_module
+    if "opencode_status_bar.analytics.db" in sys.modules:
+        import opencode_status_bar.analytics.db as db_module
 
         db_module._db_instance = None
 
-    if "opencode_monitor.analytics.indexer.hybrid" in sys.modules:
-        import opencode_monitor.analytics.indexer.hybrid as indexer_module
+    if "opencode_status_bar.analytics.indexer.hybrid" in sys.modules:
+        import opencode_status_bar.analytics.indexer.hybrid as indexer_module
 
         if hasattr(indexer_module, "IndexerRegistry"):
             indexer_module.IndexerRegistry._instance = None
 
-    if "opencode_monitor.api.routes._context" in sys.modules:
-        import opencode_monitor.api.routes._context as context_module
+    if "opencode_status_bar.api.routes._context" in sys.modules:
+        import opencode_status_bar.api.routes._context as context_module
 
         if hasattr(context_module, "RouteContext"):
             context_module.RouteContext._instance = None
 
-    if "opencode_monitor.dashboard.sections.tracing.image_cache" in sys.modules:
-        import opencode_monitor.dashboard.sections.tracing.image_cache as cache_module
+    if "opencode_status_bar.dashboard.sections.tracing.image_cache" in sys.modules:
+        import opencode_status_bar.dashboard.sections.tracing.image_cache as cache_module
 
         cache_module._thumbnail_cache = None
 
-    if "opencode_monitor.security.auditor.core" in sys.modules:
-        import opencode_monitor.security.auditor.core as auditor_core
+    if "opencode_status_bar.security.auditor.core" in sys.modules:
+        import opencode_status_bar.security.auditor.core as auditor_core
 
         auditor_core._auditor = None
 
     # Reset settings singleton
-    if "opencode_monitor.utils.settings" in sys.modules:
-        import opencode_monitor.utils.settings as settings_module
+    if "opencode_status_bar.utils.settings" in sys.modules:
+        import opencode_status_bar.utils.settings as settings_module
 
         settings_module._settings = None
 
     # Reset risk analyzer singleton
-    if "opencode_monitor.security.analyzer.risk" in sys.modules:
-        import opencode_monitor.security.analyzer.risk as risk_module
+    if "opencode_status_bar.security.analyzer.risk" in sys.modules:
+        import opencode_status_bar.security.analyzer.risk as risk_module
 
         risk_module._analyzer = None
 
     # Reset API client singleton
-    if "opencode_monitor.api.client" in sys.modules:
-        import opencode_monitor.api.client as client_module
+    if "opencode_status_bar.api.client" in sys.modules:
+        import opencode_status_bar.api.client as client_module
 
         client_module._api_client = None
 
     # Reset API server singleton
-    if "opencode_monitor.api.server" in sys.modules:
-        import opencode_monitor.api.server as server_module
+    if "opencode_status_bar.api.server" in sys.modules:
+        import opencode_status_bar.api.server as server_module
 
         server_module._api_server = None
 
     # Reset dashboard process singleton
-    if "opencode_monitor.dashboard.window.launcher" in sys.modules:
-        import opencode_monitor.dashboard.window.launcher as launcher_module
+    if "opencode_status_bar.dashboard.window.launcher" in sys.modules:
+        import opencode_status_bar.dashboard.window.launcher as launcher_module
 
         launcher_module._dashboard_process = None
 
     # Reset factory singleton
     if (
-        "opencode_monitor.dashboard.sections.tracing.detail_panel.strategies"
+        "opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies"
         in sys.modules
     ):
-        import opencode_monitor.dashboard.sections.tracing.detail_panel.strategies as strategies_module
+        import opencode_status_bar.dashboard.sections.tracing.detail_panel.strategies as strategies_module
 
         strategies_module._factory_instance = None

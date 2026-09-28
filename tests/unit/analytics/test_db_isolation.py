@@ -17,11 +17,11 @@ class TestDatabaseIsolation:
     """Verify that all database fixtures are properly isolated."""
 
     def test_analytics_db_not_in_home_config(self, analytics_db):
-        """Verify analytics_db does NOT use ~/.config/opencode-monitor."""
+        """Verify analytics_db does NOT use ~/.config/opencode-status-bar."""
         db_path = analytics_db._db_path
 
         # The path should NOT be in the user's home config directory
-        home_config = Path.home() / ".config" / "opencode-monitor"
+        home_config = Path.home() / ".config" / "opencode-status-bar"
         assert not str(db_path).startswith(str(home_config)), (
             f"Test database {db_path} is in production path {home_config}!"
         )
