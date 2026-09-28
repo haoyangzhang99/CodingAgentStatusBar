@@ -5,10 +5,16 @@ Provides rumps mocking infrastructure for the menu bar UI tests.
 """
 
 import sys
+import os
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+
+# Point HOME at a throwaway folder before any app module is imported, so tests
+# never write to the real ~/Library/Logs or read real status snapshots.
+os.environ["HOME"] = tempfile.mkdtemp(prefix="opencode-status-bar-tests-")
 
 # Add src directory to path for imports
 src_path = Path(__file__).parent.parent / "src"
