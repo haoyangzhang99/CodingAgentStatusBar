@@ -32,17 +32,59 @@ each recent session and what it's waiting for, **Refresh**, and **Quit**.
 ## Requirements
 
 - macOS (tested on macOS 26 with an Apple silicon Mac)
-- The OpenCode desktop app (tested with 1.18)
+- The OpenCode desktop app, version 2 (tested with 2.0). For OpenCode 1, see
+  [Which Version to Install](#which-version-to-install).
 - [uv](https://docs.astral.sh/uv/): `brew install uv`
 - Xcode Command Line Tools: `xcode-select --install`
 
+## Which Version to Install
+
+OpenCode 2 changed how plugins work, so each major version of OpenCode needs its own version of
+the plugin. The menu bar app itself is the same in both.
+
+| Your OpenCode version | Install from         | Clone command                                                                      |
+| --------------------- | -------------------- | ---------------------------------------------------------------------------------- |
+| 2.x                   | `main`               | `git clone https://github.com/haoyangzhang99/OpenCodeStatusBar.git`                |
+| 1.x                   | `opencode-v1` branch | `git clone -b opencode-v1 https://github.com/haoyangzhang99/OpenCodeStatusBar.git` |
+
+To check your OpenCode version, select OpenCode in Finder's Applications folder and choose
+File > Get Info, or run:
+
+```sh
+defaults read /Applications/OpenCode.app/Contents/Info.plist CFBundleShortVersionString
+```
+
+With the wrong version, the menu bar stays on `OpenCode offline`.
+
+The `opencode-v1` branch is the last release that supports OpenCode 1, and new features are only
+added to `main`.
+
+### Moving from OpenCode 1 to OpenCode 2
+
+After OpenCode updates to version 2, switch the project folder to `main`:
+
+```sh
+cd OpenCodeStatusBar
+git fetch
+git checkout main
+git pull
+./install.sh
+```
+
+Then fully quit OpenCode (Cmd+Q) and reopen it.
+
 ## Install
+
+For OpenCode 2:
 
 ```sh
 git clone https://github.com/haoyangzhang99/OpenCodeStatusBar.git
 cd OpenCodeStatusBar
 ./install.sh
 ```
+
+For OpenCode 1, use `git clone -b opencode-v1 ...` instead (see
+[Which Version to Install](#which-version-to-install)).
 
 The installer:
 
@@ -70,7 +112,9 @@ git pull
 ./install.sh
 ```
 
-Restart OpenCode afterwards if the plugin changed.
+Restart OpenCode afterwards if the plugin changed. `git pull` stays on the version you
+installed; to move from OpenCode 1 to 2, see
+[Moving from OpenCode 1 to OpenCode 2](#moving-from-opencode-1-to-opencode-2).
 
 ## Uninstall
 
@@ -93,7 +137,8 @@ connects to OpenCode.
 - Finished sessions stay listed for 60 seconds, which is how `Done` appears.
 - Approval and question states come from OpenCode's own request events (approvals are also
   checked against its pending list), not timing guesses.
-- The plugin is written for OpenCode 2; OpenCode 1 can't load it.
+- The plugin on `main` is written for OpenCode 2; OpenCode 1 users install the `opencode-v1`
+  branch instead.
 - When OpenCode starts, the plugin opens the menu bar app in the background (once per OpenCode
   launch). If you quit the app, it stays closed until OpenCode starts again.
 
