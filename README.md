@@ -91,7 +91,9 @@ connects to OpenCode.
 
 - Snapshots older than 15 seconds, or from an OpenCode process that has exited, are ignored.
 - Finished sessions stay listed for 60 seconds, which is how `Done` appears.
-- Approval and question states come from OpenCode's own pending-request lists, not timing guesses.
+- Approval and question states come from OpenCode's own request events (approvals are also
+  checked against its pending list), not timing guesses.
+- The plugin is written for OpenCode 2; OpenCode 1 can't load it.
 - When OpenCode starts, the plugin opens the menu bar app in the background (once per OpenCode
   launch). If you quit the app, it stays closed until OpenCode starts again.
 

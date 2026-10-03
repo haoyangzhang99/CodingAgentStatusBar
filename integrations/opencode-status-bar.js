@@ -8,6 +8,9 @@ import { join } from "node:path";
 const BUNDLE_ID = "io.github.haoyangzhang99.OpenCodeStatusBar";
 // Shared across plugin module instances, so each OpenCode process launches once.
 const LAUNCHED = Symbol.for("opencode-status-bar.launched");
+const INTERVAL = 2_000;
+const RETENTION = 60_000;
+const RESUBSCRIBE = 1_000;
 
 // Open the menu bar app when OpenCode starts. OpenCode loads this plugin once per
 // project, so only the first load in a process does anything. Never throws.
@@ -33,152 +36,237 @@ function launchStatusBar() {
   }
 }
 
-// Only the default export is a plugin: OpenCode invokes every exported function.
-export default async function statusBarBridge({ client, directory }) {
+const ENDED = new Set(["session.execution.succeeded", "session.execution.failed", "session.execution.interrupted"]);
+
+// OpenCode 2 plugin: a default export with an id and setup(ctx).
+export default {
+  id: "opencode-status-bar",
+  setup: statusBarBridge,
+};
+
+// The V2 plugin context cannot list sessions, their status or pending questions, so the
+// bridge follows the event stream and keeps its own view of this directory's sessions.
+function statusBarBridge(ctx) {
   launchStatusBar();
-  const interval = 2_000;
-  const timeout = 5_000;
-  const retention = 60_000;
+  const directory = ctx.location.directory;
   const parent = join(homedir(), ".config", "opencode-status-bar", "bridge");
   const hash = createHash("sha256").update(directory).digest("hex");
   const filename = join(parent, `${process.pid}-${hash}.json`);
-  let recent = new Map();
+  const controller = new AbortController();
+  const signal = controller.signal;
+  // id -> { title, parentID?, status, questions, permissions, lastActive }
+  const sessions = new Map();
+  // id -> Promise resolving to true (this directory), false (elsewhere) or undefined (unknown yet).
+  const owners = new Map();
+  let connected = false;
   let disposed = false;
-  let blocked = false;
   let timer;
-  let controller;
-  let inFlight;
+  let writing;
   let cleanup;
 
-  async function poll() {
-    if (disposed) return;
-    let temporary;
-    let deadline;
-    try {
-      // If a transport ignores cancellation, do not stack requests behind it.
-      if (blocked) return;
-      blocked = true;
-      controller = new AbortController();
-      const signal = controller.signal;
-      const options = { query: { directory }, signal, throwOnError: true };
-      const expires = new Promise((_, reject) => {
-        signal.addEventListener("abort", () => reject(new Error("Poll cancelled")), { once: true });
-        deadline = setTimeout(() => controller.abort(), timeout);
-        deadline.unref?.();
-      });
-      const started = Date.now();
-      const nextRecent = new Map(recent);
-      const data = async (request) => {
-        const result = await request;
-        if (!result || result.error || result.data === undefined) throw new Error("Invalid response");
-        return result.data;
-      };
-      const work = (async () => {
-        // The injected desktop v1 SDK has no question/permission namespace.
-        // Its underlying client retains both auth and the in-process fetch.
-        const results = await Promise.allSettled([
-          () => client.session.status(options),
-          () => client._client.get({ ...options, url: "/question" }),
-          () => client._client.get({ ...options, url: "/permission" }),
-          () => client.session.list({ ...options, query: { directory, start: started - retention } }),
-        ].map((request) => data(Promise.resolve().then(request))));
-        const [statuses, questions, permissions, listed] = results.map((result) => {
-          if (result.status === "rejected") throw result.reason;
-          return result.value;
-        });
-        if (!statuses || typeof statuses !== "object" || Array.isArray(statuses) ||
-            !Array.isArray(questions) || !Array.isArray(permissions) || !Array.isArray(listed)) {
-          throw new Error("Invalid poll data");
+  function track(id, info) {
+    let session = sessions.get(id);
+    if (!session) {
+      session = { title: "", status: "idle", questions: new Set(), permissions: new Set(), lastActive: Date.now() };
+      sessions.set(id, session);
+    }
+    if (typeof info?.title === "string") session.title = info.title;
+    if (typeof info?.parentID === "string") session.parentID = info.parentID;
+    return session;
+  }
+
+  function forget(id) {
+    sessions.delete(id);
+    owners.set(id, Promise.resolve(false));
+  }
+
+  // Look a session up once to learn its directory and title. A failed lookup is retried
+  // on the session's next event.
+  function owned(id, location) {
+    if (location && typeof location.directory === "string") {
+      if (location.directory !== directory) return Promise.resolve(false);
+      if (sessions.has(id)) return Promise.resolve(true);
+    }
+    if (!owners.has(id)) {
+      owners.set(id, (async () => {
+        const info = await ctx.session.get({ sessionID: id }, { signal });
+        if (info?.id !== id || typeof info.location?.directory !== "string") throw new Error("Invalid session");
+        if (info.location.directory !== directory) {
+          sessions.delete(id);
+          return false;
         }
-        const pending = (requests) => new Set(requests.map((request) => {
-          if (typeof request?.sessionID !== "string") throw new Error("Invalid pending request");
-          return request.sessionID;
-        }));
-        const question = pending(questions);
-        const permission = pending(permissions);
-        const details = new Map(listed.map((session) => [session.id, session]));
-        for (const [id, status] of Object.entries(statuses)) {
-          if (!["busy", "idle", "retry"].includes(status?.type)) throw new Error("Invalid status");
-          if (status.type !== "idle") nextRecent.set(id, started);
-        }
-        for (const id of [...question, ...permission]) nextRecent.set(id, started);
-        for (const session of listed) {
-          if (session.directory === directory && Number.isFinite(session.time?.updated) &&
-              session.time.updated >= started - retention) {
-            nextRecent.set(session.id, Math.max(nextRecent.get(session.id) ?? 0,
-              Math.min(started, session.time.updated)));
-          }
-        }
-        const sessions = [];
-        for (const [id, lastActive] of nextRecent) {
-          if (lastActive < started - retention) {
-            nextRecent.delete(id);
-            continue;
-          }
-          if (signal.aborted) throw new Error("Poll cancelled");
-          const session = details.get(id) ?? await data(client.session.get({ ...options, path: { id } }));
-          if (session.id !== id || typeof session.title !== "string" || typeof session.directory !== "string" ||
-              (session.parentID !== undefined && typeof session.parentID !== "string")) {
-            throw new Error("Invalid session");
-          }
-          if (session.directory !== directory) {
-            nextRecent.delete(id);
-            continue;
-          }
-          sessions.push({
-            id, title: session.title, directory: session.directory,
-            ...(session.parentID === undefined ? {} : { parentID: session.parentID }),
-            status: statuses[id]?.type ?? "idle", tools: [],
-            question: question.has(id), permission: permission.has(id),
-          });
-        }
-        return { version: 1, pid: process.pid, updated: started, directory, sessions };
-      })();
-      // Wait for all transport requests, even after the deadline, before retrying.
-      work.then(() => { blocked = false; }, () => { blocked = false; });
-      const snapshot = await Promise.race([work, expires]);
-      if (disposed || signal.aborted) return;
-      await mkdir(parent, { recursive: true, mode: 0o700 });
-      await chmod(parent, 0o700);
-      temporary = `${filename}.${randomUUID()}.tmp`;
-      await writeFile(temporary, JSON.stringify(snapshot), { mode: 0o600, flag: "wx" });
-      if (disposed || signal.aborted) return;
-      await rename(temporary, filename);
-      recent = nextRecent;
-    } catch {
-      // Leave the last successful timestamp untouched; never disrupt OpenCode.
-      controller?.abort();
-    } finally {
-      clearTimeout(deadline);
-      if (temporary) await unlink(temporary).catch(() => {});
-      if (!disposed) {
-        timer = setTimeout(() => { inFlight = poll(); }, interval);
-        timer.unref?.();
-      }
+        if (!disposed) track(id, info);
+        return true;
+      })().catch(() => {
+        owners.delete(id);
+        return location?.directory === directory ? (track(id), true) : undefined;
+      }));
+    }
+    return owners.get(id);
+  }
+
+  async function handle(event) {
+    const data = event?.data;
+    if (!data || typeof data !== "object") return;
+    const id = event.type === "form.created" ? data.form?.sessionID : data.sessionID;
+    if (typeof id !== "string") return;
+    if (event.type === "session.deleted") return forget(id);
+    if (event.type === "session.created") {
+      if (data.location?.directory !== directory) return forget(id);
+      owners.set(id, Promise.resolve(true));
+      return void track(id, data);
+    }
+    let location = event.location;
+    if (event.type === "session.moved") {
+      if (data.location?.directory !== directory) return forget(id);
+      owners.delete(id);
+      location = undefined;
+    }
+    if (await owned(id, location) !== true || disposed) return;
+    const session = track(id);
+    session.lastActive = Date.now();
+    switch (event.type) {
+      case "session.renamed":
+        if (typeof data.title === "string") session.title = data.title;
+        break;
+      case "session.execution.started":
+      case "session.step.started":
+        session.status = "busy";
+        break;
+      case "session.retry.scheduled":
+        session.status = "retry";
+        break;
+      case "session.status":
+        if (["busy", "idle", "retry"].includes(data.status?.type)) session.status = data.status.type;
+        break;
+      case "session.idle":
+        session.status = "idle";
+        break;
+      case "permission.asked":
+        if (typeof data.id === "string") session.permissions.add(data.id);
+        break;
+      case "permission.replied":
+        session.permissions.delete(data.requestID);
+        break;
+      case "form.created":
+        if (typeof data.form.id === "string") session.questions.add(data.form.id);
+        break;
+      case "form.replied":
+      case "form.cancelled":
+        session.questions.delete(data.id);
+        break;
+    }
+    // A finished run can't still be waiting for an answer.
+    if (ENDED.has(event.type)) {
+      session.status = "idle";
+      session.questions.clear();
+      session.permissions.clear();
     }
   }
 
-  function dispose() {
+  async function listen() {
+    while (!disposed) {
+      try {
+        const stream = ctx.event.subscribe({ signal });
+        connected = true;
+        for await (const event of stream) {
+          if (disposed) return;
+          try { await handle(event); } catch {}
+        }
+      } catch {
+        // Fall through and resubscribe.
+      }
+      // While disconnected the snapshot is not refreshed, so the app treats it as offline.
+      connected = false;
+      if (disposed) return;
+      await new Promise((resolve) => {
+        const wait = setTimeout(resolve, RESUBSCRIBE);
+        wait.unref?.();
+        signal.addEventListener("abort", () => { clearTimeout(wait); resolve(); }, { once: true });
+      });
+    }
+  }
+
+  function snapshot() {
+    const now = Date.now();
+    const list = [];
+    for (const [id, session] of sessions) {
+      const pending = session.questions.size > 0 || session.permissions.size > 0;
+      if (pending || session.status !== "idle") session.lastActive = now;
+      if (session.lastActive < now - RETENTION) {
+        // Look it up again if it comes back, so it gets its title.
+        sessions.delete(id);
+        owners.delete(id);
+        continue;
+      }
+      list.push({
+        id, title: session.title, directory,
+        ...(session.parentID === undefined ? {} : { parentID: session.parentID }),
+        status: session.status, tools: [],
+        question: session.questions.size > 0, permission: session.permissions.size > 0,
+      });
+    }
+    return { version: 1, pid: process.pid, updated: now, directory, sessions: list };
+  }
+
+  // Not every resolved request emits permission.replied, so confirm flagged sessions against
+  // OpenCode's pending list. Keep the flag if the check fails.
+  async function reconcile() {
+    await Promise.all([...sessions].filter(([, session]) => session.permissions.size > 0).map(async ([id, session]) => {
+      const known = [...session.permissions];
+      try {
+        const pending = await ctx.permission.list({ sessionID: id }, { signal });
+        if (!Array.isArray(pending)) return;
+        const ids = new Set(pending.map((request) => request?.id));
+        // Only drop requests known before the check; newer ones may not be listed yet.
+        for (const request of known) if (!ids.has(request)) session.permissions.delete(request);
+      } catch {}
+    }));
+  }
+
+  async function write() {
+    let temporary;
+    try {
+      if (disposed || !connected) return;
+      await reconcile();
+      if (disposed || !connected) return;
+      const data = JSON.stringify(snapshot());
+      await mkdir(parent, { recursive: true, mode: 0o700 });
+      await chmod(parent, 0o700);
+      temporary = `${filename}.${randomUUID()}.tmp`;
+      await writeFile(temporary, data, { mode: 0o600, flag: "wx" });
+      if (disposed) return;
+      await rename(temporary, filename);
+      temporary = undefined;
+    } catch {
+      // Never disrupt OpenCode; the app treats a stale snapshot as offline.
+    } finally {
+      if (temporary) await unlink(temporary).catch(() => {});
+    }
+  }
+
+  function tick() {
+    writing = write().finally(() => {
+      if (disposed) return;
+      timer = setTimeout(tick, INTERVAL);
+      timer.unref?.();
+    });
+  }
+
+  void listen();
+  tick();
+
+  return function dispose() {
     if (!cleanup) {
       disposed = true;
+      connected = false;
       clearTimeout(timer);
-      controller?.abort();
-      // Both teardown paths may run; never unlink a replacement context's file twice.
+      controller.abort();
       cleanup = (async () => {
-        await inFlight;
+        await writing;
         await unlink(filename).catch(() => {});
       })();
     }
     return cleanup;
-  }
-
-  inFlight = poll();
-  return {
-    dispose,
-    async event({ event }) {
-      if (event.type !== "server.instance.disposed" ||
-          (event.properties?.directory !== undefined && event.properties.directory !== directory)) return;
-      await dispose();
-    },
   };
 }

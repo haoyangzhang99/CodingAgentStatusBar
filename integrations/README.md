@@ -5,15 +5,24 @@ Two pieces connect the OpenCode desktop app to the menu bar. `install.sh` builds
 ## Status Plugin (`opencode-status-bar.js`)
 
 OpenCode Desktop's local server requires a password generated at each launch, so outside
-programs can't discover or query it. This plugin runs inside OpenCode and uses the client
-OpenCode gives every plugin.
+programs can't discover or query it. This plugin runs inside OpenCode and uses the context
+OpenCode gives every plugin. It is an OpenCode 2 plugin (a default export with `id` and
+`setup(ctx)`); OpenCode 1 can't load it.
 
-Every 2 seconds, for each open project directory, it:
+The V2 plugin context can't list sessions, their status or pending questions, so for each open
+project directory the plugin follows OpenCode's event stream (`ctx.event.subscribe`):
 
-- reads session status (`busy`, `retry`, `idle`), pending questions (`/question`) and pending
-  permission requests (`/permission`), plus sessions updated in the last 60 seconds;
-- writes `~/.config/opencode-status-bar/bridge/<pid>-<sha256(directory)>.json` atomically,
-  with file mode `0600` in a `0700` directory.
+- execution started/succeeded/failed/interrupted, step started, retry scheduled and status
+  events give each session's status (`busy`, `retry`, `idle`);
+- `permission.asked`/`permission.replied` and `form.created`/`form.replied`/`form.cancelled`
+  track pending permission requests and questions. A finished run clears both, and every 2
+  seconds flagged sessions are checked against `ctx.permission.list`;
+- sessions are matched to the directory from the event's location or, when an event has none,
+  one `ctx.session.get` lookup, which also supplies the title and `parentID`.
+
+Every 2 seconds it writes `~/.config/opencode-status-bar/bridge/<pid>-<sha256(directory)>.json`
+atomically, with file mode `0600` in a `0700` directory. Idle sessions stay listed for 60 seconds
+after their last event.
 
 Snapshot format:
 
@@ -29,14 +38,13 @@ arguments are never exported.
 
 Behavior details:
 
-- Polls never overlap, and each has a 5-second timeout.
-- A failed poll never refreshes the snapshot's timestamp, so the app treats stale data as offline.
-- When OpenCode closes a project context (`dispose` hook or `server.instance.disposed` event), the
-  plugin stops polling and deletes its snapshot.
+- Snapshot writes never overlap.
+- While the event stream is down the snapshot's timestamp isn't refreshed, so the app treats
+  stale data as offline. The plugin resubscribes every second until the stream is back.
+- When OpenCode unloads the plugin for a project, the cleanup function returned by `setup` stops
+  the stream and deletes its snapshot.
 - Plugin startup never fails because the snapshot folder is unavailable.
-
-The injected v1 SDK client has no methods for questions or permissions, so the plugin calls those
-endpoints through `client._client.get`, an internal API that may change between OpenCode releases.
+- A session that was already running when the plugin loaded appears at its next step.
 
 ### Opening the App
 

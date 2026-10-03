@@ -32,16 +32,12 @@ const LAUNCHED = Symbol.for("opencode-status-bar.launched");
 const APP = join(home, "Applications", "OpenCode Status Bar.app");
 const BY_ID = ["-g", "-b", "io.github.haoyangzhang99.OpenCodeStatusBar"];
 const optOut = join(home, ".config", "opencode-status-bar", "no-autolaunch");
-const failing = () => Promise.reject(new Error("offline"));
-const client = {
-  session: { status: failing, list: failing, get: failing },
-  _client: { get: failing },
-};
+const failing = () => { throw new Error("offline"); };
 const skip = process.platform !== "darwin" && "the app only exists on macOS";
 
 async function load(directory = "/project") {
-  const hooks = await plugin({ client, directory });
-  await hooks.dispose();
+  const dispose = await plugin.setup({ location: { directory }, event: { subscribe: failing }, session: { get: failing } });
+  await dispose();
 }
 const settle = () => new Promise((resolve) => setImmediate(() => setImmediate(resolve)));
 
