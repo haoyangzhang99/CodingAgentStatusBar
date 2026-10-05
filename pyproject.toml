@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "opencode-status-bar"
+name = "coding-agent-status-bar"
 version = "0.1.0"
-description = "macOS menu bar status for the OpenCode desktop app"
+description = "macOS menu bar status for OpenCode, Codex and Claude Code"
 requires-python = ">=3.12"
 dependencies = [
     "rumps>=0.4.0",
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-opencode-status-bar = "opencode_status_bar.app:main"
+coding-agent-status-bar = "coding_agent_status_bar.app:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

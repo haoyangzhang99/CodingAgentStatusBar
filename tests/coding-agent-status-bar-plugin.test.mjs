@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setImmediate as immediate } from "node:timers/promises";
 import test from "node:test";
-import plugin from "../integrations/opencode-status-bar.js";
+import plugin from "../integrations/coding-agent-status-bar.js";
 
 // Run all plugin code with an isolated HOME, never the user's monitor directory.
 if (!process.env.MONITOR_PLUGIN_TEST_CHILD) {
@@ -15,8 +15,8 @@ if (!process.env.MONITOR_PLUGIN_TEST_CHILD) {
     const home = await mkdtemp(join(tmpdir(), "monitor-plugin-test-"));
     try {
       // Opt out of opening the real menu bar app; launching has its own tests.
-      await mkdir(join(home, ".config", "opencode-status-bar"), { recursive: true });
-      await writeFile(join(home, ".config", "opencode-status-bar", "no-autolaunch"), "");
+      await mkdir(join(home, ".config", "coding-agent-status-bar"), { recursive: true });
+      await writeFile(join(home, ".config", "coding-agent-status-bar", "no-autolaunch"), "");
       const env = { ...process.env, HOME: home, MONITOR_PLUGIN_TEST_CHILD: "1" };
       delete env.NODE_TEST_CONTEXT;
       const child = spawn(process.execPath, ["--test", fileURLToPath(import.meta.url)], {
@@ -37,7 +37,7 @@ if (!process.env.MONITOR_PLUGIN_TEST_CHILD) {
     }
   });
 } else {
-  const parent = join(homedir(), ".config", "opencode-status-bar", "bridge");
+  const parent = join(homedir(), ".config", "coding-agent-status-bar", "bridge");
   test.beforeEach(() => rm(parent, { recursive: true, force: true }));
   const directory = "/test/project";
   const filename = (dir = directory) => join(parent,
@@ -140,8 +140,8 @@ if (!process.env.MONITOR_PLUGIN_TEST_CHILD) {
     { sessionID: id, projectID: "project", location: { directory }, slug: "slug", version: "1", ...extra });
 
   test("a V2 plugin definition; exact sanitized contract and private atomic files", async (t) => {
-    assert.deepEqual(Object.keys(await import("../integrations/opencode-status-bar.js")), ["default"]);
-    assert.equal(plugin.id, "opencode-status-bar");
+    assert.deepEqual(Object.keys(await import("../integrations/coding-agent-status-bar.js")), ["default"]);
+    assert.equal(plugin.id, "coding-agent-status-bar");
     assert.equal(typeof plugin.setup, "function");
     const { stream } = await setup(t);
     assert.deepEqual(await snapshot(), { version: 1, pid: process.pid, updated: Date.now(), directory, sessions: [] });

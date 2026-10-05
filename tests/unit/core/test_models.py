@@ -2,7 +2,7 @@
 
 import pytest
 
-from opencode_status_bar.core.models import Agent, Instance, SessionStatus, State, Tool
+from coding_agent_status_bar.core.models import Agent, Instance, SessionStatus, State, Tool
 
 
 def agent(aid="a", status=SessionStatus.BUSY, **kwargs):

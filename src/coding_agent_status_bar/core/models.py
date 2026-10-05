@@ -1,4 +1,5 @@
-"""Data models for OpenCode Status Bar, filled in from the plugin's snapshots."""
+"""Data models for Coding Agent Status Bar, filled in from the OpenCode plugin's snapshots and
+the Codex and Claude Code hooks' status files."""
 
 import time
 from dataclasses import dataclass, field

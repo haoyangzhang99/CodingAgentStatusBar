@@ -1,4 +1,4 @@
-"""Draw the OpenCode Status Bar app icon and write AppIcon.png and AppIcon.icns.
+"""Draw the Coding Agent Status Bar app icon and write AppIcon.png and AppIcon.icns.
 
 The style follows the OpenCode desktop icon (dark rounded square, flat blocky
 white and light-gray shapes separated by thin black lines), with an original

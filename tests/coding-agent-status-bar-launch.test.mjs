@@ -26,12 +26,12 @@ mock.module("node:child_process", {
     },
   },
 });
-const { default: plugin } = await import("../integrations/opencode-status-bar.js");
+const { default: plugin } = await import("../integrations/coding-agent-status-bar.js");
 
-const LAUNCHED = Symbol.for("opencode-status-bar.launched");
-const APP = join(home, "Applications", "OpenCode Status Bar.app");
-const BY_ID = ["-g", "-b", "io.github.haoyangzhang99.OpenCodeStatusBar"];
-const optOut = join(home, ".config", "opencode-status-bar", "no-autolaunch");
+const LAUNCHED = Symbol.for("coding-agent-status-bar.launched");
+const APP = join(home, "Applications", "Coding Agent Status Bar.app");
+const BY_ID = ["-g", "-b", "io.github.haoyangzhang99.CodingAgentStatusBar"];
+const optOut = join(home, ".config", "coding-agent-status-bar", "no-autolaunch");
 const failing = () => { throw new Error("offline"); };
 const skip = process.platform !== "darwin" && "the app only exists on macOS";
 
@@ -69,7 +69,7 @@ test("falls back to the install path if the app ID is unknown", { skip }, async 
 });
 
 test("the opt-out file disables launching", { skip }, async () => {
-  await mkdir(join(home, ".config", "opencode-status-bar"), { recursive: true });
+  await mkdir(join(home, ".config", "coding-agent-status-bar"), { recursive: true });
   await writeFile(optOut, "");
   await load();
   await settle();

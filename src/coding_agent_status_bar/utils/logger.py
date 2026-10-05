@@ -1,4 +1,4 @@
-"""Structured logging for OpenCode Status Bar using loguru."""
+"""Structured logging for Coding Agent Status Bar using loguru."""
 
 from __future__ import annotations
 import os
@@ -12,7 +12,7 @@ from loguru import logger
 
 _req_id: ContextVar[str | None] = ContextVar("request_id", default=None)
 _sess_id: ContextVar[str | None] = ContextVar("session_id", default=None)
-LOG_DIR = Path.home() / "Library" / "Logs" / "OpenCodeStatusBar"
+LOG_DIR = Path.home() / "Library" / "Logs" / "CodingAgentStatusBar"
 FMT = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan> | <cyan>{file}:{line}</cyan> | {message}{extra[context]}"
 
 
@@ -25,14 +25,14 @@ def _patch(r: dict) -> None:
 
 def setup_logging() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    dbg = os.getenv("OPENCODE_DEBUG", "").lower() in ("1", "true")
-    lvl = os.getenv("OPENCODE_LOG_LEVEL", "DEBUG" if dbg else "INFO").upper()
+    dbg = os.getenv("STATUS_BAR_DEBUG", "").lower() in ("1", "true")
+    lvl = os.getenv("STATUS_BAR_LOG_LEVEL", "DEBUG" if dbg else "INFO").upper()
     logger.remove()
     logger.configure(patcher=_patch)
-    if os.getenv("OPENCODE_LOG_CONSOLE", "1" if dbg else "0") == "1":
+    if os.getenv("STATUS_BAR_LOG_CONSOLE", "1" if dbg else "0") == "1":
         logger.add(sys.stderr, format=FMT, level=lvl, colorize=True, diagnose=False)
     logger.add(
-        LOG_DIR / "opencode-status-bar.log",
+        LOG_DIR / "coding-agent-status-bar.log",
         format=FMT,
         level=lvl,
         rotation="10 MB",
@@ -41,7 +41,7 @@ def setup_logging() -> None:
         diagnose=False,
     )
     logger.add(
-        LOG_DIR / "opencode-status-bar.json",
+        LOG_DIR / "coding-agent-status-bar.json",
         level=lvl,
         rotation="20 MB",
         retention=3,

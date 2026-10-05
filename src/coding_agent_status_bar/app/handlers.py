@@ -1,4 +1,4 @@
-"""Handlers mixin for OpenCodeApp - Contains all callback methods."""
+"""Handlers mixin for StatusBarApp - Contains all callback methods."""
 
 import subprocess
 
@@ -6,7 +6,7 @@ from ..utils.logger import info, error
 
 
 class HandlersMixin:
-    """Mixin providing callback handlers for OpenCodeApp."""
+    """Mixin providing callback handlers for StatusBarApp."""
 
     _needs_refresh: bool
 

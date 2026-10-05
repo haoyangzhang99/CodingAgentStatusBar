@@ -1,9 +1,9 @@
-# OpenCode Status Bar - Makefile
+# Coding Agent Status Bar - Makefile
 
 .PHONY: help install uninstall run run-debug test coverage coverage-html lint clean
 
 help:
-	@echo "OpenCode Status Bar"
+	@echo "Coding Agent Status Bar"
 	@echo ""
 	@echo "  make install        Build and install the app and OpenCode plugin"
 	@echo "  make uninstall      Remove the app and OpenCode plugin"
@@ -22,20 +22,20 @@ uninstall:
 	@./uninstall.sh
 
 run:
-	@uv run python -c "from opencode_status_bar.app import main; main()"
+	@uv run python -c "from coding_agent_status_bar.app import main; main()"
 
 run-debug:
-	@OPENCODE_DEBUG=1 OPENCODE_LOG_LEVEL=DEBUG uv run python -c "from opencode_status_bar.app import main; main()"
+	@STATUS_BAR_DEBUG=1 STATUS_BAR_LOG_LEVEL=DEBUG uv run python -c "from coding_agent_status_bar.app import main; main()"
 
 test:
 	@uv run pytest tests/ -q
 	@node --test --experimental-test-module-mocks tests/*.test.mjs
 
 coverage:
-	@uv run pytest tests/ --cov=src/opencode_status_bar --cov-report=term-missing
+	@uv run pytest tests/ --cov=src/coding_agent_status_bar --cov-report=term-missing
 
 coverage-html:
-	@uv run pytest tests/ --cov=src/opencode_status_bar --cov-report=html
+	@uv run pytest tests/ --cov=src/coding_agent_status_bar --cov-report=html
 	@open htmlcov/index.html
 
 lint:

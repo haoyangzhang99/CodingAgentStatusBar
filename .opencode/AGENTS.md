@@ -1,13 +1,13 @@
-# Project Instructions: OpenCode Status Bar
+# Project Instructions: Coding Agent Status Bar
 
-A macOS menu bar app showing whether the OpenCode desktop app is working, done, or waiting for
-the user. Read `DEVELOPMENT.md` for the layout.
+A macOS menu bar app showing whether OpenCode, Codex and Claude Code are working, done, or waiting
+for the user. Read `DEVELOPMENT.md` for the layout.
 
 ## Scope
 
-- The app's runtime path is: `integrations/opencode-status-bar.js` (plugin) → snapshot files →
+- The app's runtime path is: `integrations/coding-agent-status-bar.js` (plugin) → snapshot files →
   `core/monitor/bridge.py` → `app/` and `ui/menu.py`. Codex and Claude Code follow the same path
-  through `integrations/opencode-status-bar-codex.py` and `integrations/opencode-status-bar-claude.py`
+  through `integrations/coding-agent-status-bar-codex.py` and `integrations/coding-agent-status-bar-claude.py`
   (hooks) and `core/monitor/hooks.py`. Prefer changes there.
 - Keep runtime dependencies to `rumps` and `loguru`; the app should stay small (about 36 MB).
 - The app makes no network requests. The plugin and the Codex and Claude Code hooks must not write prompts, messages,

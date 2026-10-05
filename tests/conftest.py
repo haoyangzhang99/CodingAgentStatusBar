@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures for opencode_status_bar tests.
+Pytest configuration and shared fixtures for coding_agent_status_bar tests.
 
 Provides rumps mocking infrastructure for the menu bar UI tests.
 """
@@ -14,7 +14,7 @@ import pytest
 
 # Point HOME at a throwaway folder before any app module is imported, so tests
 # never write to the real ~/Library/Logs or read real status snapshots.
-os.environ["HOME"] = tempfile.mkdtemp(prefix="opencode-status-bar-tests-")
+os.environ["HOME"] = tempfile.mkdtemp(prefix="coding-agent-status-bar-tests-")
 
 # Add src directory to path for imports
 src_path = Path(__file__).parent.parent / "src"
@@ -147,10 +147,10 @@ def pytest_runtest_setup(item):
                 del sys.modules["rumps"]
                 # Only clear modules that actually import rumps (not all ui/app modules)
                 rumps_dependent_modules = [
-                    "opencode_status_bar.ui.menu",
-                    "opencode_status_bar.app",
-                    "opencode_status_bar.app.core",
-                    "opencode_status_bar.app.menu",
+                    "coding_agent_status_bar.ui.menu",
+                    "coding_agent_status_bar.app",
+                    "coding_agent_status_bar.app.core",
+                    "coding_agent_status_bar.app.menu",
                 ]
                 for mod in rumps_dependent_modules:
                     if mod in sys.modules:

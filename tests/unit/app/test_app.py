@@ -1,5 +1,5 @@
 """
-Tests for OpenCodeApp (rumps menu bar application).
+Tests for StatusBarApp (rumps menu bar application).
 
 Tests the application logic, callbacks, and state management.
 Mocks rumps and external dependencies to test behavior without UI.
@@ -123,13 +123,13 @@ def setup_rumps_mock():
 
     if original_rumps is not None:
         sys.modules["rumps"] = original_rumps
-        if "opencode_status_bar.app" in sys.modules:
-            del sys.modules["opencode_status_bar.app"]
+        if "coding_agent_status_bar.app" in sys.modules:
+            del sys.modules["coding_agent_status_bar.app"]
 
 
 @pytest.fixture
 def mock_dependencies():
-    """Mock all external dependencies for OpenCodeApp.
+    """Mock all external dependencies for StatusBarApp.
 
     Strategy: Patch at SOURCE level BEFORE reloading the app module.
     This ensures that when the module is reloaded, all imports resolve
@@ -149,7 +149,7 @@ def mock_dependencies():
     mock_builder_instance.build_hook_items.return_value = []
     mock_menu_builder.return_value = mock_builder_instance
 
-    from opencode_status_bar.core.models import HookState
+    from coding_agent_status_bar.core.models import HookState
 
     # Tests must never see the real Codex or Claude apps or status files.
     mock_read_codex = MagicMock(return_value=HookState())
@@ -158,28 +158,28 @@ def mock_dependencies():
     # Patch at SOURCE level (where functions are defined)
     # Then reload the app module so imports resolve to mocks
     with (
-        patch("opencode_status_bar.ui.menu.MenuBuilder", mock_menu_builder),
-        patch("opencode_status_bar.core.monitor.bridge.read_bridge_state", mock_read_state),
-        patch("opencode_status_bar.core.monitor.hooks.read_codex_state", mock_read_codex),
-        patch("opencode_status_bar.core.monitor.hooks.read_claude_state", mock_read_claude),
-        patch("opencode_status_bar.utils.logger.info", mock_info),
-        patch("opencode_status_bar.utils.logger.error", mock_error),
-        patch("opencode_status_bar.utils.logger.debug", mock_debug),
+        patch("coding_agent_status_bar.ui.menu.MenuBuilder", mock_menu_builder),
+        patch("coding_agent_status_bar.core.monitor.bridge.read_bridge_state", mock_read_state),
+        patch("coding_agent_status_bar.core.monitor.hooks.read_codex_state", mock_read_codex),
+        patch("coding_agent_status_bar.core.monitor.hooks.read_claude_state", mock_read_claude),
+        patch("coding_agent_status_bar.utils.logger.info", mock_info),
+        patch("coding_agent_status_bar.utils.logger.error", mock_error),
+        patch("coding_agent_status_bar.utils.logger.debug", mock_debug),
     ):
         # Remove ALL cached app modules so they get re-imported with mocks
         # The app package has: __init__, core, menu, handlers
         modules_to_remove = [
-            "opencode_status_bar.app",
-            "opencode_status_bar.app.core",
-            "opencode_status_bar.app.menu",
-            "opencode_status_bar.app.handlers",
+            "coding_agent_status_bar.app",
+            "coding_agent_status_bar.app.core",
+            "coding_agent_status_bar.app.menu",
+            "coding_agent_status_bar.app.handlers",
         ]
         for mod_name in modules_to_remove:
             if mod_name in sys.modules:
                 del sys.modules[mod_name]
 
         # Now import the app module - imports will resolve to mocks
-        import opencode_status_bar.app  # noqa: F401
+        import coding_agent_status_bar.app  # noqa: F401
 
         yield {
             "menu_builder": mock_menu_builder,
@@ -199,14 +199,14 @@ def mock_dependencies():
 
 
 def create_app_with_mocks(mock_dependencies, skip_monitor=True):
-    """Helper to create OpenCodeApp with proper mocking."""
-    from opencode_status_bar.app import OpenCodeApp
+    """Helper to create StatusBarApp with proper mocking."""
+    from coding_agent_status_bar.app import StatusBarApp
 
     if skip_monitor:
-        with patch.object(OpenCodeApp, "_run_monitor_loop"):
-            app = OpenCodeApp()
+        with patch.object(StatusBarApp, "_run_monitor_loop"):
+            app = StatusBarApp()
     else:
-        app = OpenCodeApp()
+        app = StatusBarApp()
 
     return app
 
@@ -221,12 +221,12 @@ def get_title(app) -> str:
 # =============================================================================
 
 
-class TestOpenCodeAppInit:
-    """Tests for OpenCodeApp.__init__"""
+class TestStatusBarAppInit:
+    """Tests for StatusBarApp.__init__"""
 
     def test_init_full(self, mock_dependencies):
         """App should initialize state and the monitor thread, and nothing else."""
-        from opencode_status_bar.app import OpenCodeApp
+        from coding_agent_status_bar.app import StatusBarApp
 
         app = create_app_with_mocks(mock_dependencies)
 
@@ -234,12 +234,12 @@ class TestOpenCodeAppInit:
         assert app._state is None
         assert app._codex is None
         assert app._claude is None
-        assert app.title == "OpenCode"
+        assert app.title == "Agents"
         assert app._running  # Direct boolean assertion
         assert app._needs_refresh  # Direct boolean assertion
 
         # Class constants
-        assert OpenCodeApp.POLL_INTERVAL == 2
+        assert StatusBarApp.POLL_INTERVAL == 2
         assert app._PORT_NAMES_LIMIT == 50
 
         mock_dependencies["menu_builder"].assert_called_once()
@@ -257,7 +257,7 @@ def test_app_imports_in_a_fresh_process():
     """The real app package imports cleanly, catching references to removed code."""
     src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "src"))
     script = (
-        "import opencode_status_bar.app as app\n"
+        "import coding_agent_status_bar.app as app\n"
         "assert callable(app.main)\n"
     )
     result = subprocess.run(
@@ -274,7 +274,7 @@ def test_app_imports_in_a_fresh_process():
 
 
 class TestBuildStaticMenu:
-    """Tests for OpenCodeApp._build_static_menu"""
+    """Tests for StatusBarApp._build_static_menu"""
 
     def test_build_static_menu_creates_all_items(self, mock_dependencies):
         """Should create Show OpenCode, refresh and quit, without removed features."""
@@ -301,7 +301,7 @@ class TestBuildStaticMenu:
 
 
 class TestUIRefresh:
-    """Tests for OpenCodeApp._ui_refresh"""
+    """Tests for StatusBarApp._ui_refresh"""
 
     @pytest.mark.parametrize(
         "needs_refresh,should_rebuild",
@@ -337,14 +337,14 @@ class TestUIRefresh:
 
 
 class TestBuildMenu:
-    """Tests for OpenCodeApp._build_menu"""
+    """Tests for StatusBarApp._build_menu"""
 
     def test_open_opencode_is_first_and_launches_desktop(self, mock_dependencies):
         app = create_app_with_mocks(mock_dependencies)
         assert app.menu[0].title == "Show OpenCode"
         app._build_menu()
         assert app.menu[0] is app._open_opencode_item
-        with patch("opencode_status_bar.app.handlers.subprocess.run") as run:
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run") as run:
             app.menu[0].callback(None)
         run.assert_called_once_with(
             ["/usr/bin/open", "-b", "ai.opencode.desktop"],
@@ -353,8 +353,8 @@ class TestBuildMenu:
 
     def test_open_opencode_failure_does_not_crash_menu(self, mock_dependencies):
         app = create_app_with_mocks(mock_dependencies)
-        with patch("opencode_status_bar.app.handlers.subprocess.run", side_effect=OSError("Unavailable")), \
-             patch("opencode_status_bar.app.handlers.error") as log_error:
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run", side_effect=OSError("Unavailable")), \
+             patch("coding_agent_status_bar.app.handlers.error") as log_error:
             app._open_opencode(None)
         log_error.assert_called_once()
 
@@ -363,15 +363,15 @@ class TestBuildMenu:
         assert app.menu[1].title == "Show Codex"
         app._build_menu()
         assert app.menu[1] is app._open_codex_item
-        with patch("opencode_status_bar.app.handlers.subprocess.run") as run:
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run") as run:
             app.menu[1].callback(None)
         run.assert_called_once_with(
             ["/usr/bin/open", "-b", "com.openai.codex"],
             check=True, capture_output=True, timeout=5,
         )
-        with patch("opencode_status_bar.app.handlers.subprocess.run",
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run",
                    side_effect=subprocess.TimeoutExpired("open", 5)), \
-             patch("opencode_status_bar.app.handlers.error") as log_error:
+             patch("coding_agent_status_bar.app.handlers.error") as log_error:
             app._open_codex(None)
         log_error.assert_called_once()
 
@@ -380,15 +380,15 @@ class TestBuildMenu:
         assert app.menu[2].title == "Show Claude"
         app._build_menu()
         assert app.menu[2] is app._open_claude_item
-        with patch("opencode_status_bar.app.handlers.subprocess.run") as run:
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run") as run:
             app.menu[2].callback(None)
         run.assert_called_once_with(
             ["/usr/bin/open", "-b", "com.anthropic.claudefordesktop"],
             check=True, capture_output=True, timeout=5,
         )
-        with patch("opencode_status_bar.app.handlers.subprocess.run",
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run",
                    side_effect=OSError("Unavailable")), \
-             patch("opencode_status_bar.app.handlers.error") as log_error:
+             patch("coding_agent_status_bar.app.handlers.error") as log_error:
             app._open_claude(None)
         log_error.assert_called_once()
 
@@ -461,7 +461,7 @@ class TestUpdateTitleDefault:
     )
     def test_update_title_default(self, mock_dependencies, state_config):
         """Should distinguish disconnected state from connected without sessions."""
-        from opencode_status_bar.core.models import State
+        from coding_agent_status_bar.core.models import State
 
         app = create_app_with_mocks(mock_dependencies)
 
@@ -485,7 +485,7 @@ class TestUpdateTitleDefault:
 
 
 class TestUpdateTitlePermission:
-    """Tests for approval detection in OpenCodeApp._update_title"""
+    """Tests for approval detection in StatusBarApp._update_title"""
 
     @pytest.mark.parametrize(
         "tool_name,pending,expected_lock",
@@ -499,7 +499,7 @@ class TestUpdateTitlePermission:
         self, mock_dependencies, tool_name, pending, expected_lock
     ):
         """A pending approval from the plugin takes priority over busy status."""
-        from opencode_status_bar.core.models import (
+        from coding_agent_status_bar.core.models import (
             State,
             Instance,
             Agent,
@@ -558,7 +558,7 @@ class TestNativeStatusTitle:
         connected, title, symbol,
     ):
         """Use native colors; child attention wins without inflating counts."""
-        from opencode_status_bar.core.models import Agent, Instance, SessionStatus, State, Tool
+        from coding_agent_status_bar.core.models import Agent, Instance, SessionStatus, State, Tool
 
         app = create_app_with_mocks(mock_dependencies)
         agents = [
@@ -654,7 +654,7 @@ class TestNativeStatusTitle:
 
 
 class TestUpdateTitleIdle:
-    """Tests for idle instances in OpenCodeApp._update_title"""
+    """Tests for idle instances in StatusBarApp._update_title"""
 
     @pytest.mark.parametrize(
         "idle_count", [2, 1, 0],
@@ -663,7 +663,7 @@ class TestUpdateTitleIdle:
         self, mock_dependencies, idle_count
     ):
         """Empty instances must not dilute the busy status."""
-        from opencode_status_bar.core.models import (
+        from coding_agent_status_bar.core.models import (
             State,
             Instance,
             Agent,
@@ -698,7 +698,7 @@ class TestUpdateTitleIdle:
 
 def hook_session(sid="ses", status="BUSY", permission=False, question=False):
     """A Codex or Claude Code session as read from its status file."""
-    from opencode_status_bar.core.models import Agent, SessionStatus, Tool
+    from coding_agent_status_bar.core.models import Agent, SessionStatus, Tool
 
     return Agent(
         id=sid, title="project", dir="project", full_dir="/work/project",
@@ -710,7 +710,7 @@ def hook_session(sid="ses", status="BUSY", permission=False, question=False):
 
 def opencode_state(*statuses, connected=True, question=False):
     """An OpenCode state with one root session per status; "SUB" adds a working sub-agent."""
-    from opencode_status_bar.core.models import Agent, Instance, SessionStatus, State
+    from coding_agent_status_bar.core.models import Agent, Instance, SessionStatus, State
 
     agents = [
         Agent(
@@ -764,8 +764,8 @@ class TestCombinedStatus:
     )
     def test_status(self, mock_dependencies, opencode, codex_running, codex, title, symbol,
                     attention):
-        from opencode_status_bar.app.core import status_for
-        from opencode_status_bar.core.models import HookState
+        from coding_agent_status_bar.app.core import status_for
+        from coding_agent_status_bar.core.models import HookState
 
         state = HookState(running=codex_running, sessions=[
             hook_session(str(i), status, permission)
@@ -796,8 +796,8 @@ class TestCombinedStatus:
     def test_claude_code_joins_the_status(
         self, mock_dependencies, codex, claude_running, claude, title, symbol, attention,
     ):
-        from opencode_status_bar.app.core import status_for
-        from opencode_status_bar.core.models import HookState
+        from coding_agent_status_bar.app.core import status_for
+        from coding_agent_status_bar.core.models import HookState
 
         codex_state = HookState(running=bool(codex), sessions=[
             hook_session(f"c{i}", status, permission)
@@ -811,7 +811,7 @@ class TestCombinedStatus:
         assert status_for(opencode, codex_state, claude_state) == (title, symbol, attention)
 
     def test_codex_approval_turns_icon_yellow(self, mock_dependencies):
-        from opencode_status_bar.core.models import HookState, State
+        from coding_agent_status_bar.core.models import HookState, State
 
         app = create_app_with_mocks(mock_dependencies)
         app._state = State(connected=True)
@@ -841,12 +841,12 @@ class TestMain:
     """Tests for main() entry point"""
 
     def test_main_creates_and_runs_app(self, mock_dependencies):
-        """Should create OpenCodeApp instance and call run()."""
-        from opencode_status_bar.app import main, OpenCodeApp
+        """Should create StatusBarApp instance and call run()."""
+        from coding_agent_status_bar.app import main, StatusBarApp
 
         with (
-            patch.object(OpenCodeApp, "_run_monitor_loop"),
-            patch.object(OpenCodeApp, "run") as mock_run,
+            patch.object(StatusBarApp, "_run_monitor_loop"),
+            patch.object(StatusBarApp, "run") as mock_run,
         ):
             main()
 
@@ -860,12 +860,12 @@ class TestMain:
 
 @pytest.mark.xdist_group(name="app_monitor_loop")
 class TestMonitorLoop:
-    """Tests for OpenCodeApp._run_monitor_loop"""
+    """Tests for StatusBarApp._run_monitor_loop"""
 
     @staticmethod
     def _run(app, results, codex=None, claude=None):
         """Run the loop over a scripted sequence of states or exceptions."""
-        from opencode_status_bar.core.models import HookState
+        from coding_agent_status_bar.core.models import HookState
 
         remaining = list(results)
         codex_remaining = list(codex or [HookState()] * len(remaining))
@@ -885,12 +885,12 @@ class TestMonitorLoop:
             app._needs_refresh = False
 
         with (
-            patch("opencode_status_bar.app.core.read_bridge_state", side_effect=read),
-            patch("opencode_status_bar.app.core.read_codex_state",
+            patch("coding_agent_status_bar.app.core.read_bridge_state", side_effect=read),
+            patch("coding_agent_status_bar.app.core.read_codex_state",
                   side_effect=lambda: codex_remaining.pop(0)),
-            patch("opencode_status_bar.app.core.read_claude_state",
+            patch("coding_agent_status_bar.app.core.read_claude_state",
                   side_effect=lambda: claude_remaining.pop(0)),
-            patch("opencode_status_bar.app.core.time.sleep", side_effect=sleep),
+            patch("coding_agent_status_bar.app.core.time.sleep", side_effect=sleep),
         ):
             app._running = True
             app._run_monitor_loop()
@@ -898,7 +898,7 @@ class TestMonitorLoop:
 
     @staticmethod
     def _state(status, updated, title="Private title"):
-        from opencode_status_bar.core.models import Agent, Instance, SessionStatus, State
+        from coding_agent_status_bar.core.models import Agent, Instance, SessionStatus, State
 
         agent = Agent(
             id="ses_1", title=title, dir="p", full_dir="/private/p",
@@ -933,7 +933,7 @@ class TestMonitorLoop:
         assert "State updated" not in logged
 
     def test_codex_and_claude_changes_redraw_and_log_without_paths(self, mock_dependencies):
-        from opencode_status_bar.core.models import HookState
+        from coding_agent_status_bar.core.models import HookState
 
         app = create_app_with_mocks(mock_dependencies)
 
@@ -1001,7 +1001,7 @@ class TestThreadSafetyAndRefresh:
 
     def test_state_access_and_refresh(self, mock_dependencies):
         """State access should use lock, and refresh should set flag and log."""
-        from opencode_status_bar.core.models import State
+        from coding_agent_status_bar.core.models import State
 
         app = create_app_with_mocks(mock_dependencies)
 
@@ -1032,7 +1032,7 @@ class TestAdditionalCoverage:
 
     def test_question_title_and_empty_state(self, mock_dependencies):
         """A pending question wins over working; no sessions means idle."""
-        from opencode_status_bar.core.models import State, Instance, Agent, SessionStatus
+        from coding_agent_status_bar.core.models import State, Instance, Agent, SessionStatus
 
         app = create_app_with_mocks(mock_dependencies)
         agent = Agent(

@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[3] / "integrations" / "opencode-status-bar-claude.py"
+SCRIPT = Path(__file__).resolve().parents[3] / "integrations" / "coding-agent-status-bar-claude.py"
 PAYLOAD = {
     "session_id": "abc-123", "cwd": "/work/project", "hook_event_name": "UserPromptSubmit",
     "prompt": "secret prompt", "tool_name": "Bash", "tool_input": {"command": "secret command"},
@@ -32,15 +32,15 @@ def run(home, *args, payload=None, shell=False):
 
 @pytest.fixture
 def home(tmp_path):
-    (tmp_path / ".config/opencode-status-bar").mkdir(parents=True)
+    (tmp_path / ".config/coding-agent-status-bar").mkdir(parents=True)
     # Never open the real app from tests.
-    (tmp_path / ".config/opencode-status-bar/no-autolaunch").touch()
+    (tmp_path / ".config/coding-agent-status-bar/no-autolaunch").touch()
     (tmp_path / ".claude").mkdir()
     return tmp_path
 
 
 def status(home, name="abc-123"):
-    path = home / ".config/opencode-status-bar/claude" / f"{name}.json"
+    path = home / ".config/coding-agent-status-bar/claude" / f"{name}.json"
     return json.loads(path.read_text()) if path.exists() else None
 
 
@@ -75,7 +75,7 @@ class TestEvents:
         }
         assert data["pid"] == os.getpid() and data["directory"] == "/work/project"
 
-        folder = home / ".config/opencode-status-bar/claude"
+        folder = home / ".config/coding-agent-status-bar/claude"
         text = (folder / "abc-123.json").read_text()
         assert "secret" not in text and "Bash" not in text
         assert stat.S_IMODE(folder.stat().st_mode) == 0o700
@@ -127,7 +127,7 @@ class TestEvents:
         assert status(home)["status"] == "busy"
 
     def test_session_start_replaces_an_earlier_process_status(self, home):
-        folder = home / ".config/opencode-status-bar/claude"
+        folder = home / ".config/coding-agent-status-bar/claude"
         folder.mkdir()
         (folder / "abc-123.json").write_text(json.dumps({"pid": 1, "status": "busy"}))
         run(home, "start", payload={**PAYLOAD, "source": "resume"})
@@ -149,7 +149,7 @@ class TestEvents:
             capture_output=True, text=True, env={**os.environ, "HOME": str(home)}, timeout=30,
         )
         assert result.returncode == 0 and result.stdout == ""
-        assert not (home / ".config/opencode-status-bar/claude").exists()
+        assert not (home / ".config/coding-agent-status-bar/claude").exists()
 
 
 def test_launch_opens_app_in_background_unless_turned_off(home, monkeypatch):
@@ -157,17 +157,17 @@ def test_launch_opens_app_in_background_unless_turned_off(home, monkeypatch):
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    monkeypatch.setattr(module, "CONFIG_DIR", home / ".config/opencode-status-bar")
+    monkeypatch.setattr(module, "CONFIG_DIR", home / ".config/coding-agent-status-bar")
     popen = MagicMock()
     monkeypatch.setattr(module.subprocess, "Popen", popen)
     module.launch_app()
     popen.assert_not_called()
 
-    (home / ".config/opencode-status-bar/no-autolaunch").unlink()
+    (home / ".config/coding-agent-status-bar/no-autolaunch").unlink()
     module.launch_app()
     args = popen.call_args.args[0]
     assert args[:2] == ["/bin/sh", "-c"] and "open -g -b" in args[2]
-    assert args[4] == "io.github.haoyangzhang99.OpenCodeStatusBar"
+    assert args[4] == "io.github.haoyangzhang99.CodingAgentStatusBar"
     assert popen.call_args.kwargs["start_new_session"] is True
 
 
@@ -207,7 +207,7 @@ class TestInstall:
         assert "matcher" not in hooks["Stop"][0]
         assert hooks["StopFailure"][0]["hooks"][0]["command"].endswith(" stop")
         assert stat.S_IMODE((home / ".claude/settings.json").stat().st_mode) == 0o600
-        backup = home / ".claude/settings.json.bak-opencode-status-bar"
+        backup = home / ".claude/settings.json.bak-coding-agent-status-bar"
         assert json.loads(backup.read_text()) == self.EXISTING
 
         before = (home / ".claude/settings.json").read_bytes()
@@ -215,12 +215,26 @@ class TestInstall:
         assert "up to date" in result.stdout
         assert (home / ".claude/settings.json").read_bytes() == before
 
-    def test_replaces_hooks_from_a_moved_folder(self, home):
-        old = {"type": "command", "command": "python /old/opencode-status-bar-claude.py stop"}
+    # A moved folder, or hooks installed before the app was renamed from OpenCode Status Bar.
+    @pytest.mark.parametrize("name", ["coding-agent-status-bar-claude.py", "opencode-status-bar-claude.py"])
+    def test_replaces_and_removes_hooks_from_an_old_location(self, home, name):
+        old = {"type": "command", "command": f"python /old/{name} stop"}
         self.write(home, {"hooks": {"Stop": [{"hooks": [old]}]}})
         run(home, "install")
         commands = [h["command"] for g in self.read(home)["hooks"]["Stop"] for h in g["hooks"]]
         assert len(commands) == 1 and str(SCRIPT) in commands[0]
+
+        self.write(home, {"theme": "dark", "hooks": {"Stop": [{"hooks": [old]}]}})
+        run(home, "uninstall")
+        assert self.read(home) == {"theme": "dark"}
+
+    def test_keeps_the_backup_made_under_the_previous_name(self, home):
+        self.write(home, {"theme": "dark"})
+        legacy = home / ".claude/settings.json.bak-opencode-status-bar"
+        legacy.write_text('{"original": true}')
+        run(home, "install")
+        backup = home / ".claude/settings.json.bak-coding-agent-status-bar"
+        assert not legacy.exists() and json.loads(backup.read_text()) == {"original": True}
 
     @pytest.mark.parametrize("existing", [EXISTING, {"theme": "dark"}])
     def test_uninstall_restores_settings(self, home, existing):
@@ -233,7 +247,7 @@ class TestInstall:
     def test_creates_settings_file_when_missing(self, home):
         run(home, "install")
         assert len(self.read(home)["hooks"]) == 10
-        assert not (home / ".claude/settings.json.bak-opencode-status-bar").exists()
+        assert not (home / ".claude/settings.json.bak-coding-agent-status-bar").exists()
 
     @pytest.mark.parametrize("content", ["{", "[]", '{"hooks": []}', '{"hooks": {"Stop": {}}}'])
     def test_unexpected_file_is_left_unchanged(self, home, content):

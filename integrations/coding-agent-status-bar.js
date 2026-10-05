@@ -5,9 +5,9 @@ import { mkdir, chmod, writeFile, rename, unlink } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const BUNDLE_ID = "io.github.haoyangzhang99.OpenCodeStatusBar";
+const BUNDLE_ID = "io.github.haoyangzhang99.CodingAgentStatusBar";
 // Shared across plugin module instances, so each OpenCode process launches once.
-const LAUNCHED = Symbol.for("opencode-status-bar.launched");
+const LAUNCHED = Symbol.for("coding-agent-status-bar.launched");
 const INTERVAL = 2_000;
 const RETENTION = 60_000;
 const RESUBSCRIBE = 1_000;
@@ -19,7 +19,7 @@ function launchStatusBar() {
     if (globalThis[LAUNCHED] || process.platform !== "darwin") return;
     globalThis[LAUNCHED] = true;
     const home = homedir();
-    if (existsSync(join(home, ".config", "opencode-status-bar", "no-autolaunch"))) return;
+    if (existsSync(join(home, ".config", "coding-agent-status-bar", "no-autolaunch"))) return;
     const open = (args, fallback) => {
       const child = spawn("/usr/bin/open", args, { stdio: "ignore", detached: true });
       child.on("error", () => {});
@@ -29,7 +29,7 @@ function launchStatusBar() {
     // -g opens it without stealing focus; an already-running app is left as is.
     // Fall back to the install path if macOS hasn't indexed the app's ID yet.
     open(["-g", "-b", BUNDLE_ID], () => {
-      try { open(["-g", join(home, "Applications", "OpenCode Status Bar.app")]); } catch {}
+      try { open(["-g", join(home, "Applications", "Coding Agent Status Bar.app")]); } catch {}
     });
   } catch {
     // Launching is a convenience; it must never break OpenCode.
@@ -40,7 +40,7 @@ const ENDED = new Set(["session.execution.succeeded", "session.execution.failed"
 
 // OpenCode 2 plugin: a default export with an id and setup(ctx).
 export default {
-  id: "opencode-status-bar",
+  id: "coding-agent-status-bar",
   setup: statusBarBridge,
 };
 
@@ -49,7 +49,7 @@ export default {
 function statusBarBridge(ctx) {
   launchStatusBar();
   const directory = ctx.location.directory;
-  const parent = join(homedir(), ".config", "opencode-status-bar", "bridge");
+  const parent = join(homedir(), ".config", "coding-agent-status-bar", "bridge");
   const hash = createHash("sha256").update(directory).digest("hex");
   const filename = join(parent, `${process.pid}-${hash}.json`);
   const controller = new AbortController();

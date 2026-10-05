@@ -1,8 +1,8 @@
 {
-  "name": "opencode-status-bar",
+  "name": "coding-agent-status-bar",
   "version": "0.1.0",
   "private": true,
-  "description": "Dev tools for OpenCode Status Bar (duplicate-code detection)",
+  "description": "Dev tools for Coding Agent Status Bar (duplicate-code detection)",
   "scripts": {
     "duplicates": "jscpd src/ --min-lines 5 --min-tokens 50",
     "duplicates:tests": "jscpd tests/ --min-lines 5 --min-tokens 50",

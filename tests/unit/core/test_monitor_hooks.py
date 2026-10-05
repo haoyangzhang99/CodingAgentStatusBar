@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from opencode_status_bar.core.models import SessionStatus
-from opencode_status_bar.core.monitor import hooks
+from coding_agent_status_bar.core.models import SessionStatus
+from coding_agent_status_bar.core.monitor import hooks
 
 APPS = {
     "codex": (hooks.read_codex_state, "com.openai.codex"),
@@ -20,7 +20,7 @@ def app(request, tmp_path, monkeypatch):
     """(status folder, reader, desktop app bundle ID) for Codex and for Claude Code."""
     monkeypatch.setattr(hooks.Path, "home", lambda: tmp_path)
     monkeypatch.setattr(hooks, "app_running", lambda bundle_id: False)
-    path = tmp_path / ".config/opencode-status-bar" / request.param
+    path = tmp_path / ".config/coding-agent-status-bar" / request.param
     path.mkdir(parents=True)
     return (path, *APPS[request.param])
 
@@ -63,7 +63,7 @@ def test_approval_becomes_a_pending_tool(folder, read):
 def test_question_waits_for_an_answer(tmp_path, monkeypatch):
     monkeypatch.setattr(hooks.Path, "home", lambda: tmp_path)
     monkeypatch.setattr(hooks, "app_running", lambda bundle_id: False)
-    folder = tmp_path / ".config/opencode-status-bar/claude"
+    folder = tmp_path / ".config/coding-agent-status-bar/claude"
     folder.mkdir(parents=True)
     write(folder, question=True, age=16 * 60)
     [session] = hooks.read_claude_state().sessions
@@ -122,7 +122,7 @@ def test_desktop_app_counts_as_running(app, monkeypatch):
 def test_apps_read_only_their_own_folder(tmp_path, monkeypatch):
     monkeypatch.setattr(hooks.Path, "home", lambda: tmp_path)
     monkeypatch.setattr(hooks, "app_running", lambda bundle_id: False)
-    folder = tmp_path / ".config/opencode-status-bar/codex"
+    folder = tmp_path / ".config/coding-agent-status-bar/codex"
     folder.mkdir(parents=True)
     write(folder)
     assert hooks.read_codex_state().running

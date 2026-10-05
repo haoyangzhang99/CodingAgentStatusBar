@@ -1,7 +1,7 @@
 """
-Core OpenCodeApp class - Main menu bar application.
+Core StatusBarApp class - Main menu bar application.
 
-This module provides the OpenCodeApp class which:
+This module provides the StatusBarApp class which:
 - Manages application state and lifecycle
 - Polls status snapshots written by the OpenCode desktop bridge plugin, and Codex and
   Claude Code hooks
@@ -120,7 +120,7 @@ def status_summary(
     )
 
 
-class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
+class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
     """Main menu bar application.
 
     Combines:
@@ -133,8 +133,8 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
 
     def __init__(self):
         super().__init__(
-            name="OpenCode Status Bar",
-            title="OpenCode",
+            name="Coding Agent Status Bar",
+            title="Agents",
             quit_button=None,  # type: ignore[arg-type]  # rumps accepts None to disable quit button
         )
 
@@ -229,7 +229,7 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
     def _run_monitor_loop(self):
         """Poll OpenCode, Codex and Claude Code status files; log and redraw only when
         something changes."""
-        info("OpenCode Status Bar started")
+        info("Coding Agent Status Bar started")
         last_fingerprint = None
         last_summary = None
         last_error = None
@@ -269,12 +269,12 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
             elapsed = time.time() - start_time
             time.sleep(max(0, self.POLL_INTERVAL - elapsed))
 
-        info("OpenCode Status Bar stopped")
+        info("Coding Agent Status Bar stopped")
 
 
 def main():
     """Main entry point."""
-    app = OpenCodeApp()
+    app = StatusBarApp()
     app.run()
 
 

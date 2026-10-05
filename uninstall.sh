@@ -1,15 +1,15 @@
 #!/bin/bash
-# Remove OpenCode Status Bar's app, plugin, Codex and Claude Code hooks, and status files.
+# Remove Coding Agent Status Bar's app, plugin, Codex and Claude Code hooks, and status files.
 set -euo pipefail
 
-APP_NAME="OpenCode Status Bar"
-EXEC_NAME="OpenCodeStatusBar"
+APP_NAME="Coding Agent Status Bar"
+EXEC_NAME="CodingAgentStatusBar"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 APP="$HOME/Applications/$APP_NAME.app"
-PLUGIN="$HOME/.config/opencode/plugins/opencode-status-bar.js"
-MARKER="Installed by OpenCode Status Bar"
-CONFIG_DIR="$HOME/.config/opencode-status-bar"
-LOG_DIR="$HOME/Library/Logs/OpenCodeStatusBar"
+PLUGIN="$HOME/.config/opencode/plugins/coding-agent-status-bar.js"
+MARKER="Installed by Coding Agent Status Bar"
+CONFIG_DIR="$HOME/.config/coding-agent-status-bar"
+LOG_DIR="$HOME/Library/Logs/CodingAgentStatusBar"
 PURGE=0
 
 usage() {
@@ -53,15 +53,16 @@ fi
 
 PY="$REPO/.venv/bin/python"
 [ -x "$PY" ] || PY=python3
-"$PY" "$REPO/integrations/opencode-status-bar-codex.py" uninstall ||
+"$PY" "$REPO/integrations/coding-agent-status-bar-codex.py" uninstall ||
     echo "Could not remove the Codex hooks from ~/.codex/hooks.json; remove them yourself." >&2
-"$PY" "$REPO/integrations/opencode-status-bar-claude.py" uninstall ||
+"$PY" "$REPO/integrations/coding-agent-status-bar-claude.py" uninstall ||
     echo "Could not remove the Claude Code hooks from ~/.claude/settings.json; remove them yourself." >&2
 
 rm -rf "$CONFIG_DIR/bridge" "$CONFIG_DIR/codex" "$CONFIG_DIR/claude"
 
 if [ "$PURGE" = 1 ]; then
-    rm -rf "$CONFIG_DIR" "$LOG_DIR" "$REPO/.venv"
+    # Logs from before the app was renamed from OpenCode Status Bar.
+    rm -rf "$CONFIG_DIR" "$LOG_DIR" "$HOME/Library/Logs/OpenCodeStatusBar" "$REPO/.venv"
     echo "Removed logs and $REPO/.venv"
 fi
 

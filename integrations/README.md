@@ -3,7 +3,7 @@
 Two pieces connect the OpenCode desktop app to the menu bar, and Codex and Claude Code hooks add
 those apps' status. `install.sh` builds and installs all four.
 
-## Status Plugin (`opencode-status-bar.js`)
+## Status Plugin (`coding-agent-status-bar.js`)
 
 OpenCode Desktop's local server requires a password generated at each launch, so outside
 programs can't discover or query it. This plugin runs inside OpenCode and uses the context
@@ -21,7 +21,7 @@ project directory the plugin follows OpenCode's event stream (`ctx.event.subscri
 - sessions are matched to the directory from the event's location or, when an event has none,
   one `ctx.session.get` lookup, which also supplies the title and `parentID`.
 
-Every 2 seconds it writes `~/.config/opencode-status-bar/bridge/<pid>-<sha256(directory)>.json`
+Every 2 seconds it writes `~/.config/coding-agent-status-bar/bridge/<pid>-<sha256(directory)>.json`
 atomically, with file mode `0600` in a `0700` directory. Idle sessions stay listed for 60 seconds
 after their last event.
 
@@ -49,22 +49,22 @@ Behavior details:
 
 ### Opening the App
 
-When OpenCode loads the plugin, it runs `open -g -b io.github.haoyangzhang99.OpenCodeStatusBar`,
+When OpenCode loads the plugin, it runs `open -g -b io.github.haoyangzhang99.CodingAgentStatusBar`,
 which starts the menu bar app in the background, or does nothing if it's already running. OpenCode
 loads the plugin once per project, so a flag on `globalThis` limits this to the first load in each
 OpenCode process. If macOS doesn't know the app's ID yet, the plugin opens
-`~/Applications/OpenCode Status Bar.app` directly. Failures are ignored.
+`~/Applications/Coding Agent Status Bar.app` directly. Failures are ignored.
 
-Creating `~/.config/opencode-status-bar/no-autolaunch` turns this off. Launching only happens on
-macOS; tests replace the launcher (`tests/opencode-status-bar-launch.test.mjs`).
+Creating `~/.config/coding-agent-status-bar/no-autolaunch` turns this off. Launching only happens on
+macOS; tests replace the launcher (`tests/coding-agent-status-bar-launch.test.mjs`).
 
-The installed file `~/.config/opencode/plugins/opencode-status-bar.js` only re-exports this file,
+The installed file `~/.config/opencode/plugins/coding-agent-status-bar.js` only re-exports this file,
 so `git pull` updates the plugin the next time OpenCode starts.
 
-## Codex Hooks (`opencode-status-bar-codex.py`)
+## Codex Hooks (`coding-agent-status-bar-codex.py`)
 
 Codex runs this script on its lifecycle events, as
-`<repo>/.venv/bin/python -I -S opencode-status-bar-codex.py <argument>`, with the event's JSON on
+`<repo>/.venv/bin/python -I -S coding-agent-status-bar-codex.py <argument>`, with the event's JSON on
 stdin. The script uses only the standard library, never prints, and always exits 0, so it can't
 block or change anything Codex does.
 
@@ -79,7 +79,7 @@ block or change anything Codex does.
 Codex runs `SessionStart` lazily inside a session's first turn, so it keeps a status the same
 Codex process already wrote. A file left by an earlier process, for example after Codex crashed
 and the session was resumed, is replaced, because the app ignores files whose process has
-exited. Each session writes `~/.config/opencode-status-bar/codex/<session id>.json` atomically, with
+exited. Each session writes `~/.config/coding-agent-status-bar/codex/<session id>.json` atomically, with
 file mode `0600` in a `0700` directory:
 
 ```json
@@ -90,20 +90,23 @@ file mode `0600` in a `0700` directory:
 `pid` is the Codex process that ran the hook (a shell between them is skipped). `status` is
 `ready`, `busy` or `idle`. Files untouched for a day are removed at the next session start.
 
-`python opencode-status-bar-codex.py install` adds one hook group per event to the end of
+`python coding-agent-status-bar-codex.py install` adds one hook group per event to the end of
 `~/.codex/hooks.json`, with a 3-second timeout, and backs the file up once to
-`hooks.json.bak-opencode-status-bar`. Codex trusts hooks by their position and exact command, so
+`hooks.json.bak-coding-agent-status-bar`. Codex trusts hooks by their position and exact command, so
 existing hooks are never moved, and re-running it changes nothing unless the command changed
 (for example, after moving this folder). `uninstall` removes only hooks whose command contains
-`opencode-status-bar-codex.py`. Both refuse to rewrite a file they can't parse.
+`coding-agent-status-bar-codex.py`. Both refuse to rewrite a file they can't parse. Both also
+treat `opencode-status-bar-codex.py`, the script's name before the app was renamed from
+OpenCode Status Bar, as ours, and keep a `hooks.json.bak-opencode-status-bar` backup by
+renaming it.
 
 `SessionStart` opens the app the same way the OpenCode plugin does, unless
-`~/.config/opencode-status-bar/no-autolaunch` exists.
+`~/.config/coding-agent-status-bar/no-autolaunch` exists.
 
-## Claude Code Hooks (`opencode-status-bar-claude.py`)
+## Claude Code Hooks (`coding-agent-status-bar-claude.py`)
 
 A standalone script that works like the Codex one, run as
-`<repo>/.venv/bin/python -I -S opencode-status-bar-claude.py <argument>`. Claude Code reports more
+`<repo>/.venv/bin/python -I -S coding-agent-status-bar-claude.py <argument>`. Claude Code reports more
 than Codex, so its status files add `"question": true` while Claude waits for an answer:
 
 | Claude Code event | Argument | Status file |
@@ -123,20 +126,21 @@ showing.
 
 `install` adds one hook group per event to the end of the `hooks` object in
 `~/.claude/settings.json`, keeping every other setting and the file's permissions, and backs the
-file up once to `settings.json.bak-opencode-status-bar`. Claude Code needs no trust step and picks
+file up once to `settings.json.bak-coding-agent-status-bar`. Claude Code needs no trust step and picks
 up changes on its own. `uninstall` removes only hooks whose command contains
-`opencode-status-bar-claude.py`, and the `hooks` object too if nothing else is left in it.
+`coding-agent-status-bar-claude.py`, and the `hooks` object too if nothing else is left in it.
+Hooks and backups from the app's previous name are handled as for Codex.
 
 ## Menu Bar App
 
-`src/opencode_status_bar/core/monitor/hooks.py` reads the Codex and Claude Code status files. It
+`src/coding_agent_status_bar/core/monitor/hooks.py` reads the Codex and Claude Code status files. It
 skips malformed files and files whose process has exited. Each app counts as running while its
 desktop app (`com.openai.codex`, `com.anthropic.claudefordesktop`) is open or any of its status
 files has a live process. Idle sessions are listed for 60 seconds, `ready` sessions aren't listed,
 and a `busy` session without an event for 15 minutes counts as idle unless it's waiting for an
 approval or an answer.
 
-`src/opencode_status_bar/core/monitor/bridge.py` reads the OpenCode snapshots. It skips files that are
+`src/coding_agent_status_bar/core/monitor/bridge.py` reads the OpenCode snapshots. It skips files that are
 malformed, older than 15 seconds, or written by a process that is no longer running, and it
 merges duplicate sessions. Busy and retry sessions count as working.
 
@@ -152,4 +156,4 @@ menu bar item then fails to appear.
 `install.sh` compiles `launcher.m` against the uv-managed Python in `.venv`, which provides the
 required shared `libpython`. Running the executable with `--check` prints the bundle identifier
 and verifies the Python imports without starting the app. Launcher output goes to
-`~/Library/Logs/OpenCodeStatusBar/launcher.log`.
+`~/Library/Logs/CodingAgentStatusBar/launcher.log`.

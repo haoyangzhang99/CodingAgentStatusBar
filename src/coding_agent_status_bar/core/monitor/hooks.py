@@ -41,7 +41,7 @@ def read_hook_state(folder: str, bundle_id: str, name: str) -> HookState:
     now = time.time() * 1000
     live = False
     recent: list[tuple[float, Agent]] = []
-    for path in (Path.home() / ".config/opencode-status-bar" / folder).glob("*.json"):
+    for path in (Path.home() / ".config/coding-agent-status-bar" / folder).glob("*.json"):
         try:
             data = json.loads(path.read_text())
             pid, updated, directory = data["pid"], data["updated"], data["directory"]

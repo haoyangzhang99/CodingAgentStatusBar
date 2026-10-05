@@ -1,8 +1,8 @@
 # Quick Start
 
 ```sh
-git clone https://github.com/haoyangzhang99/OpenCodeStatusBar.git
-cd OpenCodeStatusBar
+git clone https://github.com/haoyangzhang99/CodingAgentStatusBar.git
+cd CodingAgentStatusBar
 ./install.sh
 ```
 

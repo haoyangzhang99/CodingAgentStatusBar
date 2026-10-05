@@ -15,8 +15,8 @@ if "rumps" not in sys.modules:
 else:
     sys.modules["rumps"].MenuItem = MockMenuItem
 
-from opencode_status_bar.ui.menu import MenuBuilder, truncate_with_tooltip  # noqa: E402
-from opencode_status_bar.core.models import (  # noqa: E402
+from coding_agent_status_bar.ui.menu import MenuBuilder, truncate_with_tooltip  # noqa: E402
+from coding_agent_status_bar.core.models import (  # noqa: E402
     Agent,
     HookState,
     Instance,

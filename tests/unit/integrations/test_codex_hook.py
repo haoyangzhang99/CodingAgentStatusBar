@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[3] / "integrations" / "opencode-status-bar-codex.py"
+SCRIPT = Path(__file__).resolve().parents[3] / "integrations" / "coding-agent-status-bar-codex.py"
 PAYLOAD = {
     "session_id": "01a1-session", "cwd": "/work/project", "hook_event_name": "UserPromptSubmit",
     "prompt": "secret prompt", "tool_name": "Bash", "tool_input": {"command": "secret command"},
@@ -31,15 +31,15 @@ def run(home, *args, payload=None, shell=False):
 
 @pytest.fixture
 def home(tmp_path):
-    (tmp_path / ".config/opencode-status-bar").mkdir(parents=True)
+    (tmp_path / ".config/coding-agent-status-bar").mkdir(parents=True)
     # Never open the real app from tests.
-    (tmp_path / ".config/opencode-status-bar/no-autolaunch").touch()
+    (tmp_path / ".config/coding-agent-status-bar/no-autolaunch").touch()
     (tmp_path / ".codex").mkdir()
     return tmp_path
 
 
 def status(home, name="01a1-session"):
-    path = home / ".config/opencode-status-bar/codex" / f"{name}.json"
+    path = home / ".config/coding-agent-status-bar/codex" / f"{name}.json"
     return json.loads(path.read_text()) if path.exists() else None
 
 
@@ -57,7 +57,7 @@ class TestEvents:
         assert set(data) == {"version", "pid", "updated", "directory", "status", "permission"}
         assert data["pid"] == os.getpid() and data["directory"] == "/work/project"
 
-        folder = home / ".config/opencode-status-bar/codex"
+        folder = home / ".config/coding-agent-status-bar/codex"
         text = (folder / "01a1-session.json").read_text()
         assert "secret" not in text and "Bash" not in text
         assert stat.S_IMODE(folder.stat().st_mode) == 0o700
@@ -80,7 +80,7 @@ class TestEvents:
         json.dumps({"pid": 1, "status": "busy", "permission": True}), "{", "[]",
     ])
     def test_session_start_replaces_an_earlier_process_status(self, home, content):
-        folder = home / ".config/opencode-status-bar/codex"
+        folder = home / ".config/coding-agent-status-bar/codex"
         folder.mkdir()
         (folder / "01a1-session.json").write_text(content)
         run(home, "start", payload={**PAYLOAD, "source": "resume"})
@@ -103,11 +103,11 @@ class TestEvents:
             capture_output=True, text=True, env={**os.environ, "HOME": str(home)}, timeout=30,
         )
         assert result.returncode == 0 and result.stdout == ""
-        assert not (home / ".config/opencode-status-bar/codex").exists()
+        assert not (home / ".config/coding-agent-status-bar/codex").exists()
 
     def test_unsafe_session_id_stays_in_status_folder(self, home):
         run(home, "prompt", payload={**PAYLOAD, "session_id": "../../escape"})
-        assert [p.name for p in (home / ".config/opencode-status-bar/codex").iterdir()] == ["escape.json"]
+        assert [p.name for p in (home / ".config/coding-agent-status-bar/codex").iterdir()] == ["escape.json"]
 
 
 def load_module(monkeypatch, home):
@@ -115,7 +115,7 @@ def load_module(monkeypatch, home):
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    monkeypatch.setattr(module, "CONFIG_DIR", home / ".config/opencode-status-bar")
+    monkeypatch.setattr(module, "CONFIG_DIR", home / ".config/coding-agent-status-bar")
     return module
 
 
@@ -126,11 +126,11 @@ def test_launch_opens_app_in_background_unless_turned_off(home, monkeypatch):
     module.launch_app()
     popen.assert_not_called()
 
-    (home / ".config/opencode-status-bar/no-autolaunch").unlink()
+    (home / ".config/coding-agent-status-bar/no-autolaunch").unlink()
     module.launch_app()
     args = popen.call_args.args[0]
     assert args[:2] == ["/bin/sh", "-c"] and "open -g -b" in args[2]
-    assert args[4] == "io.github.haoyangzhang99.OpenCodeStatusBar"
+    assert args[4] == "io.github.haoyangzhang99.CodingAgentStatusBar"
     assert popen.call_args.kwargs["start_new_session"] is True
 
 
@@ -168,7 +168,7 @@ class TestInstall:
         assert ours["hooks"][0]["timeout"] == 3
         assert "matcher" not in hooks["Stop"][1]
         assert hooks["Interrupt"][0]["hooks"][0]["command"].endswith(" stop")
-        backup = home / ".codex/hooks.json.bak-opencode-status-bar"
+        backup = home / ".codex/hooks.json.bak-coding-agent-status-bar"
         assert json.loads(backup.read_text()) == self.EXISTING
 
         before = (home / ".codex/hooks.json").read_bytes()
@@ -176,12 +176,26 @@ class TestInstall:
         assert "up to date" in result.stdout
         assert (home / ".codex/hooks.json").read_bytes() == before
 
-    def test_replaces_hooks_from_a_moved_folder(self, home):
-        old = {"type": "command", "command": "python /old/opencode-status-bar-codex.py stop"}
+    # A moved folder, or hooks installed before the app was renamed from OpenCode Status Bar.
+    @pytest.mark.parametrize("name", ["coding-agent-status-bar-codex.py", "opencode-status-bar-codex.py"])
+    def test_replaces_and_removes_hooks_from_an_old_location(self, home, name):
+        old = {"type": "command", "command": f"python /old/{name} stop"}
         self.write(home, {"hooks": {"Stop": [{"hooks": [old]}]}})
         run(home, "install")
         commands = [h["command"] for g in self.read(home)["hooks"]["Stop"] for h in g["hooks"]]
         assert len(commands) == 1 and str(SCRIPT) in commands[0]
+
+        self.write(home, {"hooks": {"Stop": [{"hooks": [old]}]}})
+        run(home, "uninstall")
+        assert self.read(home) == {"hooks": {}}
+
+    def test_keeps_the_backup_made_under_the_previous_name(self, home):
+        self.write(home, {"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "x"}]}]}})
+        legacy = home / ".codex/hooks.json.bak-opencode-status-bar"
+        legacy.write_text('{"original": true}')
+        run(home, "install")
+        backup = home / ".codex/hooks.json.bak-coding-agent-status-bar"
+        assert not legacy.exists() and json.loads(backup.read_text()) == {"original": True}
 
     def test_uninstall_restores_other_hooks(self, home):
         self.write(home, self.EXISTING)
@@ -193,7 +207,7 @@ class TestInstall:
     def test_creates_hooks_file_when_missing(self, home):
         run(home, "install")
         assert len(self.read(home)["hooks"]) == 8
-        assert not (home / ".codex/hooks.json.bak-opencode-status-bar").exists()
+        assert not (home / ".codex/hooks.json.bak-coding-agent-status-bar").exists()
 
     @pytest.mark.parametrize("content", ["{", "[]", '{"hooks": []}', '{"hooks": {"Stop": {}}}'])
     def test_unexpected_file_is_left_unchanged(self, home, content):

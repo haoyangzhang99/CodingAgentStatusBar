@@ -1,19 +1,20 @@
 #!/bin/bash
-# Install OpenCode Status Bar: the menu bar app, its OpenCode plugin, and its Codex and
+# Install Coding Agent Status Bar: the menu bar app, its OpenCode plugin, and its Codex and
 # Claude Code hooks.
 # Safe to re-run; use it again after `git pull` or after moving this folder.
 set -euo pipefail
 
-APP_NAME="OpenCode Status Bar"
-EXEC_NAME="OpenCodeStatusBar"
-BUNDLE_ID="io.github.haoyangzhang99.OpenCodeStatusBar"
+APP_NAME="Coding Agent Status Bar"
+EXEC_NAME="CodingAgentStatusBar"
+BUNDLE_ID="io.github.haoyangzhang99.CodingAgentStatusBar"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 APP_DIR="$HOME/Applications"
 APP="$APP_DIR/$APP_NAME.app"
 PLUGIN_DIR="$HOME/.config/opencode/plugins"
-PLUGIN="$PLUGIN_DIR/opencode-status-bar.js"
-MARKER="Installed by OpenCode Status Bar"
-PYTHON_VERSION="${OCSB_PYTHON:-3.12}"
+PLUGIN="$PLUGIN_DIR/coding-agent-status-bar.js"
+MARKER="Installed by Coding Agent Status Bar"
+CONFIG_DIR="$HOME/.config/coding-agent-status-bar"
+PYTHON_VERSION="${CASB_PYTHON:-3.12}"
 LAUNCH=1
 
 usage() {
@@ -41,12 +42,13 @@ step() { printf '\n==> %s\n' "$*"; }
 warn() { printf 'Warning: %s\n' "$*" >&2; }
 fail() { printf '\nError: %s\n' "$*" >&2; exit 1; }
 
-# Stop only the copy installed at $APP, never another build of the app.
+# Stop only the copy installed at the given app path, never another build of the app.
+# Usage: stop_installed_app <app path> <executable name>
 stop_installed_app() {
     local pid
-    for pid in $(pgrep -f "/Contents/MacOS/$EXEC_NAME" 2>/dev/null || true); do
+    for pid in $(pgrep -f "/Contents/MacOS/$2" 2>/dev/null || true); do
         case "$(ps -o command= -p "$pid" 2>/dev/null)" in
-            "$APP/Contents/MacOS/$EXEC_NAME"*)
+            "$1/Contents/MacOS/$2"*)
                 kill "$pid" 2>/dev/null || true
                 for _ in 1 2 3 4 5 6 7 8 9 10; do
                     kill -0 "$pid" 2>/dev/null || break
@@ -58,7 +60,7 @@ stop_installed_app() {
 }
 
 step "Checking requirements"
-[ "$(uname -s)" = Darwin ] || fail "OpenCode Status Bar only runs on macOS."
+[ "$(uname -s)" = Darwin ] || fail "Coding Agent Status Bar only runs on macOS."
 command -v uv >/dev/null 2>&1 ||
     fail "uv is required. Install it with 'brew install uv' (see https://docs.astral.sh/uv/), then re-run this script."
 xcode-select -p >/dev/null 2>&1 ||
@@ -80,7 +82,7 @@ step "Building $APP_NAME.app"
 INCLUDE="$("$PY" -c 'import sysconfig; print(sysconfig.get_path("include"))')"
 LIBDIR="$("$PY" -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')"
 PYVER="$("$PY" -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
-VERSION="$("$PY" -c 'import importlib.metadata as m; print(m.version("opencode-status-bar"))')"
+VERSION="$("$PY" -c 'import importlib.metadata as m; print(m.version("coding-agent-status-bar"))')"
 [ -f "$LIBDIR/libpython$PYVER.dylib" ] || fail "libpython$PYVER.dylib not found in $LIBDIR."
 
 BUILD="$(mktemp -d)"
@@ -124,11 +126,31 @@ codesign --force --sign - "$STAGE" 2>"$BUILD/codesign.log" ||
     fail "Code signing failed: $(cat "$BUILD/codesign.log")"
 "$STAGE/Contents/MacOS/$EXEC_NAME" --check || fail "The app failed its self-check."
 
-stop_installed_app
+stop_installed_app "$APP" "$EXEC_NAME"
 mkdir -p "$APP_DIR"
 rm -rf "$APP"
 mv "$STAGE" "$APP"
 echo "Installed $APP"
+
+# This app was called OpenCode Status Bar before. Remove that install; the hook scripts
+# replace its Codex and Claude Code hooks below.
+LEGACY_APP="$APP_DIR/OpenCode Status Bar.app"
+LEGACY_PLUGIN="$PLUGIN_DIR/opencode-status-bar.js"
+LEGACY_CONFIG="$HOME/.config/opencode-status-bar"
+if [ -d "$LEGACY_APP" ] || [ -e "$LEGACY_PLUGIN" ] || [ -d "$LEGACY_CONFIG" ]; then
+    step "Removing OpenCode Status Bar, this app's previous name"
+    stop_installed_app "$LEGACY_APP" OpenCodeStatusBar
+    rm -rf "$LEGACY_APP"
+    if [ -e "$LEGACY_PLUGIN" ] && grep -q "Installed by OpenCode Status Bar" "$LEGACY_PLUGIN"; then
+        rm -f "$LEGACY_PLUGIN"
+    fi
+    if [ -e "$LEGACY_CONFIG/no-autolaunch" ]; then
+        mkdir -p "$CONFIG_DIR"
+        mv "$LEGACY_CONFIG/no-autolaunch" "$CONFIG_DIR/no-autolaunch"
+    fi
+    rm -rf "$LEGACY_CONFIG"
+    echo "Removed the old app, plugin, and status files. Old logs stay in ~/Library/Logs/OpenCodeStatusBar."
+fi
 
 step "Installing the OpenCode plugin"
 mkdir -p "$PLUGIN_DIR"
@@ -138,7 +160,7 @@ if [ -e "$PLUGIN" ] && ! grep -q "$MARKER" "$PLUGIN"; then
     warn "Moved an existing, unrelated $PLUGIN to $BACKUP."
 fi
 PLUGIN_URL="$("$PY" -c 'import pathlib, sys; print(pathlib.Path(sys.argv[1]).as_uri())' \
-    "$REPO/integrations/opencode-status-bar.js")"
+    "$REPO/integrations/coding-agent-status-bar.js")"
 # Load the plugin from this folder, so `git pull` updates it on the next OpenCode restart.
 printf '// %s. Re-run install.sh if you move the project folder.\nexport { default } from "%s";\n' \
     "$MARKER" "$PLUGIN_URL" >"$PLUGIN.tmp"
@@ -146,12 +168,12 @@ mv "$PLUGIN.tmp" "$PLUGIN"
 echo "Installed $PLUGIN"
 
 step "Installing the Codex hooks"
-"$PY" "$REPO/integrations/opencode-status-bar-codex.py" install ||
-    warn "Could not add the Codex hooks. OpenCode status still works."
+"$PY" "$REPO/integrations/coding-agent-status-bar-codex.py" install ||
+    warn "Could not add the Codex hooks. The rest of the status bar still works."
 
 step "Installing the Claude Code hooks"
-"$PY" "$REPO/integrations/opencode-status-bar-claude.py" install ||
-    warn "Could not add the Claude Code hooks. OpenCode status still works."
+"$PY" "$REPO/integrations/coding-agent-status-bar-claude.py" install ||
+    warn "Could not add the Claude Code hooks. The rest of the status bar still works."
 
 if [ "$LAUNCH" = 1 ]; then
     open "$APP"
@@ -165,7 +187,7 @@ Done. Next steps:
   opens "$APP_NAME" automatically whenever it starts.
 
   For Codex: start a new Codex session, run /hooks and trust the
-  OpenCode Status Bar hooks. Codex skips them until you do.
+  Coding Agent Status Bar hooks. Codex skips them until you do.
 
   For Claude Code: nothing to do. New sessions report their status.
 

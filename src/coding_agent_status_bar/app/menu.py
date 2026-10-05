@@ -1,5 +1,5 @@
 """
-Menu mixin for OpenCodeApp - Contains menu building methods.
+Menu mixin for StatusBarApp - Contains menu building methods.
 
 This module provides the MenuMixin class with:
 - Static menu building (_build_static_menu)
@@ -16,9 +16,9 @@ from ..ui.menu import MenuBuilder, set_menu_symbol
 
 
 class MenuMixin:
-    """Mixin providing menu building methods for OpenCodeApp."""
+    """Mixin providing menu building methods for StatusBarApp."""
 
-    # Type hints for attributes from OpenCodeApp
+    # Type hints for attributes from StatusBarApp
     _state: Optional[State]
     _codex: Optional[HookState]
     _claude: Optional[HookState]

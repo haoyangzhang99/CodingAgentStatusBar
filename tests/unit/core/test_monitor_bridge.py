@@ -4,14 +4,14 @@ import time
 
 import pytest
 
-from opencode_status_bar.core.models import SessionStatus
-from opencode_status_bar.core.monitor import bridge
+from coding_agent_status_bar.core.models import SessionStatus
+from coding_agent_status_bar.core.monitor import bridge
 
 
 @pytest.fixture
 def snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge.Path, "home", lambda: tmp_path)
-    path = tmp_path / ".config/opencode-status-bar/bridge/status.json"
+    path = tmp_path / ".config/coding-agent-status-bar/bridge/status.json"
     path.parent.mkdir(parents=True)
     data = {
         "version": 1,

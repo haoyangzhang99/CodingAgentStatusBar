@@ -1,10 +1,10 @@
-"""Codex hooks for OpenCode Status Bar.
+"""Codex hooks for Coding Agent Status Bar.
 
 Codex runs this script on its lifecycle events, with the event's JSON on stdin:
 
-    python opencode-status-bar-codex.py <start|prompt|tool|permission|stop|end>
+    python coding-agent-status-bar-codex.py <start|prompt|tool|permission|stop|end>
 
-Each Codex session gets one status file in ~/.config/opencode-status-bar/codex/ holding only
+Each Codex session gets one status file in ~/.config/coding-agent-status-bar/codex/ holding only
 its status, project folder, Codex's process ID and a timestamp: never prompts, messages, tool
 names, tool arguments or output. Hooks never print or block, so Codex behaves as before.
 
@@ -20,13 +20,14 @@ import sys
 import time
 from pathlib import Path
 
-BUNDLE_ID = "io.github.haoyangzhang99.OpenCodeStatusBar"
-CONFIG_DIR = Path.home() / ".config" / "opencode-status-bar"
+BUNDLE_ID = "io.github.haoyangzhang99.CodingAgentStatusBar"
+CONFIG_DIR = Path.home() / ".config" / "coding-agent-status-bar"
 STATUS_DIR = CONFIG_DIR / "codex"
 HOOKS_FILE = Path.home() / ".codex" / "hooks.json"
 SCRIPT = Path(__file__).resolve()
-# Our hook commands are recognized by this file name.
-MARKER = "opencode-status-bar-codex.py"
+# Our hook commands are recognized by this file name, or by its name before the app was
+# renamed from OpenCode Status Bar.
+MARKERS = ("coding-agent-status-bar-codex.py", "opencode-status-bar-codex.py")
 # SessionEnd and Interrupt hooks may not run longer than 3 seconds.
 TIMEOUT = 3
 PRUNE_AFTER = 24 * 60 * 60
@@ -125,7 +126,7 @@ def launch_app() -> None:
     """Open the menu bar app in the background, without waiting for it."""
     if (CONFIG_DIR / "no-autolaunch").exists():
         return
-    app = Path.home() / "Applications" / "OpenCode Status Bar.app"
+    app = Path.home() / "Applications" / "Coding Agent Status Bar.app"
     # Fall back to the install path if macOS hasn't indexed the app's ID yet.
     subprocess.Popen(
         ["/bin/sh", "-c", 'open -g -b "$1" || open -g "$2"', "sh", BUNDLE_ID, str(app)],
@@ -159,7 +160,10 @@ def handle(event: str, payload: dict) -> None:
 
 
 def is_ours(handler: object) -> bool:
-    return isinstance(handler, dict) and MARKER in str(handler.get("command", ""))
+    if not isinstance(handler, dict):
+        return False
+    command = str(handler.get("command", ""))
+    return any(marker in command for marker in MARKERS)
 
 
 def our_group(event: str) -> dict:
@@ -193,7 +197,11 @@ def load_hooks() -> dict:
 
 
 def save_hooks(config: dict) -> None:
-    backup = HOOKS_FILE.with_name(HOOKS_FILE.name + ".bak-opencode-status-bar")
+    backup = HOOKS_FILE.with_name(HOOKS_FILE.name + ".bak-coding-agent-status-bar")
+    # A backup made under the app's previous name predates all of our hooks, so keep it.
+    legacy = HOOKS_FILE.with_name(HOOKS_FILE.name + ".bak-opencode-status-bar")
+    if legacy.exists() and not backup.exists():
+        legacy.rename(backup)
     if HOOKS_FILE.exists() and not backup.exists():
         backup.write_bytes(HOOKS_FILE.read_bytes())
     temporary = HOOKS_FILE.with_name(f"{HOOKS_FILE.name}.{os.getpid()}.tmp")

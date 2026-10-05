@@ -18,7 +18,7 @@ def read_bridge_instances() -> list[Instance]:
     instances: dict[int, Instance] = {}
     seen: set[str] = set()
     now = time.time() * 1000
-    for path in sorted((Path.home() / ".config/opencode-status-bar/bridge").glob("*.json")):
+    for path in sorted((Path.home() / ".config/coding-agent-status-bar/bridge").glob("*.json")):
         try:
             snapshot = json.loads(path.read_text())
             pid = snapshot["pid"]

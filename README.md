@@ -1,6 +1,6 @@
-<img src="assets/AppIcon.png" width="128" alt="OpenCode Status Bar icon">
+<img src="assets/AppIcon.png" width="128" alt="Coding Agent Status Bar icon">
 
-# OpenCode Status Bar
+# Coding Agent Status Bar
 
 A small macOS menu bar item that shows what the [OpenCode](https://opencode.ai) desktop app,
 and optionally Codex and Claude Code, are doing.
@@ -8,7 +8,8 @@ Check it while you work in other apps to see whether your agents are still worki
 or are waiting for you to approve something or answer a question.
 
 This is a fork of [OpenClaudeAgent/opencode-monitor](https://github.com/OpenClaudeAgent/opencode-monitor)
-(MIT licensed, now archived). It is a community project, not an official OpenCode product.
+(MIT licensed, now archived), first published as OpenCode Status Bar. It is a community project,
+not an official OpenCode, OpenAI or Anthropic product.
 
 ## What You'll See
 
@@ -53,8 +54,8 @@ the plugin. The menu bar app itself is the same in both.
 
 | Your OpenCode version | Install from         | Clone command                                                                      |
 | --------------------- | -------------------- | ---------------------------------------------------------------------------------- |
-| 2.x                   | `main`               | `git clone https://github.com/haoyangzhang99/OpenCodeStatusBar.git`                |
-| 1.x                   | `opencode-v1` branch | `git clone -b opencode-v1 https://github.com/haoyangzhang99/OpenCodeStatusBar.git` |
+| 2.x                   | `main`               | `git clone https://github.com/haoyangzhang99/CodingAgentStatusBar.git`                |
+| 1.x                   | `opencode-v1` branch | `git clone -b opencode-v1 https://github.com/haoyangzhang99/CodingAgentStatusBar.git` |
 
 To check your OpenCode version, select OpenCode in Finder's Applications folder and choose
 File > Get Info, or run:
@@ -74,7 +75,7 @@ added to `main`.
 After OpenCode updates to version 2, switch the project folder to `main`:
 
 ```sh
-cd OpenCodeStatusBar
+cd CodingAgentStatusBar
 git fetch
 git checkout main
 git pull
@@ -88,8 +89,8 @@ Then fully quit OpenCode (Cmd+Q) and reopen it.
 For OpenCode 2:
 
 ```sh
-git clone https://github.com/haoyangzhang99/OpenCodeStatusBar.git
-cd OpenCodeStatusBar
+git clone https://github.com/haoyangzhang99/CodingAgentStatusBar.git
+cd CodingAgentStatusBar
 ./install.sh
 ```
 
@@ -99,16 +100,16 @@ For OpenCode 1, use `git clone -b opencode-v1 ...` instead (see
 The installer:
 
 1. Installs Python 3.12 and the app's two dependencies in `.venv` inside this folder.
-2. Builds `~/Applications/OpenCode Status Bar.app` and checks that it starts correctly.
-3. Adds the plugin `~/.config/opencode/plugins/opencode-status-bar.js`, which loads
-   `integrations/opencode-status-bar.js` from this folder.
+2. Builds `~/Applications/Coding Agent Status Bar.app` and checks that it starts correctly.
+3. Adds the plugin `~/.config/opencode/plugins/coding-agent-status-bar.js`, which loads
+   `integrations/coding-agent-status-bar.js` from this folder.
 4. If Codex is installed, adds hooks to `~/.codex/hooks.json` that run
-   `integrations/opencode-status-bar-codex.py` from this folder. Your other hooks are left as
-   they are, and the original file is backed up once to `hooks.json.bak-opencode-status-bar`.
+   `integrations/coding-agent-status-bar-codex.py` from this folder. Your other hooks are left as
+   they are, and the original file is backed up once to `hooks.json.bak-coding-agent-status-bar`.
 5. If Claude Code is installed, adds hooks to `~/.claude/settings.json` that run
-   `integrations/opencode-status-bar-claude.py` from this folder. Your other hooks and settings
+   `integrations/coding-agent-status-bar-claude.py` from this folder. Your other hooks and settings
    are left as they are, and the original file is backed up once to
-   `settings.json.bak-opencode-status-bar`.
+   `settings.json.bak-coding-agent-status-bar`.
 6. Opens the app.
 
 Then **fully quit OpenCode (Cmd+Q) and reopen it** so it loads the plugin. Until then the
@@ -116,7 +117,7 @@ dropdown shows `No OpenCode instances`. From then on, **OpenCode opens the statu
 it starts**, so you don't need to launch it yourself.
 
 **For Codex, trust the new hooks once:** Codex skips new hooks until you review them. Start a
-new Codex session, run `/hooks`, and trust the OpenCode Status Bar hooks. Codex sessions that
+new Codex session, run `/hooks`, and trust the Coding Agent Status Bar hooks. Codex sessions that
 were already open load hooks only when they start. After that, starting a Codex session also
 opens the status bar app.
 
@@ -128,7 +129,7 @@ Keep the project folder where it is: the app, plugin, and hooks run from it. If 
 folder, run `./install.sh` again, then trust the updated Codex hooks in `/hooks`.
 
 To stop OpenCode, Codex and Claude Code from opening the app, run
-`mkdir -p ~/.config/opencode-status-bar && touch ~/.config/opencode-status-bar/no-autolaunch`.
+`mkdir -p ~/.config/coding-agent-status-bar && touch ~/.config/coding-agent-status-bar/no-autolaunch`.
 Delete that file to turn it back on.
 
 ## Update
@@ -141,6 +142,15 @@ git pull
 Restart OpenCode afterwards if the plugin changed. `git pull` stays on the version you
 installed; to move from OpenCode 1 to 2, see
 [Moving from OpenCode 1 to OpenCode 2](#moving-from-opencode-1-to-opencode-2).
+
+### Coming From OpenCode Status Bar
+
+This app used to be called OpenCode Status Bar, and the repository used to be
+`haoyangzhang99/OpenCodeStatusBar`. GitHub redirects the old address, so `git pull` still works.
+After pulling, run `./install.sh`: it removes the old app, plugin, and status files, replaces
+the old Codex and Claude Code hooks, and keeps your `no-autolaunch` setting. Then restart
+OpenCode, and in a new Codex session trust the renamed hooks in `/hooks`. Old logs stay in
+`~/Library/Logs/OpenCodeStatusBar/` until you delete them or run `./uninstall.sh --purge`.
 
 ## Uninstall
 
@@ -156,7 +166,7 @@ Then restart OpenCode to unload the plugin, and delete this folder if you no lon
 OpenCode's desktop app protects its local server with a password that changes every launch,
 so outside programs can't query it directly. Instead, a small OpenCode plugin runs inside
 OpenCode and every 2 seconds writes a status snapshot for each open project to
-`~/.config/opencode-status-bar/bridge/`. The menu bar app reads those files and never
+`~/.config/coding-agent-status-bar/bridge/`. The menu bar app reads those files and never
 connects to OpenCode.
 
 - Snapshots older than 15 seconds, or from an OpenCode process that has exited, are ignored.
@@ -169,9 +179,9 @@ connects to OpenCode.
   launch). If you quit the app, it stays closed until OpenCode starts again.
 - For Codex, hooks run on each Codex event (prompt submitted, tool started or finished, approval
   requested, turn finished or interrupted, session started or ended) and write one status file
-  per Codex session to `~/.config/opencode-status-bar/codex/`. Sessions of a Codex process that
+  per Codex session to `~/.config/coding-agent-status-bar/codex/`. Sessions of a Codex process that
   has exited are ignored.
-- Claude Code works the same way, with status files in `~/.config/opencode-status-bar/claude/`.
+- Claude Code works the same way, with status files in `~/.config/coding-agent-status-bar/claude/`.
   Its hooks also report failed turns, questions Claude asks you, and Claude Code's "idle for a
   minute" notification.
 
@@ -185,7 +195,7 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
   process ID, and status flags. Files are readable only by your user account.
 - **Not written:** prompts, messages, tool names, inputs or output, API keys, or OpenCode's
   server password.
-- **Logs** (`~/Library/Logs/OpenCodeStatusBar/`) get one line per status change, with counts
+- **Logs** (`~/Library/Logs/CodingAgentStatusBar/`) get one line per status change, with counts
   only: no session titles or paths.
 
 ## Limitations

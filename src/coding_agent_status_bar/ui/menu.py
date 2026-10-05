@@ -1,5 +1,5 @@
 """
-Menu Builder - Constructs rumps menu items for OpenCode Status Bar
+Menu Builder - Constructs rumps menu items for Coding Agent Status Bar
 """
 
 from typing import Any, Callable, Optional
