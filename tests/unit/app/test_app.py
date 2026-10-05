@@ -146,13 +146,22 @@ def mock_dependencies():
 
     mock_builder_instance = MagicMock()
     mock_builder_instance.build_dynamic_items.return_value = []
+    mock_builder_instance.build_hook_items.return_value = []
     mock_menu_builder.return_value = mock_builder_instance
+
+    from opencode_status_bar.core.models import HookState
+
+    # Tests must never see the real Codex or Claude apps or status files.
+    mock_read_codex = MagicMock(return_value=HookState())
+    mock_read_claude = MagicMock(return_value=HookState())
 
     # Patch at SOURCE level (where functions are defined)
     # Then reload the app module so imports resolve to mocks
     with (
         patch("opencode_status_bar.ui.menu.MenuBuilder", mock_menu_builder),
         patch("opencode_status_bar.core.monitor.bridge.read_bridge_state", mock_read_state),
+        patch("opencode_status_bar.core.monitor.hooks.read_codex_state", mock_read_codex),
+        patch("opencode_status_bar.core.monitor.hooks.read_claude_state", mock_read_claude),
         patch("opencode_status_bar.utils.logger.info", mock_info),
         patch("opencode_status_bar.utils.logger.error", mock_error),
         patch("opencode_status_bar.utils.logger.debug", mock_debug),
@@ -176,6 +185,8 @@ def mock_dependencies():
             "menu_builder": mock_menu_builder,
             "builder_instance": mock_builder_instance,
             "read_state": mock_read_state,
+            "read_codex": mock_read_codex,
+            "read_claude": mock_read_claude,
             "info": mock_info,
             "error": mock_error,
             "debug": mock_debug,
@@ -221,6 +232,8 @@ class TestOpenCodeAppInit:
 
         # State initialization
         assert app._state is None
+        assert app._codex is None
+        assert app._claude is None
         assert app.title == "OpenCode"
         assert app._running  # Direct boolean assertion
         assert app._needs_refresh  # Direct boolean assertion
@@ -232,6 +245,8 @@ class TestOpenCodeAppInit:
         mock_dependencies["menu_builder"].assert_called_once()
         # Status is only read by the background loop, never during startup.
         mock_dependencies["read_state"].assert_not_called()
+        mock_dependencies["read_codex"].assert_not_called()
+        mock_dependencies["read_claude"].assert_not_called()
         # Verify thread exists and is configured correctly
         assert hasattr(app, "_monitor_thread")
         assert app._monitor_thread.daemon  # Direct boolean assertion
@@ -343,6 +358,63 @@ class TestBuildMenu:
             app._open_opencode(None)
         log_error.assert_called_once()
 
+    def test_show_codex_is_second_and_launches_desktop(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        assert app.menu[1].title == "Show Codex"
+        app._build_menu()
+        assert app.menu[1] is app._open_codex_item
+        with patch("opencode_status_bar.app.handlers.subprocess.run") as run:
+            app.menu[1].callback(None)
+        run.assert_called_once_with(
+            ["/usr/bin/open", "-b", "com.openai.codex"],
+            check=True, capture_output=True, timeout=5,
+        )
+        with patch("opencode_status_bar.app.handlers.subprocess.run",
+                   side_effect=subprocess.TimeoutExpired("open", 5)), \
+             patch("opencode_status_bar.app.handlers.error") as log_error:
+            app._open_codex(None)
+        log_error.assert_called_once()
+
+    def test_show_claude_is_third_and_launches_desktop(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        assert app.menu[2].title == "Show Claude"
+        app._build_menu()
+        assert app.menu[2] is app._open_claude_item
+        with patch("opencode_status_bar.app.handlers.subprocess.run") as run:
+            app.menu[2].callback(None)
+        run.assert_called_once_with(
+            ["/usr/bin/open", "-b", "com.anthropic.claudefordesktop"],
+            check=True, capture_output=True, timeout=5,
+        )
+        with patch("opencode_status_bar.app.handlers.subprocess.run",
+                   side_effect=OSError("Unavailable")), \
+             patch("opencode_status_bar.app.handlers.error") as log_error:
+            app._open_claude(None)
+        log_error.assert_called_once()
+
+    def test_codex_and_claude_sections_follow_opencode_rows(self, mock_dependencies):
+        opencode_row = MockMenuItem("OpenCode session")
+        codex_rows = [MockMenuItem("Codex"), MockMenuItem("project")]
+        claude_rows = [MockMenuItem("Claude Code"), MockMenuItem("other")]
+        builder = mock_dependencies["builder_instance"]
+        builder.build_dynamic_items.return_value = [opencode_row]
+        builder.build_hook_items.side_effect = (
+            lambda state, name, on_select: codex_rows if name == "Codex" else claude_rows
+        )
+
+        app = create_app_with_mocks(mock_dependencies)
+        app._build_menu()
+
+        assert builder.build_hook_items.call_args_list == [
+            ((app._codex, "Codex"), {"on_select": app._open_codex}),
+            ((app._claude, "Claude Code"), {"on_select": app._open_claude}),
+        ]
+        assert cast(MockMenu, app.menu)._items == [
+            app._open_opencode_item, app._open_codex_item, app._open_claude_item,
+            None, opencode_row, None, *codex_rows, None, *claude_rows,
+            None, app._refresh_item, None, app._quit_item,
+        ]
+
     def test_build_menu_full(self, mock_dependencies):
         """Should use MenuBuilder, clear menu, and add dynamic plus static items."""
         mock_item1 = MockMenuItem("Item 1")
@@ -365,8 +437,8 @@ class TestBuildMenu:
         menu = cast(MockMenu, app.menu)
         assert menu._clear_called  # Direct boolean assertion
         assert menu._items == [
-            app._open_opencode_item, None, mock_item1, mock_item2,
-            None, app._refresh_item, None, app._quit_item,
+            app._open_opencode_item, app._open_codex_item, app._open_claude_item,
+            None, mock_item1, mock_item2, None, app._refresh_item, None, app._quit_item,
         ]
 
 
@@ -403,7 +475,7 @@ class TestUpdateTitleDefault:
         app._update_title()
 
         title = get_title(app)
-        expected = "OpenCode idle" if app._state and app._state.connected else "OpenCode offline"
+        expected = "Agents idle" if app._state and app._state.connected else "Agents offline"
         assert title == expected
 
 
@@ -469,8 +541,8 @@ class TestNativeStatusTitle:
     @pytest.mark.parametrize(
         "roots,children,idle,approval,question,connected,title,symbol",
         [
-            (0, 0, False, False, False, False, "OpenCode offline", "terminal"),
-            (0, 0, False, False, False, True, "OpenCode idle", "terminal"),
+            (0, 0, False, False, False, False, "Agents offline", "terminal"),
+            (0, 0, False, False, False, True, "Agents idle", "terminal"),
             (0, 0, True, False, False, True, "Done", "checkmark.circle"),
             (1, 2, True, False, False, True, "Working...", "terminal"),
             (2, 2, False, False, False, True, "2 working", "terminal"),
@@ -478,7 +550,7 @@ class TestNativeStatusTitle:
             (1, 1, False, True, False, True, "Awaiting approval", "hand.raised"),
             (1, 1, False, False, True, True, "Awaiting answer", "questionmark.circle"),
             (2, 1, False, True, True, True, "Needs attention", "exclamationmark.circle"),
-            (0, 1, False, True, True, False, "OpenCode offline", "terminal"),
+            (0, 1, False, True, True, False, "Agents offline", "terminal"),
         ],
     )
     def test_native_status(
@@ -552,7 +624,7 @@ class TestNativeStatusTitle:
         button.setImagePosition_.assert_called_once_with(native.NSImageLeft)
         button.setImage_.assert_called_once_with(image)
         button.setContentTintColor_.assert_called_once_with(None)
-        button.setAccessibilityLabel_.assert_called_once_with(f"OpenCode: {title}")
+        button.setAccessibilityLabel_.assert_called_once_with(f"Agents: {title}")
         button.setNeedsDisplay_.assert_called_once_with(True)
         assert app.title == title
 
@@ -564,7 +636,7 @@ class TestNativeStatusTitle:
         with patch.dict(sys.modules, {"AppKit": native}):
             app._update_title()
         title = get_title(app)
-        assert title == "OpenCode offline"
+        assert title == "Agents offline"
         native.NSImage.imageWithSystemSymbolName_accessibilityDescription_.assert_called_once_with("terminal", title)
         assert native.NSAttributedString.mock_calls == []
         assert native.NSColor.mock_calls == []
@@ -577,7 +649,7 @@ class TestNativeStatusTitle:
         button.setImage_.assert_called_once_with(None)
         button.setImagePosition_.assert_called_once_with(native.NSImageLeft)
         button.setContentTintColor_.assert_called_once_with(None)
-        button.setAccessibilityLabel_.assert_called_once_with(f"OpenCode: {title}")
+        button.setAccessibilityLabel_.assert_called_once_with(f"Agents: {title}")
         button.setNeedsDisplay_.assert_called_once_with(True)
 
 
@@ -624,6 +696,141 @@ class TestUpdateTitleIdle:
         assert title == "Working..."
 
 
+def hook_session(sid="ses", status="BUSY", permission=False, question=False):
+    """A Codex or Claude Code session as read from its status file."""
+    from opencode_status_bar.core.models import Agent, SessionStatus, Tool
+
+    return Agent(
+        id=sid, title="project", dir="project", full_dir="/work/project",
+        status=getattr(SessionStatus, status),
+        tools=[Tool(name="Approval required", permission_pending=True)] if permission else [],
+        has_pending_ask_user=question,
+    )
+
+
+def opencode_state(*statuses, connected=True, question=False):
+    """An OpenCode state with one root session per status; "SUB" adds a working sub-agent."""
+    from opencode_status_bar.core.models import Agent, Instance, SessionStatus, State
+
+    agents = [
+        Agent(
+            id=str(i), title="Session", dir=".", full_dir="/test",
+            status=SessionStatus.BUSY if status == "SUB" else getattr(SessionStatus, status),
+            parent_id="0" if status == "SUB" else None,
+        )
+        for i, status in enumerate(statuses)
+    ]
+    if question:
+        agents[-1].has_pending_ask_user = True
+    return State(instances=[Instance(port=-1, agents=agents)], connected=connected)
+
+
+class TestCombinedStatus:
+    """One status for OpenCode, Codex and Claude Code together, without app names."""
+
+    @pytest.mark.parametrize(
+        "opencode,codex_running,codex,title,symbol,attention",
+        [
+            # Neither app running
+            (None, False, [], "Agents offline", "terminal", False),
+            (opencode_state(connected=False), False, [("BUSY", False)],
+             "Agents offline", "terminal", False),
+            # Idle, or one idle and the other not running
+            (opencode_state(), False, [], "Agents idle", "terminal", False),
+            (None, True, [], "Agents idle", "terminal", False),
+            (opencode_state(), True, [], "Agents idle", "terminal", False),
+            # One session working, in either app
+            (None, True, [("BUSY", False)], "Working...", "terminal", False),
+            (opencode_state("BUSY"), True, [], "Working...", "terminal", False),
+            # Sessions add up across both apps; sub-agents don't count
+            (opencode_state("BUSY", "SUB", "SUB"), True, [], "Working...", "terminal", False),
+            (opencode_state("BUSY"), True, [("BUSY", False)], "2 working", "terminal", False),
+            (opencode_state("IDLE"), True, [("BUSY", False)] * 2, "2 working", "terminal", False),
+            (opencode_state("BUSY", "SUB"), True, [("BUSY", False)] * 2,
+             "3 working", "terminal", False),
+            # Done in either app, nothing working
+            (opencode_state("IDLE"), True, [], "Done", "checkmark.circle", False),
+            (None, True, [("IDLE", False)], "Done", "checkmark.circle", False),
+            # Attention wins over working, from either app
+            (opencode_state("BUSY"), True, [("BUSY", True)],
+             "Awaiting approval", "hand.raised", True),
+            (opencode_state("BUSY", question=True), True, [("BUSY", False)],
+             "Awaiting answer", "questionmark.circle", True),
+            (opencode_state("BUSY", question=True), True, [("BUSY", True)],
+             "Needs attention", "exclamationmark.circle", True),
+            # A Codex that isn't running contributes nothing
+            (opencode_state("IDLE"), False, [("BUSY", True)], "Done", "checkmark.circle", False),
+        ],
+    )
+    def test_status(self, mock_dependencies, opencode, codex_running, codex, title, symbol,
+                    attention):
+        from opencode_status_bar.app.core import status_for
+        from opencode_status_bar.core.models import HookState
+
+        state = HookState(running=codex_running, sessions=[
+            hook_session(str(i), status, permission)
+            for i, (status, permission) in enumerate(codex)
+        ])
+        assert status_for(opencode, state) == (title, symbol, attention)
+
+    @pytest.mark.parametrize(
+        "codex,claude_running,claude,title,symbol,attention",
+        [
+            # Claude Code alone decides offline or idle, like Codex
+            ([], False, [], "Agents offline", "terminal", False),
+            ([], True, [], "Agents idle", "terminal", False),
+            ([], False, [("BUSY", False, False)], "Agents offline", "terminal", False),
+            # Sessions add up across all three apps
+            ([], True, [("BUSY", False, False)], "Working...", "terminal", False),
+            ([("BUSY", False)], True, [("BUSY", False, False)] * 2,
+             "4 working", "terminal", False),
+            ([], True, [("IDLE", False, False)], "Done", "checkmark.circle", False),
+            # Claude Code can wait for an answer, and its attention wins over working
+            ([("BUSY", False)], True, [("BUSY", False, True)],
+             "Awaiting answer", "questionmark.circle", True),
+            ([], True, [("BUSY", True, False)], "Awaiting approval", "hand.raised", True),
+            ([("BUSY", True)], True, [("BUSY", False, True)],
+             "Needs attention", "exclamationmark.circle", True),
+        ],
+    )
+    def test_claude_code_joins_the_status(
+        self, mock_dependencies, codex, claude_running, claude, title, symbol, attention,
+    ):
+        from opencode_status_bar.app.core import status_for
+        from opencode_status_bar.core.models import HookState
+
+        codex_state = HookState(running=bool(codex), sessions=[
+            hook_session(f"c{i}", status, permission)
+            for i, (status, permission) in enumerate(codex)
+        ])
+        claude_state = HookState(running=claude_running, sessions=[
+            hook_session(f"a{i}", status, permission, question)
+            for i, (status, permission, question) in enumerate(claude)
+        ])
+        opencode = opencode_state("BUSY") if title == "4 working" else None
+        assert status_for(opencode, codex_state, claude_state) == (title, symbol, attention)
+
+    def test_codex_approval_turns_icon_yellow(self, mock_dependencies):
+        from opencode_status_bar.core.models import HookState, State
+
+        app = create_app_with_mocks(mock_dependencies)
+        app._state = State(connected=True)
+        app._codex = HookState(running=True, sessions=[hook_session(permission=True)])
+        app._nsapp = MagicMock()
+        native = MagicMock()
+        with patch.dict(sys.modules, {"AppKit": native}):
+            app._update_title()
+
+        title = "Awaiting approval"
+        assert app.title == title
+        native.NSImage.imageWithSystemSymbolName_accessibilityDescription_.assert_called_once_with(
+            "hand.raised", title
+        )
+        native.NSColor.systemYellowColor.return_value.set.assert_called_once()
+        button = app._nsapp.nsstatusitem.button.return_value
+        button.setTitle_.assert_called_once_with(title)
+        button.setAccessibilityLabel_.assert_called_once_with(f"Agents: {title}")
+
 
 # =============================================================================
 # Group 12: Main (1 test - unchanged)
@@ -656,9 +863,13 @@ class TestMonitorLoop:
     """Tests for OpenCodeApp._run_monitor_loop"""
 
     @staticmethod
-    def _run(app, results):
+    def _run(app, results, codex=None, claude=None):
         """Run the loop over a scripted sequence of states or exceptions."""
+        from opencode_status_bar.core.models import HookState
+
         remaining = list(results)
+        codex_remaining = list(codex or [HookState()] * len(remaining))
+        claude_remaining = list(claude or [HookState()] * len(remaining))
         refreshes = []
 
         def read():
@@ -675,6 +886,10 @@ class TestMonitorLoop:
 
         with (
             patch("opencode_status_bar.app.core.read_bridge_state", side_effect=read),
+            patch("opencode_status_bar.app.core.read_codex_state",
+                  side_effect=lambda: codex_remaining.pop(0)),
+            patch("opencode_status_bar.app.core.read_claude_state",
+                  side_effect=lambda: claude_remaining.pop(0)),
             patch("opencode_status_bar.app.core.time.sleep", side_effect=sleep),
         ):
             app._running = True
@@ -707,13 +922,48 @@ class TestMonitorLoop:
             if c.args[0].startswith("Status changed")
         ]
         assert changes == [
-            "Status changed: Working... (sessions: 1, working: 1, needing attention: 0)",
-            "Status changed: Done (sessions: 1, working: 0, needing attention: 0)",
+            "Status changed: Working... (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 0, working: 1, needing attention: 0)",
+            "Status changed: Done (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 0, working: 0, needing attention: 0)",
         ]
         # Nothing identifying a session is written to the log.
         logged = str(mock_dependencies["info"].call_args_list)
         assert "Private title" not in logged and "/private/p" not in logged
         assert "State updated" not in logged
+
+    def test_codex_and_claude_changes_redraw_and_log_without_paths(self, mock_dependencies):
+        from opencode_status_bar.core.models import HookState
+
+        app = create_app_with_mocks(mock_dependencies)
+
+        def busy(question=False):
+            return HookState(running=True, sessions=[hook_session(question=question)])
+
+        refreshes = self._run(
+            app,
+            [self._state("BUSY", i) for i in range(5)],
+            codex=[HookState(), busy(), busy(), HookState(running=True), HookState(running=True)],
+            claude=[HookState(), HookState(), HookState(), busy(), busy(question=True)],
+        )
+        assert app._codex is not None and app._codex.running
+        assert app._claude is not None and app._claude.sessions[0].has_pending_ask_user
+        assert refreshes == [True, True, False, True, True]
+        changes = [
+            c.args[0] for c in mock_dependencies["info"].call_args_list
+            if c.args[0].startswith("Status changed")
+        ]
+        assert changes == [
+            "Status changed: Working... (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 0, working: 1, needing attention: 0)",
+            "Status changed: 2 working (OpenCode sessions: 1, Codex sessions: 1, "
+            "Claude Code sessions: 0, working: 2, needing attention: 0)",
+            "Status changed: 2 working (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 1, working: 2, needing attention: 0)",
+            "Status changed: Awaiting answer (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 1, working: 2, needing attention: 1)",
+        ]
+        assert "/work/project" not in str(mock_dependencies["info"].call_args_list)
 
     def test_title_change_redraws_menu_without_logging(self, mock_dependencies):
         app = create_app_with_mocks(mock_dependencies)
@@ -795,7 +1045,7 @@ class TestAdditionalCoverage:
 
         app._state = State(instances=[], connected=True)
         app._update_title()
-        assert get_title(app) == "OpenCode idle"
+        assert get_title(app) == "Agents idle"
 
     def test_removed_features_are_gone(self, mock_dependencies):
         app = create_app_with_mocks(mock_dependencies)

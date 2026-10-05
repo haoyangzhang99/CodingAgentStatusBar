@@ -1,5 +1,5 @@
 #!/bin/bash
-# Remove OpenCode Status Bar's app, plugin, and status files.
+# Remove OpenCode Status Bar's app, plugin, Codex and Claude Code hooks, and status files.
 set -euo pipefail
 
 APP_NAME="OpenCode Status Bar"
@@ -16,7 +16,8 @@ usage() {
     cat <<EOF
 Usage: ./uninstall.sh [--purge]
 
-Removes "$APP_NAME.app", the OpenCode plugin, and live status snapshots.
+Removes "$APP_NAME.app", the OpenCode plugin, the Codex and Claude Code hooks, and
+live status files.
 
   --purge   Also delete logs and this folder's .venv.
 EOF
@@ -50,7 +51,14 @@ if [ -e "$PLUGIN" ]; then
     fi
 fi
 
-rm -rf "$CONFIG_DIR/bridge"
+PY="$REPO/.venv/bin/python"
+[ -x "$PY" ] || PY=python3
+"$PY" "$REPO/integrations/opencode-status-bar-codex.py" uninstall ||
+    echo "Could not remove the Codex hooks from ~/.codex/hooks.json; remove them yourself." >&2
+"$PY" "$REPO/integrations/opencode-status-bar-claude.py" uninstall ||
+    echo "Could not remove the Claude Code hooks from ~/.claude/settings.json; remove them yourself." >&2
+
+rm -rf "$CONFIG_DIR/bridge" "$CONFIG_DIR/codex" "$CONFIG_DIR/claude"
 
 if [ "$PURGE" = 1 ]; then
     rm -rf "$CONFIG_DIR" "$LOG_DIR" "$REPO/.venv"

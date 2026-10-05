@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional
 
 import rumps
 
-from ..core.models import Agent, SessionStatus, State
+from ..core.models import Agent, HookState, SessionStatus, State
 
 
 # Truncation limits for menu items
@@ -71,13 +71,15 @@ class MenuBuilder:
     def build_dynamic_items(
         self, state: Optional[State], on_select: Optional[Callable] = None
     ) -> list:
-        """Build rows for every OpenCode process and its recent sessions.
+        """Build the OpenCode section: a header, then every OpenCode process and its
+        recent sessions.
 
         Args:
             state: Current application state
             on_select: rumps callback for clicking a session row
         """
-        items: list = []
+        # Without a callback, rumps shows the header as a disabled label.
+        items: list = [rumps.MenuItem("OpenCode")]
 
         if state is None or not state.connected:
             items.append(rumps.MenuItem("No OpenCode instances"))
@@ -117,8 +119,38 @@ class MenuBuilder:
 
         return items
 
+    def build_hook_items(
+        self,
+        state: Optional[HookState],
+        app_name: str,
+        on_select: Optional[Callable] = None,
+    ) -> list:
+        """Build the section for Codex or Claude Code: a header and its recent
+        sessions, or nothing while the app isn't running.
+
+        Args:
+            state: Current state of the app
+            app_name: Header and label text, such as "Codex"
+            on_select: rumps callback for clicking a session row
+        """
+        if state is None or not state.running:
+            return []
+        # Without a callback, rumps shows the header as a disabled label.
+        items: list = [rumps.MenuItem(app_name)]
+        if not state.sessions:
+            idle_item = rumps.MenuItem(f"{app_name} idle", callback=on_select)
+            set_menu_symbol(idle_item, "moon.zzz")
+            items.append(idle_item)
+        for session in state.sessions:
+            items.extend(self.build_agent_items(session, 0, on_select, app_name=app_name))
+        return items
+
     def build_agent_items(
-        self, agent: Agent, indent: int, on_select: Optional[Callable] = None
+        self,
+        agent: Agent,
+        indent: int,
+        on_select: Optional[Callable] = None,
+        app_name: str = "OpenCode",
     ) -> list:
         """Build the row for one session, plus rows for what it's waiting on.
 
@@ -159,7 +191,7 @@ class MenuBuilder:
             item = truncate_with_tooltip(tool.name, TOOL_ARG_MAX_LENGTH)
             set_menu_symbol(item, "hand.raised")
             set_menu_indent(item, indent + 1)
-            item._menuitem.setToolTip_("OpenCode is waiting for you to approve a request")
+            item._menuitem.setToolTip_(f"{app_name} is waiting for you to approve a request")
             items.append(item)
 
         if agent.has_pending_ask_user and agent.ask_user_title:

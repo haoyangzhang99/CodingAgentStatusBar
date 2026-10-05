@@ -1,5 +1,6 @@
 #!/bin/bash
-# Install OpenCode Status Bar: the menu bar app and its OpenCode plugin.
+# Install OpenCode Status Bar: the menu bar app, its OpenCode plugin, and its Codex and
+# Claude Code hooks.
 # Safe to re-run; use it again after `git pull` or after moving this folder.
 set -euo pipefail
 
@@ -19,8 +20,10 @@ usage() {
     cat <<EOF
 Usage: ./install.sh [--no-launch]
 
-Builds "$APP_NAME.app" into ~/Applications and installs the OpenCode plugin
-into ~/.config/opencode/plugins. Requires macOS, uv, and Xcode Command Line Tools.
+Builds "$APP_NAME.app" into ~/Applications, installs the OpenCode plugin
+into ~/.config/opencode/plugins, and adds Codex hooks to ~/.codex/hooks.json
+and Claude Code hooks to ~/.claude/settings.json if those apps are installed.
+Requires macOS, uv, and Xcode Command Line Tools.
 
   --no-launch   Install without starting the app afterwards.
 EOF
@@ -142,6 +145,14 @@ printf '// %s. Re-run install.sh if you move the project folder.\nexport { defau
 mv "$PLUGIN.tmp" "$PLUGIN"
 echo "Installed $PLUGIN"
 
+step "Installing the Codex hooks"
+"$PY" "$REPO/integrations/opencode-status-bar-codex.py" install ||
+    warn "Could not add the Codex hooks. OpenCode status still works."
+
+step "Installing the Claude Code hooks"
+"$PY" "$REPO/integrations/opencode-status-bar-claude.py" install ||
+    warn "Could not add the Claude Code hooks. OpenCode status still works."
+
 if [ "$LAUNCH" = 1 ]; then
     open "$APP"
 fi
@@ -150,8 +161,13 @@ cat <<EOF
 
 Done. Next steps:
   Fully quit OpenCode (Cmd+Q) and reopen it, so it loads the plugin.
-  Until then the menu bar shows "OpenCode offline". After that, OpenCode
+  Until then the dropdown shows "No OpenCode instances". After that, OpenCode
   opens "$APP_NAME" automatically whenever it starts.
+
+  For Codex: start a new Codex session, run /hooks and trust the
+  OpenCode Status Bar hooks. Codex skips them until you do.
+
+  For Claude Code: nothing to do. New sessions report their status.
 
 If the icon is hidden behind the notch or other menu bar icons, hold Command
 and drag it further right.

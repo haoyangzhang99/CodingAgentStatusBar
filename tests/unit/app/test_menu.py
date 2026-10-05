@@ -18,6 +18,7 @@ else:
 from opencode_status_bar.ui.menu import MenuBuilder, truncate_with_tooltip  # noqa: E402
 from opencode_status_bar.core.models import (  # noqa: E402
     Agent,
+    HookState,
     Instance,
     SessionStatus,
     State,
@@ -70,7 +71,7 @@ class TestBuildDynamicItems:
     @pytest.mark.parametrize("state", [None, State(connected=False)])
     def test_not_connected(self, builder, state):
         items = builder.build_dynamic_items(state)
-        assert [i.title for i in items] == ["No OpenCode instances"]
+        assert [i.title for i in items] == ["OpenCode", "No OpenCode instances"]
 
     def test_sessions_across_processes_and_click_shows_opencode(self, builder, on_select):
         state = connected(
@@ -78,8 +79,10 @@ class TestBuildDynamicItems:
             Instance(port=-2, agents=[make_agent("agent-2", "Second", SessionStatus.IDLE)]),
         )
         items = builder.build_dynamic_items(state, on_select=on_select)
-        assert [i.title for i in items] == ["Test Agent", "Second"]
-        items[0].callback(None)
+        assert [i.title for i in items] == ["OpenCode", "Test Agent", "Second"]
+        # The header is a label, matching the Codex and Claude Code sections.
+        assert items[0].callback is None
+        items[1].callback(None)
         on_select.assert_called_once_with(None)
 
     def test_subagents_nest_under_parent_and_are_not_clickable(self, builder, on_select):
@@ -89,7 +92,7 @@ class TestBuildDynamicItems:
         items = builder.build_dynamic_items(
             connected(Instance(port=-1, agents=[child, parent, idle_child])),
             on_select=on_select,
-        )
+        )[1:]
         assert [i.title for i in items] == ["Root", "Child", "Child 2"]
         assert [i.symbol_name for i in items] == ["terminal", "circle.fill", "circle"]
         assert items[1].callback is None
@@ -99,14 +102,14 @@ class TestBuildDynamicItems:
     def test_idle_process_uses_last_title_or_fallback(self, builder, on_select):
         state = connected(Instance(port=-1, agents=[]))
         items = builder.build_dynamic_items(state, on_select=on_select)
-        assert items[0].title == "Port -1 (idle)"
-        assert items[0].symbol_name == "moon.zzz"
-        assert items[0]._menuitem.setImage_.call_args.args[0].isTemplate()
-        assert items[0].callback is on_select
+        assert items[1].title == "Port -1 (idle)"
+        assert items[1].symbol_name == "moon.zzz"
+        assert items[1]._menuitem.setImage_.call_args.args[0].isTemplate()
+        assert items[1].callback is on_select
 
         # After a session was seen, the idle row reuses its title.
         builder.build_dynamic_items(connected(Instance(port=-1, agents=[make_agent()])))
-        assert builder.build_dynamic_items(state)[0].title == "Test Agent (idle)"
+        assert builder.build_dynamic_items(state)[1].title == "Test Agent (idle)"
 
     def test_name_cache_drops_stopped_processes_and_rotates(self, on_select):
         builder = MenuBuilder(port_names_cache={-9: "Gone"}, port_names_limit=1)
@@ -116,6 +119,39 @@ class TestBuildDynamicItems:
         builder.build_dynamic_items(state, on_select=on_select)
         assert -9 not in builder._port_names
         assert -3 in builder._port_names and len(builder._port_names) <= 2
+
+
+class TestBuildHookItems:
+    @pytest.mark.parametrize("state", [None, HookState(running=False, sessions=[make_agent()])])
+    def test_hidden_while_app_is_not_running(self, builder, state):
+        assert builder.build_hook_items(state, "Codex") == []
+
+    @pytest.mark.parametrize("name", ["Codex", "Claude Code"])
+    def test_idle_app(self, builder, on_select, name):
+        items = builder.build_hook_items(HookState(running=True), name, on_select=on_select)
+        assert [i.title for i in items] == [name, f"{name} idle"]
+        assert items[0].callback is None
+        assert items[1].symbol_name == "moon.zzz" and items[1].callback is on_select
+
+    def test_sessions_use_opencode_row_style(self, builder, on_select):
+        approval = make_agent("a", "api", tools=[Tool(name="Approval required", permission_pending=True)])
+        done = make_agent("b", "web", SessionStatus.IDLE)
+        items = builder.build_hook_items(
+            HookState(running=True, sessions=[approval, done]), "Codex", on_select=on_select
+        )
+        assert [i.title for i in items] == ["Codex", "api", "Approval required", "web"]
+        assert [i.symbol_name for i in items[1:]] == ["hand.raised", "hand.raised", "checkmark.circle"]
+        items[2]._menuitem.setToolTip_.assert_called_with("Codex is waiting for you to approve a request")
+        items[1].callback(None)
+        on_select.assert_called_once_with(None)
+        assert not any(ch in i.title for i in items for ch in EMOJI)
+
+    def test_claude_question_row(self, builder):
+        asks = make_agent("a", "api", has_pending_ask_user=True,
+                          ask_user_title="Claude Code needs your answer")
+        items = builder.build_hook_items(HookState(running=True, sessions=[asks]), "Claude Code")
+        assert [i.title for i in items] == ["Claude Code", "api", "Claude Code needs your answer"]
+        assert [i.symbol_name for i in items[1:]] == ["questionmark.circle", "text.bubble"]
 
 
 class TestBuildAgentItems:

@@ -2,32 +2,41 @@
 
 # OpenCode Status Bar
 
-A small macOS menu bar item that shows what the [OpenCode](https://opencode.ai) desktop app is doing.
-Check it while you work in other apps to see whether OpenCode is still working, has finished,
-or is waiting for you to approve something or answer a question.
+A small macOS menu bar item that shows what the [OpenCode](https://opencode.ai) desktop app,
+and optionally Codex and Claude Code, are doing.
+Check it while you work in other apps to see whether your agents are still working, have finished,
+or are waiting for you to approve something or answer a question.
 
 This is a fork of [OpenClaudeAgent/opencode-monitor](https://github.com/OpenClaudeAgent/opencode-monitor)
 (MIT licensed, now archived). It is a community project, not an official OpenCode product.
 
 ## What You'll See
 
-The menu bar shows an icon and a short status. The icon turns yellow only when OpenCode needs you;
-otherwise the icon and text follow your menu bar's light or dark appearance, like other menu bar items.
+The menu bar shows an icon and a short status, combined across OpenCode,
+[Codex](https://github.com/openai/codex) and [Claude Code](https://code.claude.com) (each in its
+desktop app or a terminal session). The icon turns yellow only when any of them needs you;
+otherwise the icon and text follow your menu bar's light or dark appearance, like other menu bar
+items.
 
 | Status | Icon | Meaning |
 |---|---|---|
-| `Working...` / `2 working` | Terminal | One or more sessions are generating a response |
-| `Done` | Checkmark | A session finished within the last minute |
-| `Awaiting approval` | Hand (yellow) | OpenCode is waiting for you to approve a permission request |
-| `Awaiting answer` | Question mark (yellow) | OpenCode asked you a question |
-| `Needs attention` | Exclamation mark (yellow) | Both an approval and a question are pending |
-| `OpenCode idle` | Terminal | OpenCode is running, with no recent activity |
-| `OpenCode offline` | Terminal | OpenCode isn't running, or hasn't loaded the plugin yet |
+| `Working...` | Terminal | One session is working, in any of the apps |
+| `2 working`, `3 working`, ... | Terminal | Several sessions are working, added up across all apps |
+| `Done` | Checkmark | A session finished within the last minute, and nothing is working |
+| `Awaiting approval` | Hand (yellow) | An app is waiting for you to approve a request |
+| `Awaiting answer` | Question mark (yellow) | OpenCode or Claude Code asked you a question |
+| `Needs attention` | Exclamation mark (yellow) | An approval and a question are both pending |
+| `Agents idle` | Terminal | At least one app is running, with no recent activity |
+| `Agents offline` | Terminal | None is running (OpenCode counts only once it has loaded the plugin) |
 
-Attention states take priority over working states. Counts are active sessions, not open windows.
+Anything that needs you comes first, then working, then done, then idle. Counts are sessions
+(conversations), not sub-agents or open windows. Codex and Claude Code count as running while
+their desktop app is open, even if you only use the Claude app for chat.
 
-Click the item for a dropdown with **Show OpenCode** (brings OpenCode to the front, or opens it),
-each recent session and what it's waiting for, **Refresh**, and **Quit**.
+Click the item for a dropdown with **Show OpenCode**, **Show Codex** and **Show Claude** (each
+brings that app to the front, or opens it), an **OpenCode**, a **Codex** and a **Claude Code**
+section listing each recent session and what it's waiting for, **Refresh**, and **Quit**. The
+Codex and Claude Code sections appear only while those apps run.
 
 ## Requirements
 
@@ -54,7 +63,8 @@ File > Get Info, or run:
 defaults read /Applications/OpenCode.app/Contents/Info.plist CFBundleShortVersionString
 ```
 
-With the wrong version, the menu bar stays on `OpenCode offline`.
+With the wrong version, OpenCode's sessions never appear: the menu bar stays on `Agents offline`
+(or `Agents idle` while Codex or Claude Code runs), and the dropdown shows `No OpenCode instances`.
 
 The `opencode-v1` branch is the last release that supports OpenCode 1, and new features are only
 added to `main`.
@@ -92,16 +102,32 @@ The installer:
 2. Builds `~/Applications/OpenCode Status Bar.app` and checks that it starts correctly.
 3. Adds the plugin `~/.config/opencode/plugins/opencode-status-bar.js`, which loads
    `integrations/opencode-status-bar.js` from this folder.
-4. Opens the app.
+4. If Codex is installed, adds hooks to `~/.codex/hooks.json` that run
+   `integrations/opencode-status-bar-codex.py` from this folder. Your other hooks are left as
+   they are, and the original file is backed up once to `hooks.json.bak-opencode-status-bar`.
+5. If Claude Code is installed, adds hooks to `~/.claude/settings.json` that run
+   `integrations/opencode-status-bar-claude.py` from this folder. Your other hooks and settings
+   are left as they are, and the original file is backed up once to
+   `settings.json.bak-opencode-status-bar`.
+6. Opens the app.
 
 Then **fully quit OpenCode (Cmd+Q) and reopen it** so it loads the plugin. Until then the
-menu bar shows `OpenCode offline`. From then on, **OpenCode opens the status bar app whenever
+dropdown shows `No OpenCode instances`. From then on, **OpenCode opens the status bar app whenever
 it starts**, so you don't need to launch it yourself.
 
-Keep the project folder where it is: the app and plugin run from it. If you move the folder,
-run `./install.sh` again.
+**For Codex, trust the new hooks once:** Codex skips new hooks until you review them. Start a
+new Codex session, run `/hooks`, and trust the OpenCode Status Bar hooks. Codex sessions that
+were already open load hooks only when they start. After that, starting a Codex session also
+opens the status bar app.
 
-To stop OpenCode from opening the app, run
+**Claude Code needs no extra step:** it picks up the new hooks on its own. Sessions that were
+already open report their status from their next prompt. Starting a Claude Code session also
+opens the status bar app.
+
+Keep the project folder where it is: the app, plugin, and hooks run from it. If you move the
+folder, run `./install.sh` again, then trust the updated Codex hooks in `/hooks`.
+
+To stop OpenCode, Codex and Claude Code from opening the app, run
 `mkdir -p ~/.config/opencode-status-bar && touch ~/.config/opencode-status-bar/no-autolaunch`.
 Delete that file to turn it back on.
 
@@ -119,7 +145,7 @@ installed; to move from OpenCode 1 to 2, see
 ## Uninstall
 
 ```sh
-./uninstall.sh          # removes the app, plugin, and status files
+./uninstall.sh          # removes the app, plugin, Codex and Claude Code hooks, and status files
 ./uninstall.sh --purge  # also removes logs and .venv
 ```
 
@@ -141,6 +167,13 @@ connects to OpenCode.
   branch instead.
 - When OpenCode starts, the plugin opens the menu bar app in the background (once per OpenCode
   launch). If you quit the app, it stays closed until OpenCode starts again.
+- For Codex, hooks run on each Codex event (prompt submitted, tool started or finished, approval
+  requested, turn finished or interrupted, session started or ended) and write one status file
+  per Codex session to `~/.config/opencode-status-bar/codex/`. Sessions of a Codex process that
+  has exited are ignored.
+- Claude Code works the same way, with status files in `~/.config/opencode-status-bar/claude/`.
+  Its hooks also report failed turns, questions Claude asks you, and Claude Code's "idle for a
+  minute" notification.
 
 Technical details are in [`integrations/README.md`](integrations/README.md).
 
@@ -148,8 +181,10 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
 
 - **Stays on your Mac.** The app makes no network requests.
 - **Written by the plugin:** session IDs, titles, project folder paths, and status flags.
-  Files are readable only by your user account.
-- **Not written:** prompts, messages, tool inputs or output, API keys, or OpenCode's server password.
+  **Written by the Codex and Claude Code hooks:** session IDs, project folder paths, the app's
+  process ID, and status flags. Files are readable only by your user account.
+- **Not written:** prompts, messages, tool names, inputs or output, API keys, or OpenCode's
+  server password.
 - **Logs** (`~/Library/Logs/OpenCodeStatusBar/`) get one line per status change, with counts
   only: no session titles or paths.
 
@@ -158,6 +193,13 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
 - macOS only. Made for the OpenCode desktop app; the terminal version of OpenCode is untested.
 - The plugin reads approvals and questions through an internal part of OpenCode's plugin client,
   so a future OpenCode update could break those two indicators.
+- Codex sends no event when a turn fails with an error, so a failed Codex turn shows as working
+  until its next event, or for at most 15 minutes. Waiting for approval has no time limit.
+- Codex hook events don't identify individual approval requests, so if Codex runs tools in
+  parallel, finishing one tool can hide another tool's pending approval. Claude Code has the
+  same limit when a parallel tool finishes, though a tool merely starting doesn't hide it.
+- Claude Code sends no event when you press Esc, so an interrupted Claude Code turn shows as
+  working (or waiting) for about a minute, until its idle notification arrives.
 - On a crowded menu bar, macOS may hide the item behind the notch. Hold Command and drag it
   further right.
 - The app links against the Python that `install.sh` set up. If you delete uv's Python

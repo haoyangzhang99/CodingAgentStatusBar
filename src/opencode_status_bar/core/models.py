@@ -89,3 +89,12 @@ class State:
     @property
     def has_pending_ask_user(self) -> bool:
         return any(a.has_pending_ask_user for i in self.instances for a in i.agents)
+
+
+@dataclass
+class HookState:
+    """Codex or Claude Code status from their hooks. Sessions are recent ones, titled by
+    project folder."""
+
+    running: bool = False
+    sessions: list[Agent] = field(default_factory=list)

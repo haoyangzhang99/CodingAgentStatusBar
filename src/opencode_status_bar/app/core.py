@@ -3,7 +3,8 @@ Core OpenCodeApp class - Main menu bar application.
 
 This module provides the OpenCodeApp class which:
 - Manages application state and lifecycle
-- Polls status snapshots written by the OpenCode desktop bridge plugin
+- Polls status snapshots written by the OpenCode desktop bridge plugin, and Codex and
+  Claude Code hooks
 - Combines MenuMixin and HandlersMixin for functionality
 """
 
@@ -13,8 +14,9 @@ from typing import Optional
 
 import rumps
 
-from ..core.models import State, SessionStatus
+from ..core.models import Agent, HookState, State, SessionStatus
 from ..core.monitor.bridge import read_bridge_state
+from ..core.monitor.hooks import read_claude_state, read_codex_state
 from ..ui.menu import MenuBuilder
 from ..utils.logger import info, error
 
@@ -22,26 +24,57 @@ from .handlers import HandlersMixin
 from .menu import MenuMixin
 
 
-def status_for(state: Optional[State]) -> tuple[str, str, bool]:
-    """Return (menu bar label, SF Symbol name, needs attention) for a state."""
+def opencode_sessions(state: Optional[State]) -> list[Agent]:
     if state is None or not state.connected:
-        return "OpenCode offline", "terminal", False
-    agents = [agent for inst in state.instances for agent in inst.agents]
-    approval = any(tool.may_need_permission for a in agents for tool in a.tools)
-    question = any(a.has_pending_ask_user for a in agents)
+        return []
+    return [agent for inst in state.instances for agent in inst.agents]
+
+
+def hook_sessions(hooks: Optional[HookState]) -> list[Agent]:
+    return hooks.sessions if hooks is not None and hooks.running else []
+
+
+def status_for(
+    state: Optional[State],
+    codex: Optional[HookState] = None,
+    claude: Optional[HookState] = None,
+) -> tuple[str, str, bool]:
+    """Return (menu bar label, SF Symbol name, needs attention) for all apps together."""
+    if (state is None or not state.connected) and not any(
+        hooks is not None and hooks.running for hooks in (codex, claude)
+    ):
+        return "Agents offline", "terminal", False
+    sessions = opencode_sessions(state) + hook_sessions(codex) + hook_sessions(claude)
+    approval = any(tool.may_need_permission for s in sessions for tool in s.tools)
+    question = any(s.has_pending_ask_user for s in sessions)
     if approval and question:
         return "Needs attention", "exclamationmark.circle", True
     if approval:
         return "Awaiting approval", "hand.raised", True
     if question:
         return "Awaiting answer", "questionmark.circle", True
-    busy = [a for a in agents if a.status == SessionStatus.BUSY]
+    busy = [s for s in sessions if s.status == SessionStatus.BUSY]
     if busy:
-        root_count = sum(not a.is_subagent for a in busy)
+        # Count sessions, not sub-agents. Codex and Claude Code report sub-agents under
+        # their session.
+        root_count = sum(not s.is_subagent for s in busy)
         return (f"{root_count} working" if root_count > 1 else "Working..."), "terminal", False
-    if agents:
+    if sessions:
         return "Done", "checkmark.circle", False
-    return "OpenCode idle", "terminal", False
+    return "Agents idle", "terminal", False
+
+
+def hook_fingerprint(hooks: Optional[HookState]) -> tuple:
+    """Everything the menu displays about Codex or Claude Code, for change detection."""
+    if hooks is None:
+        return ()
+    return (hooks.running,) + tuple(
+        (
+            s.id, s.full_dir, s.status, s.has_pending_ask_user,
+            tuple(t.may_need_permission for t in s.tools),
+        )
+        for s in hooks.sessions
+    )
 
 
 def state_fingerprint(state: Optional[State]) -> tuple:
@@ -64,17 +97,25 @@ def state_fingerprint(state: Optional[State]) -> tuple:
     )
 
 
-def status_summary(state: Optional[State]) -> str:
+def status_summary(
+    state: Optional[State],
+    codex: Optional[HookState] = None,
+    claude: Optional[HookState] = None,
+) -> str:
     """One log line describing the status, without session titles or paths."""
-    title = status_for(state)[0]
-    agents = [a for inst in (state.instances if state else []) for a in inst.agents]
-    busy = sum(a.status == SessionStatus.BUSY and not a.is_subagent for a in agents)
+    title = status_for(state, codex, claude)[0]
+    opencode, codex_list, claude_list = (
+        opencode_sessions(state), hook_sessions(codex), hook_sessions(claude)
+    )
+    sessions = opencode + codex_list + claude_list
+    busy = sum(s.status == SessionStatus.BUSY and not s.is_subagent for s in sessions)
     attention = sum(
-        a.has_pending_ask_user or any(t.may_need_permission for t in a.tools)
-        for a in agents
+        s.has_pending_ask_user or any(t.may_need_permission for t in s.tools)
+        for s in sessions
     )
     return (
-        f"{title} (sessions: {len(agents)}, working: {busy}, "
+        f"{title} (OpenCode sessions: {len(opencode)}, Codex sessions: {len(codex_list)}, "
+        f"Claude Code sessions: {len(claude_list)}, working: {busy}, "
         f"needing attention: {attention})"
     )
 
@@ -99,6 +140,8 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
 
         # State tracking
         self._state: Optional[State] = None
+        self._codex: Optional[HookState] = None
+        self._claude: Optional[HookState] = None
         self._state_lock = threading.Lock()
         self._running = True
         self._needs_refresh = True
@@ -135,8 +178,10 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
         """Update the compact status label and native menu bar presentation."""
         with self._state_lock:
             state = self._state
+            codex = self._codex
+            claude = self._claude
 
-        title, symbol, attention = status_for(state)
+        title, symbol, attention = status_for(state, codex, claude)
 
         # Keep rumps' plain title in sync before styling its native button.
         self.title = title
@@ -178,11 +223,12 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
         button.setImage_(image)
         button.setImagePosition_(AppKit.NSImageLeft)
         button.setContentTintColor_(None)
-        button.setAccessibilityLabel_(f"OpenCode: {title}")
+        button.setAccessibilityLabel_(f"Agents: {title}")
         button.setNeedsDisplay_(True)
 
     def _run_monitor_loop(self):
-        """Poll bridge snapshots; log and redraw only when something changes."""
+        """Poll OpenCode, Codex and Claude Code status files; log and redraw only when
+        something changes."""
         info("OpenCode Status Bar started")
         last_fingerprint = None
         last_summary = None
@@ -192,15 +238,23 @@ class OpenCodeApp(HandlersMixin, MenuMixin, rumps.App):
             start_time = time.time()
             try:
                 new_state = read_bridge_state()
+                new_codex = read_codex_state()
+                new_claude = read_claude_state()
                 with self._state_lock:
                     self._state = new_state
+                    self._codex = new_codex
+                    self._claude = new_claude
 
-                fingerprint = state_fingerprint(new_state)
+                fingerprint = (
+                    state_fingerprint(new_state),
+                    hook_fingerprint(new_codex),
+                    hook_fingerprint(new_claude),
+                )
                 if fingerprint != last_fingerprint:
                     last_fingerprint = fingerprint
                     self._needs_refresh = True
 
-                summary = status_summary(new_state)
+                summary = status_summary(new_state, new_codex, new_claude)
                 if summary != last_summary:
                     last_summary = summary
                     info(f"Status changed: {summary}")
