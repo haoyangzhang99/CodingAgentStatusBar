@@ -7,6 +7,7 @@ import os
 import stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -171,6 +172,83 @@ def test_launch_opens_app_in_background_unless_turned_off(home, monkeypatch):
     assert popen.call_args.kwargs["start_new_session"] is True
 
 
+LATER = time.time() + 3600
+
+
+def window(used, resets=LATER):
+    return {"used_percentage": used, "resets_at": resets}
+
+
+class TestStatusLine:
+    """`statusline`, run by Claude Code with session data that includes usage."""
+
+    def show(self, home, rate_limits=None):
+        payload = {**PAYLOAD, "model": {"display_name": "Opus"}, "transcript_path": "/secret"}
+        if rate_limits is not None:
+            payload["rate_limits"] = rate_limits
+        result = run(home, "statusline", payload=payload)
+        assert result.returncode == 0 and result.stderr == ""
+        return result.stdout.strip()
+
+    def saved(self, home):
+        path = home / ".config/coding-agent-status-bar/claude-usage.json"
+        return json.loads(path.read_text()) if path.exists() else None
+
+    def test_saves_only_usage_and_shows_it(self, home):
+        line = self.show(home, {
+            "five_hour": {**window(23.5), "extra": 1}, "seven_day": window(41.2, LATER + 86400),
+        })
+        assert line == "5h 76% left · week 58% left"
+        data = self.saved(home)
+        assert set(data) == {"version", "updated", "limits"}
+        assert data["limits"] == {"five_hour": window(23.5), "seven_day": window(41.2, LATER + 86400)}
+        assert abs(data["updated"] / 1000 - time.time()) < 30
+        path = home / ".config/coding-agent-status-bar/claude-usage.json"
+        assert stat.S_IMODE(path.stat().st_mode) == 0o600
+        assert "secret" not in path.read_text()
+
+    def test_without_usage_shows_the_saved_numbers(self, home):
+        # Claude Code sends usage only after a session's first reply.
+        self.show(home, {"five_hour": window(10)})
+        before = self.saved(home)
+        assert self.show(home) == "5h 90% left"
+        assert self.saved(home) == before
+
+    def test_older_numbers_from_an_idle_session_are_ignored(self, home):
+        self.show(home, {"five_hour": window(50)})
+        before = self.saved(home)
+        assert self.show(home, {"five_hour": window(30)}) == "5h 50% left"
+        assert self.saved(home) == before
+
+    def test_a_new_window_replaces_the_old_one(self, home):
+        self.show(home, {"five_hour": window(90)})
+        self.show(home, {"five_hour": window(5, LATER + 18000)})
+        assert self.saved(home)["limits"]["five_hour"] == window(5, LATER + 18000)
+        # A session still holding the previous window doesn't bring it back.
+        self.show(home, {"five_hour": window(90)})
+        assert self.saved(home)["limits"]["five_hour"] == window(5, LATER + 18000)
+
+    def test_ended_windows_are_dropped(self, home):
+        path = home / ".config/coding-agent-status-bar/claude-usage.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"version": 1, "updated": 0, "limits": {
+            "five_hour": window(99, time.time() - 10)}}))
+        assert self.show(home, {"seven_day": window(40)}) == "week 60% left"
+        assert set(self.saved(home)["limits"]) == {"seven_day"}
+
+    @pytest.mark.parametrize("rate_limits", [None, {}, {"five_hour": window("10")}, []])
+    def test_nothing_to_show(self, home, rate_limits):
+        assert self.show(home, rate_limits) == ""
+        assert self.saved(home) is None
+
+    def test_bad_input_prints_nothing(self, home):
+        result = subprocess.run(
+            [sys.executable, "-I", "-S", str(SCRIPT), "statusline"], input="{",
+            capture_output=True, text=True, env={**os.environ, "HOME": str(home)}, timeout=30,
+        )
+        assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
+
+
 class TestInstall:
     EXISTING = {
         "theme": "dark",
@@ -206,6 +284,9 @@ class TestInstall:
         assert "idle_prompt" in hooks["Notification"][0]["matcher"]
         assert "matcher" not in hooks["Stop"][0]
         assert hooks["StopFailure"][0]["hooks"][0]["command"].endswith(" stop")
+        assert settings["statusLine"]["type"] == "command"
+        assert settings["statusLine"]["command"].endswith(f"-I -S {SCRIPT} statusline")
+        assert "Claude usage appears" in result.stdout
         assert stat.S_IMODE((home / ".claude/settings.json").stat().st_mode) == 0o600
         backup = home / ".claude/settings.json.bak-coding-agent-status-bar"
         assert json.loads(backup.read_text()) == self.EXISTING
@@ -261,3 +342,20 @@ class TestInstall:
         result = run(tmp_path, "install")
         assert result.returncode == 0 and "Claude Code not found" in result.stdout
         assert not (tmp_path / ".claude").exists()
+
+    def test_keeps_your_own_status_line(self, home):
+        mine = {"type": "command", "command": "~/.claude/my-status-line.sh"}
+        self.write(home, {"statusLine": mine})
+        result = run(home, "install")
+        assert result.returncode == 0 and "already have a Claude Code status line" in result.stdout
+        assert self.read(home)["statusLine"] == mine
+        run(home, "uninstall")
+        assert self.read(home) == {"statusLine": mine}
+
+    def test_replaces_a_status_line_from_the_previous_name(self, home):
+        old = {"type": "command", "command": "python /old/opencode-status-bar-claude.py statusline"}
+        self.write(home, {"statusLine": old})
+        run(home, "install")
+        assert self.read(home)["statusLine"]["command"].endswith(f"{SCRIPT} statusline")
+        run(home, "uninstall")
+        assert self.read(home) == {}

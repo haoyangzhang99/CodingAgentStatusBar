@@ -93,9 +93,36 @@ class State:
 
 
 @dataclass
+class UsageLimit:
+    """One subscription usage limit, such as the 5-hour or weekly window."""
+
+    name: str  # "5-hour" or "Weekly"
+    left: int  # Percent left, 0-100
+    resets_at: float = 0  # Unix seconds; 0 if unknown
+    reset: bool = False  # The window ended after the reading, so all of it is left again
+
+    @property
+    def low(self) -> bool:
+        return self.left < LOW_USAGE
+
+
+# A limit with less than this percent left is low: the menu bar reminds you once.
+LOW_USAGE = 10
+
+
+@dataclass
+class Usage:
+    """The latest subscription usage reading for Codex or Claude."""
+
+    limits: list[UsageLimit]
+    updated: float  # Unix seconds of the reading
+
+
+@dataclass
 class HookState:
     """Codex or Claude Code status from their hooks. Sessions are recent ones, titled by
     project folder."""
 
     running: bool = False
     sessions: list[Agent] = field(default_factory=list)
+    usage: Optional[Usage] = None

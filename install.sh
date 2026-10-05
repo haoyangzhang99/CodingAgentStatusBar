@@ -189,7 +189,8 @@ Done. Next steps:
   For Codex: start a new Codex session, run /hooks and trust the
   Coding Agent Status Bar hooks. Codex skips them until you do.
 
-  For Claude Code: nothing to do. New sessions report their status.
+  For Claude Code: nothing to do. New sessions report their status, and
+  Claude usage appears after your next reply in Claude Code in a terminal.
 
 If the icon is hidden behind the notch or other menu bar icons, hold Command
 and drag it further right.

@@ -9,11 +9,17 @@ only its status, project folder, Claude Code's process ID and a timestamp: never
 messages, tool names, tool arguments or output. Hooks never print or block, so Claude Code
 behaves as before.
 
-`install` and `uninstall` add or remove these hooks in ~/.claude/settings.json, leaving other
-hooks and settings untouched. Uses the standard library only, so it can run with `python -I -S`.
+`statusline` is Claude Code's status line command. Claude Code passes it the subscription usage
+(5-hour and weekly limits), which it saves to ~/.config/coding-agent-status-bar/claude-usage.json
+and prints as a short line at the bottom of the terminal.
+
+`install` and `uninstall` add or remove these hooks and the status line in
+~/.claude/settings.json, leaving other hooks and settings untouched, and never replacing a status
+line you set up yourself. Uses the standard library only, so it can run with `python -I -S`.
 """
 
 import json
+import math
 import os
 import shlex
 import stat
@@ -35,6 +41,11 @@ PRUNE_AFTER = 24 * 60 * 60
 SHELLS = {"sh", "bash", "zsh", "dash", "fish", "ksh", "tcsh", "csh"}
 # The tool Claude uses to ask you a question; it waits for an answer, not an approval.
 QUESTION_TOOL = "AskUserQuestion"
+USAGE_FILE = CONFIG_DIR / "claude-usage.json"
+# Usage window -> its name in the status line.
+USAGE_WINDOWS = {"five_hour": "5h", "seven_day": "week"}
+# Readings whose reset times are this close (in seconds) belong to the same window.
+SAME_WINDOW = 600
 
 # Claude Code event -> argument passed to this script.
 EVENTS = {
@@ -96,7 +107,7 @@ def write_status(
     path: Path, payload: dict, pid: int, status: str, permission: bool, question: bool
 ) -> None:
     cwd = payload.get("cwd")
-    data = {
+    write_json(path, {
         "version": 1,
         "pid": pid,
         "updated": int(time.time() * 1000),
@@ -104,9 +115,13 @@ def write_status(
         "status": status,
         "permission": permission,
         "question": question,
-    }
-    STATUS_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
-    os.chmod(STATUS_DIR, 0o700)
+    })
+
+
+def write_json(path: Path, data: dict) -> None:
+    """Write atomically, readable only by you."""
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(path.parent, 0o700)
     temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     try:
         fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -187,6 +202,60 @@ def handle(event: str, payload: dict) -> None:
         write("idle")
 
 
+# --- Status line -------------------------------------------------------------------------
+
+
+def clean_window(window: object) -> dict | None:
+    """A usage window's percent used and reset time, or None if it isn't valid."""
+    if not isinstance(window, dict):
+        return None
+    values = {key: window.get(key) for key in ("used_percentage", "resets_at")}
+    if not all(type(v) in (int, float) and math.isfinite(v) for v in values.values()):
+        return None
+    return values
+
+
+def merge_usage(saved: dict, received: dict, now: float) -> dict:
+    """Combine the saved usage with a session's. A session that has been idle passes its last,
+    possibly older, numbers; usage only grows within a window, so the larger one is newer."""
+    merged = {}
+    for key in USAGE_WINDOWS:
+        new, old = clean_window(received.get(key)), clean_window(saved.get(key))
+        if old and old["resets_at"] <= now:
+            old = None
+        if new and old:
+            if abs(new["resets_at"] - old["resets_at"]) <= SAME_WINDOW:
+                new = {**new, "used_percentage": max(new["used_percentage"], old["used_percentage"])}
+            elif old["resets_at"] > new["resets_at"]:
+                new = old  # The session's window has already ended.
+        if new or old:
+            merged[key] = new or old
+    return merged
+
+
+def statusline(payload: dict) -> str:
+    """Save Claude's usage for the menu bar app, and return the line Claude Code shows."""
+    now = time.time()
+    saved = read_status(USAGE_FILE)
+    saved_limits = saved.get("limits") if saved.get("version") == 1 else None
+    saved_limits = saved_limits if isinstance(saved_limits, dict) else {}
+    received = payload.get("rate_limits")
+    received = received if isinstance(received, dict) else {}
+    fresh = {key: clean_window(received.get(key)) for key in USAGE_WINDOWS}
+    fresh = {key: window for key, window in fresh.items() if window}
+    limits = merge_usage(saved_limits, received, now)
+    # Save only numbers at least as new as the saved ones, so their time stays right.
+    if fresh and all(limits.get(key) == window for key, window in fresh.items()):
+        write_json(USAGE_FILE, {"version": 1, "updated": int(now * 1000), "limits": limits})
+    parts = []
+    for key, name in USAGE_WINDOWS.items():
+        window = limits.get(key)
+        if window:
+            used = 0 if window["resets_at"] <= now else window["used_percentage"]
+            parts.append(f"{name} {math.floor(min(100, max(0, 100 - used)))}% left")
+    return " · ".join(parts)
+
+
 # --- Install and uninstall ---------------------------------------------------------------
 
 
@@ -197,8 +266,16 @@ def is_ours(handler: object) -> bool:
     return any(marker in command for marker in MARKERS)
 
 
+def our_command(argument: str) -> str:
+    return f"{shlex.quote(sys.executable)} -I -S {shlex.quote(str(SCRIPT))} {argument}"
+
+
+def our_status_line() -> dict:
+    return {"type": "command", "command": our_command("statusline")}
+
+
 def our_group(event: str) -> dict:
-    command = f"{shlex.quote(sys.executable)} -I -S {shlex.quote(str(SCRIPT))} {EVENTS[event]}"
+    command = our_command(EVENTS[event])
     group: dict = {"hooks": [{"type": "command", "command": command, "timeout": TIMEOUT}]}
     if event in MATCHERS:
         group = {"matcher": MATCHERS[event], **group}
@@ -260,11 +337,24 @@ def install() -> int:
             continue
         hooks[event] = without_ours(groups) + [our_group(event)]
         changed = True
+    # Claude Code allows one status line; never replace one you set up yourself.
+    line = settings.get("statusLine")
+    if line is None or is_ours(line):
+        if line != our_status_line():
+            settings["statusLine"] = our_status_line()
+            changed = True
     if changed:
         save_settings(settings)
         print(f"Added the Claude Code hooks to {SETTINGS_FILE}.")
     else:
         print(f"The Claude Code hooks in {SETTINGS_FILE} are up to date.")
+    if is_ours(settings.get("statusLine")):
+        print("Claude usage appears after your next reply in Claude Code in a terminal.")
+    else:
+        print(
+            "You already have a Claude Code status line, so it was left as is and Claude usage "
+            "won't be shown. Remove \"statusLine\" from the settings and run this again to show it."
+        )
     return 0
 
 
@@ -286,9 +376,12 @@ def uninstall() -> int:
                 hooks[event] = groups
             else:
                 del hooks[event]
+    if is_ours(settings.get("statusLine")):
+        del settings["statusLine"]
+        changed = True
     if changed:
         if not hooks:
-            del settings["hooks"]
+            settings.pop("hooks", None)
         save_settings(settings)
         print(f"Removed the Claude Code hooks from {SETTINGS_FILE}.")
     return 0
@@ -302,7 +395,11 @@ def main(argv: list[str]) -> int:
         return uninstall()
     try:
         payload = json.load(sys.stdin)
-        if isinstance(payload, dict):
+        if not isinstance(payload, dict):
+            payload = {}
+        if command == "statusline":
+            print(statusline(payload))
+        else:
             handle(command, payload)
     except Exception:
         # A status bar must never disrupt Claude Code.

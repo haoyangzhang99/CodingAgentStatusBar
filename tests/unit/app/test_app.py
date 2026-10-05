@@ -7,9 +7,11 @@ Mocks rumps and external dependencies to test behavior without UI.
 Consolidated tests: Each test validates multiple related assertions for better coverage.
 """
 
+import json
 import sys
 import os
 import subprocess
+import time
 import pytest
 from typing import cast
 from unittest.mock import MagicMock, patch
@@ -830,6 +832,112 @@ class TestCombinedStatus:
         button = app._nsapp.nsstatusitem.button.return_value
         button.setTitle_.assert_called_once_with(title)
         button.setAccessibilityLabel_.assert_called_once_with(f"Agents: {title}")
+
+
+def usage_app(*limits, sessions=(), running=True):
+    """A running Codex or Claude Code with a usage reading."""
+    from coding_agent_status_bar.core.models import HookState, Usage
+
+    return HookState(running=running, sessions=list(sessions), usage=Usage(list(limits), time.time()))
+
+
+def weekly(left, resets=None):
+    from coding_agent_status_bar.core.models import UsageLimit
+
+    return UsageLimit("Weekly", left, resets or time.time() + 86400)
+
+
+class TestUsageReminder:
+    """A low limit shows in the menu bar until the menu is opened."""
+
+    GAUGE = "gauge.with.dots.needle.0percent"
+
+    def test_reminder_comes_after_requests_and_before_working(self, mock_dependencies):
+        from coding_agent_status_bar.app.core import status_for
+
+        codex = usage_app(weekly(8), sessions=[hook_session()])
+        assert status_for(None, codex) == ("Codex: 8% left", self.GAUGE, True)
+        waiting = usage_app(weekly(8), sessions=[hook_session(permission=True)])
+        assert status_for(None, waiting) == ("Awaiting approval", "hand.raised", True)
+        asking = usage_app(weekly(8), sessions=[hook_session(question=True)])
+        assert status_for(None, None, asking)[0] == "Awaiting answer"
+
+    def test_dismissed_reminder_leaves_the_menu_bar(self, mock_dependencies):
+        from coding_agent_status_bar.app.core import status_for
+
+        limit = weekly(8)
+        codex = usage_app(limit, sessions=[hook_session()])
+        dismissed = [{"app": "Codex", "limit": "Weekly", "resets_at": limit.resets_at}]
+        assert status_for(None, codex, None, dismissed) == ("Working...", "terminal", False)
+
+    def test_opening_the_menu_dismisses_and_remembers(self, mock_dependencies, tmp_path, monkeypatch):
+        from coding_agent_status_bar.core import reminders
+
+        path = tmp_path / "dismissed.json"
+        monkeypatch.setattr(reminders, "dismissed_file", lambda: path)
+        app = create_app_with_mocks(mock_dependencies)
+        app._codex = usage_app(weekly(8))
+        app._update_title()
+        assert get_title(app) == "Codex: 8% left"
+        app._on_menu_open()
+        assert get_title(app) == "Agents idle"
+        assert json.loads(path.read_text())[0]["limit"] == "Weekly"
+
+        restarted = create_app_with_mocks(mock_dependencies)
+        restarted._codex = app._codex
+        restarted._update_title()
+        assert get_title(restarted) == "Agents idle"
+
+    def test_opening_the_menu_without_reminders_changes_nothing(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        app._codex = usage_app(weekly(50))
+        app._update_title = MagicMock()
+        with patch("coding_agent_status_bar.app.core.save_dismissed") as save:
+            app._on_menu_open()
+        save.assert_not_called()
+        app._update_title.assert_not_called()
+
+    def test_menu_is_watched_once(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        app._needs_refresh = False
+        app._nsapp = MagicMock()
+        app._on_menu_open = MagicMock()
+        native = MagicMock()
+        with patch.dict(sys.modules, {"AppKit": native}):
+            app._ui_refresh(None)
+            app._ui_refresh(None)
+        add = native.NSNotificationCenter.defaultCenter.return_value.addObserverForName_object_queue_usingBlock_
+        add.assert_called_once()
+        name, menu, queue, block = add.call_args.args
+        assert name is native.NSMenuDidBeginTrackingNotification
+        assert menu is app._nsapp.nsstatusitem.menu.return_value and queue is None
+        block(object())
+        app._on_menu_open.assert_called_once_with()
+
+    def test_failing_to_watch_the_menu_is_logged_once(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        app._needs_refresh = False
+        app._nsapp = MagicMock()
+        native = MagicMock()
+        native.NSNotificationCenter.defaultCenter.side_effect = RuntimeError("No center")
+        with patch.dict(sys.modules, {"AppKit": native}), \
+             patch("coding_agent_status_bar.app.core.error") as log_error:
+            app._ui_refresh(None)
+            app._ui_refresh(None)
+        log_error.assert_called_once()
+
+    def test_usage_changes_redraw_the_menu(self, mock_dependencies):
+        from coding_agent_status_bar.app.core import hook_fingerprint
+
+        now = time.time()
+        reading = usage_app(weekly(50, now + 100))
+        assert hook_fingerprint(reading) != hook_fingerprint(usage_app(weekly(49, now + 100)))
+        # A newer reading with the same numbers changes nothing shown.
+        newer = usage_app(weekly(50, now + 100))
+        newer.usage.updated = now + 600
+        assert hook_fingerprint(reading) == hook_fingerprint(newer)
+        # A new window can bring back a dismissed reminder, so it redraws too.
+        assert hook_fingerprint(reading) != hook_fingerprint(usage_app(weekly(50, now + 7 * 86400)))
 
 
 # =============================================================================

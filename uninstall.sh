@@ -58,7 +58,8 @@ PY="$REPO/.venv/bin/python"
 "$PY" "$REPO/integrations/coding-agent-status-bar-claude.py" uninstall ||
     echo "Could not remove the Claude Code hooks from ~/.claude/settings.json; remove them yourself." >&2
 
-rm -rf "$CONFIG_DIR/bridge" "$CONFIG_DIR/codex" "$CONFIG_DIR/claude"
+rm -rf "$CONFIG_DIR/bridge" "$CONFIG_DIR/codex" "$CONFIG_DIR/claude" \
+    "$CONFIG_DIR/claude-usage.json" "$CONFIG_DIR/dismissed-reminders.json"
 
 if [ "$PURGE" = 1 ]; then
     # Logs from before the app was renamed from OpenCode Status Bar.

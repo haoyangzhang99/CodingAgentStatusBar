@@ -6,12 +6,51 @@ from typing import Any, Callable, Optional
 
 import rumps
 
-from ..core.models import Agent, HookState, SessionStatus, State
+from ..core.models import Agent, HookState, SessionStatus, State, Usage, UsageLimit
 
 
 # Truncation limits for menu items
 TITLE_MAX_LENGTH = 40
 TOOL_ARG_MAX_LENGTH = 30
+
+# Usage row layout, in points. Text fields pad their text by 2, so the inset puts the label's
+# text where menu titles and icons start.
+USAGE_ROW_SIZE = (260, 20)
+USAGE_INSET = 14
+USAGE_NAME_WIDTH = 52
+USAGE_PERCENT_WIDTH = 58
+USAGE_TEXT_HEIGHT = 14
+USAGE_BAR_HEIGHT = 6
+USAGE_GAP = 6
+
+# How each app's usage numbers stay current, shown as the usage rows' tooltip.
+USAGE_SOURCES = {
+    "Codex": "Codex updates it after each reply, in the app and the terminal.",
+    "Claude Code": (
+        "Updated after each reply in Claude Code in a terminal. Use in the Claude app or on "
+        "claude.ai counts too, but shows only after your next terminal reply."
+    ),
+}
+
+
+def tint_yellow(image: Any, size: tuple) -> Any:
+    """A yellow copy of a template image, for things that need you. Only the image's pixels
+    are colored, so text next to it keeps its native color."""
+    import AppKit
+
+    colored = AppKit.NSImage.alloc().initWithSize_(size)
+    colored.lockFocus()
+    try:
+        rect = ((0, 0), size)
+        image.drawInRect_fromRect_operation_fraction_(
+            rect, AppKit.NSZeroRect, AppKit.NSCompositingOperationSourceOver, 1.0
+        )
+        AppKit.NSColor.systemYellowColor().set()
+        AppKit.NSRectFillUsingOperation(rect, AppKit.NSCompositingOperationSourceIn)
+    finally:
+        colored.unlockFocus()
+    colored.setTemplate_(False)
+    return colored
 
 
 def set_menu_symbol(item: Any, symbol: str) -> None:
@@ -30,6 +69,73 @@ def set_menu_symbol(item: Any, symbol: str) -> None:
     except Exception:
         # A missing icon must never break the menu; the text still shows.
         pass
+
+
+def usage_label(text: str, font: Any, alignment: int) -> Any:
+    import AppKit
+
+    field = AppKit.NSTextField.labelWithString_(text)
+    field.setFont_(font)
+    field.setTextColor_(AppKit.NSColor.secondaryLabelColor())
+    field.setAlignment_(alignment)
+    return field
+
+
+def usage_view(limit: UsageLimit, description: str, tooltip: str) -> Any:
+    """A usage row's view: "5-hour", a bar of what's left, and "99% left", in small gray text.
+
+    The menu draws neither a highlight nor a grayed-out look for an item that has a view and no
+    action, so the row reads as information, not as something to click. The bar is gray, or
+    yellow while the limit is low. If the menu is wider, the bar grows and its fill keeps the
+    same share.
+    """
+    import AppKit
+
+    width, height = USAGE_ROW_SIZE
+    view = AppKit.NSView.alloc().initWithFrame_(((0, 0), (width, height)))
+    view.setAutoresizingMask_(AppKit.NSViewWidthSizable)
+    size = AppKit.NSFont.smallSystemFontSize()
+    text_y = (height - USAGE_TEXT_HEIGHT) / 2
+
+    name = usage_label(limit.name, AppKit.NSFont.systemFontOfSize_(size), AppKit.NSTextAlignmentLeft)
+    name.setFrame_(((USAGE_INSET, text_y), (USAGE_NAME_WIDTH, USAGE_TEXT_HEIGHT)))
+    digits = AppKit.NSFont.monospacedDigitSystemFontOfSize_weight_(size, AppKit.NSFontWeightRegular)
+    percent = usage_label(f"{limit.left}% left", digits, AppKit.NSTextAlignmentRight)
+    percent_x = width - USAGE_INSET - USAGE_PERCENT_WIDTH
+    percent.setFrame_(((percent_x, text_y), (USAGE_PERCENT_WIDTH, USAGE_TEXT_HEIGHT)))
+    percent.setAutoresizingMask_(AppKit.NSViewMinXMargin)
+
+    bar_x = USAGE_INSET + USAGE_NAME_WIDTH + USAGE_GAP
+    bar_width = percent_x - USAGE_GAP - bar_x
+    bar = AppKit.NSView.alloc().initWithFrame_(
+        ((bar_x, (height - USAGE_BAR_HEIGHT) / 2), (bar_width, USAGE_BAR_HEIGHT))
+    )
+    bar.setAutoresizingMask_(AppKit.NSViewWidthSizable)
+    # At least as wide as it is tall, so a nearly empty bar still shows a rounded dot.
+    filled = max(USAGE_BAR_HEIGHT, bar_width * limit.left / 100) if limit.left > 0 else 0
+    fill_color = (
+        AppKit.NSColor.systemYellowColor() if limit.low else AppKit.NSColor.secondaryLabelColor()
+    )
+    for box_width, color, mask in (
+        (bar_width, AppKit.NSColor.quaternaryLabelColor(), AppKit.NSViewWidthSizable),
+        # A flexible width and right margin share any extra width by their sizes.
+        (filled, fill_color, AppKit.NSViewWidthSizable | AppKit.NSViewMaxXMargin),
+    ):
+        box = AppKit.NSBox.alloc().initWithFrame_(((0, 0), (box_width, USAGE_BAR_HEIGHT)))
+        box.setBoxType_(AppKit.NSBoxCustom)
+        box.setBorderWidth_(0)
+        box.setCornerRadius_(USAGE_BAR_HEIGHT / 2)
+        box.setFillColor_(color)
+        box.setAutoresizingMask_(mask)
+        bar.addSubview_(box)
+
+    for subview in (name, bar, percent):
+        view.addSubview_(subview)
+    view.setToolTip_(tooltip or None)
+    view.setAccessibilityElement_(True)
+    view.setAccessibilityRole_(AppKit.NSAccessibilityStaticTextRole)
+    view.setAccessibilityLabel_(description)
+    return view
 
 
 def set_menu_indent(item: Any, level: int) -> None:
@@ -125,8 +231,8 @@ class MenuBuilder:
         app_name: str,
         on_select: Optional[Callable] = None,
     ) -> list:
-        """Build the section for Codex or Claude Code: a header and its recent
-        sessions, or nothing while the app isn't running.
+        """Build the section for Codex or Claude Code: a header, its usage limits and
+        its recent sessions, or nothing while the app isn't running.
 
         Args:
             state: Current state of the app
@@ -137,12 +243,32 @@ class MenuBuilder:
             return []
         # Without a callback, rumps shows the header as a disabled label.
         items: list = [rumps.MenuItem(app_name)]
+        items.extend(self.build_usage_items(state.usage, app_name))
         if not state.sessions:
             idle_item = rumps.MenuItem(f"{app_name} idle", callback=on_select)
             set_menu_symbol(idle_item, "moon.zzz")
             items.append(idle_item)
         for session in state.sessions:
             items.extend(self.build_agent_items(session, 0, on_select, app_name=app_name))
+        return items
+
+    def build_usage_items(self, usage: Optional[Usage], app_name: str) -> list:
+        """One row per usage limit: a small label, a bar of what's left, and the percent.
+        The rows can't be clicked; their title, such as "5-hour limit: 99% left", is only
+        shown if the bar can't be drawn."""
+        if usage is None:
+            return []
+        items = []
+        for limit in usage.limits:
+            # Without a callback the row is disabled; its view keeps it from looking grayed out.
+            item = rumps.MenuItem(f"{limit.name} limit: {limit.left}% left")
+            try:
+                view = usage_view(limit, f"{app_name} {item.title}", USAGE_SOURCES.get(app_name, ""))
+                item._menuitem.setView_(view)
+            except Exception:
+                # Never break the menu over a drawing problem; the title still shows.
+                pass
+            items.append(item)
         return items
 
     def build_agent_items(

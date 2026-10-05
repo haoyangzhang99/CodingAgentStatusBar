@@ -27,17 +27,41 @@ items.
 | `Awaiting approval` | Hand (yellow) | An app is waiting for you to approve a request |
 | `Awaiting answer` | Question mark (yellow) | OpenCode or Claude Code asked you a question |
 | `Needs attention` | Exclamation mark (yellow) | An approval and a question are both pending |
+| `Codex: 8% left` | Gauge (yellow) | A subscription limit is nearly used up, until you open the menu |
 | `Agents idle` | Terminal | At least one app is running, with no recent activity |
 | `Agents offline` | Terminal | None is running (OpenCode counts only once it has loaded the plugin) |
 
-Anything that needs you comes first, then working, then done, then idle. Counts are sessions
-(conversations), not sub-agents or open windows. Codex and Claude Code count as running while
-their desktop app is open, even if you only use the Claude app for chat.
+Approvals and questions come first, then a low-usage reminder, then working, then done, then
+idle. Counts are sessions (conversations), not sub-agents or open windows. Codex and Claude Code
+count as running while their desktop app is open, even if you only use the Claude app for chat.
 
 Click the item for a dropdown with **Show OpenCode**, **Show Codex** and **Show Claude** (each
 brings that app to the front, or opens it), an **OpenCode**, a **Codex** and a **Claude Code**
 section listing each recent session and what it's waiting for, **Refresh**, and **Quit**. The
 Codex and Claude Code sections appear only while those apps run.
+
+### Subscription Usage
+
+The Codex and Claude Code sections start with how much of your subscription's limits is left,
+as a bar in small gray text above the sessions. These rows are for reading only; clicking them
+does nothing.
+
+```
+Codex
+  5-hour  ━━━━━━━━━━━━━━━━━━━━  99% left
+  Weekly  ━━━━━━━━━───────────  43% left
+  my-project
+```
+
+- When a limit has less than 10% left, its bar turns yellow and the menu bar shows a reminder
+  such as `Codex: 8% left`. Opening the menu dismisses the reminder; the bar stays yellow until
+  that limit resets, and the reminder only comes back for a later window.
+- Once a limit resets, it shows `100% left` without waiting for the next reply.
+- The numbers are from each app's last reply on this Mac; the rows don't show when that was.
+- **Codex** saves its usage after every reply, in both its desktop app and the terminal.
+- **Claude** usage comes from Claude Code's status line, which only Claude Code in a terminal
+  runs. The Claude desktop app (chat and Code tab) and claude.ai use the same limits but don't
+  report them, so after using those the numbers catch up at your next terminal reply.
 
 ## Requirements
 
@@ -107,8 +131,9 @@ The installer:
    `integrations/coding-agent-status-bar-codex.py` from this folder. Your other hooks are left as
    they are, and the original file is backed up once to `hooks.json.bak-coding-agent-status-bar`.
 5. If Claude Code is installed, adds hooks to `~/.claude/settings.json` that run
-   `integrations/coding-agent-status-bar-claude.py` from this folder. Your other hooks and settings
-   are left as they are, and the original file is backed up once to
+   `integrations/coding-agent-status-bar-claude.py` from this folder, and the same script as
+   Claude Code's status line, unless you already have a status line. Your other hooks and
+   settings are left as they are, and the original file is backed up once to
    `settings.json.bak-coding-agent-status-bar`.
 6. Opens the app.
 
@@ -124,6 +149,12 @@ opens the status bar app.
 **Claude Code needs no extra step:** it picks up the new hooks on its own. Sessions that were
 already open report their status from their next prompt. Starting a Claude Code session also
 opens the status bar app.
+
+**The Claude Code status line** shows your usage, such as `5h 77% left · week 59% left`, at the
+bottom of Claude Code in a terminal, and is how the app learns Claude usage. While any custom
+status line is set, Claude Code hides its footer tips (`? for shortcuts`, `esc to interrupt`);
+the keys still work. Claude Code allows one status line, so if you already have your own, the
+installer leaves it and Claude usage isn't shown.
 
 Keep the project folder where it is: the app, plugin, and hooks run from it. If you move the
 folder, run `./install.sh` again, then trust the updated Codex hooks in `/hooks`.
@@ -184,6 +215,10 @@ connects to OpenCode.
 - Claude Code works the same way, with status files in `~/.config/coding-agent-status-bar/claude/`.
   Its hooks also report failed turns, questions Claude asks you, and Claude Code's "idle for a
   minute" notification.
+- Usage: the app reads Codex's usage records from the end of its newest session files in
+  `~/.codex/sessions/`. Claude Code passes usage only to its status line, which saves it to
+  `~/.config/coding-agent-status-bar/claude-usage.json`. Dismissed low-usage reminders are kept in
+  `dismissed-reminders.json` next to it.
 
 Technical details are in [`integrations/README.md`](integrations/README.md).
 
@@ -192,9 +227,13 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
 - **Stays on your Mac.** The app makes no network requests.
 - **Written by the plugin:** session IDs, titles, project folder paths, and status flags.
   **Written by the Codex and Claude Code hooks:** session IDs, project folder paths, the app's
-  process ID, and status flags. Files are readable only by your user account.
+  process ID, and status flags. **Written by the Claude Code status line:** usage percentages and
+  reset times. Files are readable only by your user account.
 - **Not written:** prompts, messages, tool names, inputs or output, API keys, or OpenCode's
   server password.
+- **Read from Codex:** its session files also hold your conversations. The app reads only the
+  last part of the newest few, keeps only their usage records, and never stores or logs anything
+  else from them.
 - **Logs** (`~/Library/Logs/CodingAgentStatusBar/`) get one line per status change, with counts
   only: no session titles or paths.
 
@@ -210,6 +249,9 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
   same limit when a parallel tool finishes, though a tool merely starting doesn't hide it.
 - Claude Code sends no event when you press Esc, so an interrupted Claude Code turn shows as
   working (or waiting) for about a minute, until its idle notification arrives.
+- Usage is only as recent as each app's last reply on this Mac. Use elsewhere (Codex cloud
+  tasks, another computer, claude.ai, the Claude desktop app) shows after your next local reply,
+  or for Claude, your next reply in Claude Code in a terminal.
 - On a crowded menu bar, macOS may hide the item behind the notch. Hold Command and drag it
   further right.
 - The app links against the Python that `install.sh` set up. If you delete uv's Python

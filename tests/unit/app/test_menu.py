@@ -1,7 +1,8 @@
 """Tests for the dropdown's session rows (ui/menu.py)."""
 
 import sys
-from unittest.mock import MagicMock
+import time
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -15,7 +16,14 @@ if "rumps" not in sys.modules:
 else:
     sys.modules["rumps"].MenuItem = MockMenuItem
 
-from coding_agent_status_bar.ui.menu import MenuBuilder, truncate_with_tooltip  # noqa: E402
+import coding_agent_status_bar.ui.menu as menu_module  # noqa: E402
+from coding_agent_status_bar.ui.menu import (  # noqa: E402
+    USAGE_BAR_HEIGHT,
+    USAGE_INSET,
+    USAGE_ROW_SIZE,
+    MenuBuilder,
+    truncate_with_tooltip,
+)
 from coding_agent_status_bar.core.models import (  # noqa: E402
     Agent,
     HookState,
@@ -23,6 +31,8 @@ from coding_agent_status_bar.core.models import (  # noqa: E402
     SessionStatus,
     State,
     Tool,
+    Usage,
+    UsageLimit,
 )
 
 EMOJI = "🤖🔔🔒🔧❓🔄⏳💤└●○🔴🟠🟡🟢📅🌐⚠️"
@@ -152,6 +162,98 @@ class TestBuildHookItems:
         items = builder.build_hook_items(HookState(running=True, sessions=[asks]), "Claude Code")
         assert [i.title for i in items] == ["Claude Code", "api", "Claude Code needs your answer"]
         assert [i.symbol_name for i in items[1:]] == ["questionmark.circle", "text.bubble"]
+
+
+def local(hour, minute=0, day=5):
+    return time.mktime((2026, 10, day, hour, minute, 0, 0, 0, -1))
+
+
+def usage_parts(item):
+    """The real view a usage row shows, and its parts: name, bar, percent, track, fill."""
+    view = item._menuitem.setView_.call_args.args[0]
+    name, bar, percent = view.subviews()
+    track, fill = bar.subviews()
+    return view, name, bar, percent, track, fill
+
+
+def share(bar, fill):
+    return fill.frame().size.width / bar.frame().size.width
+
+
+class TestUsageRows:
+    def section(self, builder, *limits, updated=None, sessions=(), name="Codex", on_select=None):
+        usage = Usage(list(limits), local(21) if updated is None else updated)
+        state = HookState(running=True, sessions=list(sessions), usage=usage)
+        return builder.build_hook_items(state, name, on_select=on_select)
+
+    def test_rows_sit_between_header_and_sessions_and_cannot_be_clicked(self, builder, on_select):
+        import AppKit
+
+        items = self.section(
+            builder, UsageLimit("5-hour", 99, local(23, 18)), UsageLimit("Weekly", 43, local(23, 44, day=10)),
+            sessions=[make_agent("a", "api")], on_select=on_select,
+        )
+        assert [i.title for i in items] == [
+            "Codex", "5-hour limit: 99% left", "Weekly limit: 43% left", "api",
+        ]
+        assert [i.callback for i in items] == [None, None, None, on_select]
+        # Unlike session rows: no icon, small gray text and a bar.
+        assert not hasattr(items[1], "symbol_name")
+        items[1]._menuitem.setImage_.assert_not_called()
+        view, name, bar, percent, track, fill = usage_parts(items[2])
+        assert (name.stringValue(), percent.stringValue()) == ("Weekly", "43% left")
+        assert name.font().pointSize() == AppKit.NSFont.smallSystemFontSize()
+        assert name.textColor() == AppKit.NSColor.secondaryLabelColor()
+        assert share(bar, fill) == pytest.approx(0.43)
+        assert fill.fillColor() == AppKit.NSColor.secondaryLabelColor()
+        assert track.fillColor() == AppKit.NSColor.quaternaryLabelColor()
+        assert view.toolTip() == "Codex updates it after each reply, in the app and the terminal."
+        assert view.accessibilityLabel() == "Codex Weekly limit: 43% left"
+
+    def test_low_limit_bar_is_yellow(self, builder):
+        import AppKit
+
+        items = self.section(builder, UsageLimit("5-hour", 60, local(23)), UsageLimit("Weekly", 8, local(23)))
+        assert usage_parts(items[1])[5].fillColor() == AppKit.NSColor.secondaryLabelColor()
+        assert usage_parts(items[2])[5].fillColor() == AppKit.NSColor.systemYellowColor()
+
+    def test_bar_keeps_its_share_in_a_wider_menu(self, builder):
+        items = self.section(builder, UsageLimit("Weekly", 43, local(23)))
+        view, name, bar, percent, track, fill = usage_parts(items[1])
+        view.setFrameSize_((USAGE_ROW_SIZE[0] + 140, USAGE_ROW_SIZE[1]))
+        assert share(bar, fill) == pytest.approx(0.43, abs=0.01)
+        assert track.frame().size.width == bar.frame().size.width
+        assert percent.frame().origin.x + percent.frame().size.width == view.frame().size.width - USAGE_INSET
+        assert name.frame().origin.x == USAGE_INSET
+
+    @pytest.mark.parametrize("left,width", [(0, 0), (1, USAGE_BAR_HEIGHT)])
+    def test_empty_and_nearly_empty_bars(self, builder, left, width):
+        items = self.section(builder, UsageLimit("5-hour", left, local(23)))
+        assert usage_parts(items[1])[5].frame().size.width == width
+
+    def test_no_reset_or_reading_time(self, builder):
+        # An old reading, and a window that has since ended.
+        items = self.section(
+            builder, UsageLimit("5-hour", 70, local(23)), UsageLimit("Weekly", 100, local(9), reset=True),
+            updated=local(9),
+        )
+        assert [i.title for i in items[1:3]] == ["5-hour limit: 70% left", "Weekly limit: 100% left"]
+        for item in items[1:3]:
+            view, name, _, percent, _, _ = usage_parts(item)
+            shown = f"{name.stringValue()} {percent.stringValue()} {view.toolTip()}"
+            assert "AM" not in shown and "PM" not in shown
+
+    def test_claude_rows_explain_where_numbers_come_from(self, builder):
+        items = self.section(builder, UsageLimit("5-hour", 70), name="Claude Code")
+        assert items[1].title == "5-hour limit: 70% left"
+        assert "terminal" in usage_parts(items[1])[0].toolTip()
+
+    def test_drawing_problem_leaves_a_plain_row(self, builder):
+        # Patch the module this file's MenuBuilder came from; other tests reload it.
+        with patch.object(menu_module, "usage_view", side_effect=RuntimeError):
+            items = self.section(builder, UsageLimit("5-hour", 70, local(23)))
+        assert items[1].title == "5-hour limit: 70% left" and items[1].callback is None
+        items[1]._menuitem.setView_.assert_not_called()
 
 
 class TestBuildAgentItems:

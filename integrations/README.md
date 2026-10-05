@@ -131,6 +131,31 @@ up changes on its own. `uninstall` removes only hooks whose command contains
 `coding-agent-status-bar-claude.py`, and the `hooks` object too if nothing else is left in it.
 Hooks and backups from the app's previous name are handled as for Codex.
 
+### Status Line (`statusline`)
+
+Claude Code gives subscription usage only to its status line command, so `install` also sets
+`"statusLine": {"type": "command", "command": "<python> -I -S <script> statusline"}`, unless the
+settings already have a status line that isn't ours; `uninstall` removes only ours. Claude Code
+runs it after each reply (in a terminal only; the desktop app's Code tab never runs status
+lines), passing `rate_limits.five_hour` and `rate_limits.seven_day`, each with
+`used_percentage` and `resets_at`, for Pro and Max plans after a session's first reply.
+
+The command saves only those numbers, atomically with mode `0600`, to
+`~/.config/coding-agent-status-bar/claude-usage.json`:
+
+```json
+{"version": 1, "updated": 1790000000000,
+ "limits": {"five_hour": {"used_percentage": 23.5, "resets_at": 1790010000},
+            "seven_day": {"used_percentage": 41.2, "resets_at": 1790400000}}}
+```
+
+Each terminal session runs its own status line, and an idle session can pass numbers older than
+another session's. Usage only grows within a window, so for a window with the same reset time
+(within 10 minutes) the larger percentage wins, a window that has already been replaced by a later
+one is ignored, and the file is rewritten only with numbers at least as new as the saved ones.
+Ended windows are dropped. It prints `5h 77% left · week 59% left`, from the saved numbers when
+the session has none yet.
+
 ## Menu Bar App
 
 `src/coding_agent_status_bar/core/monitor/hooks.py` reads the Codex and Claude Code status files. It
@@ -139,6 +164,25 @@ desktop app (`com.openai.codex`, `com.anthropic.claudefordesktop`) is open or an
 files has a live process. Idle sessions are listed for 60 seconds, `ready` sessions aren't listed,
 and a `busy` session without an event for 15 minutes counts as idle unless it's waiting for an
 approval or an answer.
+
+`src/coding_agent_status_bar/core/monitor/usage.py` reads usage while each app runs:
+
+- **Codex** writes a `token_count` event with `rate_limits` (`primary` and `secondary` windows
+  with `used_percent`, `window_minutes` and `resets_at`) after each reply, to its session files
+  `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`. Codex also rewrites older sessions without
+  adding records, so the latest file changed may not hold the newest record. The reader goes
+  through the files in the newest 30 day folders from the most recently changed, reads the last
+  256 KB of each (4 MB if that has no record), and keeps the newest record by its timestamp. It
+  stops at the first file changed before that record, since no older file can hold a newer one,
+  and after 20 files at most. Only lines containing `token_count` and `rate_limits` are parsed,
+  and records for other limit IDs (single models) are skipped. Unchanged files aren't read again.
+- **Claude** usage comes from `claude-usage.json` above.
+
+Percent left is rounded down. A window whose reset time has passed shows 100% left.
+`core/reminders.py` decides the low-usage reminder (under 10% left): the menu bar shows the
+lowest limit not yet dismissed. Opening the menu (`NSMenuDidBeginTrackingNotification`, since
+rumps has no callback for it) dismisses every reminder showing, by app, limit and reset time, and
+saves them to `~/.config/coding-agent-status-bar/dismissed-reminders.json`.
 
 `src/coding_agent_status_bar/core/monitor/bridge.py` reads the OpenCode snapshots. It skips files that are
 malformed, older than 15 seconds, or written by a process that is no longer running, and it

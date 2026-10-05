@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 from ..models import Agent, HookState, SessionStatus, Tool
+from .usage import read_claude_usage, read_codex_usage
 
 CODEX_BUNDLE_ID = "com.openai.codex"
 CLAUDE_BUNDLE_ID = "com.anthropic.claudefordesktop"
@@ -29,11 +30,17 @@ def app_running(bundle_id: str) -> bool:
 
 
 def read_codex_state() -> HookState:
-    return read_hook_state("codex", CODEX_BUNDLE_ID, "Codex")
+    state = read_hook_state("codex", CODEX_BUNDLE_ID, "Codex")
+    if state.running:
+        state.usage = read_codex_usage()
+    return state
 
 
 def read_claude_state() -> HookState:
-    return read_hook_state("claude", CLAUDE_BUNDLE_ID, "Claude Code")
+    state = read_hook_state("claude", CLAUDE_BUNDLE_ID, "Claude Code")
+    if state.running:
+        state.usage = read_claude_usage()
+    return state
 
 
 def read_hook_state(folder: str, bundle_id: str, name: str) -> HookState:

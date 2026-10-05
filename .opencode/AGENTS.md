@@ -10,9 +10,11 @@ for the user. Read `DEVELOPMENT.md` for the layout.
   through `integrations/coding-agent-status-bar-codex.py` and `integrations/coding-agent-status-bar-claude.py`
   (hooks) and `core/monitor/hooks.py`. Prefer changes there.
 - Keep runtime dependencies to `rumps` and `loguru`; the app should stay small (about 36 MB).
-- The app makes no network requests. The plugin and the Codex and Claude Code hooks must not write prompts, messages,
-  tool arguments, tool output, or credentials.
+- The app makes no network requests, and reads Codex's session files only for their usage records.
+  The plugin, the Codex and Claude Code hooks, and the Claude status line must not write prompts,
+  messages, tool arguments, tool output, or credentials.
 - Menu bar and dropdown icons are monochrome SF Symbol templates, except yellow for attention states.
+  Usage bars follow the same rule: gray, or yellow when a limit is low.
   Don't add emoji to menu text.
 
 ## Commands

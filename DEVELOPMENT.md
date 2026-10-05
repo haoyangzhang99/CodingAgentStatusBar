@@ -31,6 +31,8 @@ The whole app is these parts:
 | `integrations/launcher.m` | Native app executable that embeds Python |
 | `src/coding_agent_status_bar/core/monitor/bridge.py` | Reads snapshots into app state |
 | `src/coding_agent_status_bar/core/monitor/hooks.py` | Reads Codex and Claude Code status files into app state |
+| `src/coding_agent_status_bar/core/monitor/usage.py` | Reads Codex and Claude subscription usage |
+| `src/coding_agent_status_bar/core/reminders.py` | Low-usage reminders and their dismissal |
 | `src/coding_agent_status_bar/core/models.py` | Session, tool, and state data classes |
 | `src/coding_agent_status_bar/app/` | Menu bar app: status label, icons, dropdown, polling loop |
 | `src/coding_agent_status_bar/ui/menu.py` | Builds the dropdown's session rows |
@@ -52,7 +54,7 @@ original repository and in this repository's Git history.
 ## Tests
 
 ```sh
-make test                   # Python tests (about 270) and plugin tests
+make test                   # Python tests (about 350) and plugin tests
 make lint                   # ruff and shellcheck
 ```
 
@@ -67,6 +69,15 @@ Python tests run in parallel and in random order by default.
 | `~/.config/coding-agent-status-bar/bridge/*.json` | Live snapshots written by the plugin |
 | `~/.config/coding-agent-status-bar/codex/*.json` | Codex session status written by the hooks |
 | `~/.config/coding-agent-status-bar/claude/*.json` | Claude Code session status written by the hooks |
+| `~/.config/coding-agent-status-bar/claude-usage.json` | Claude usage written by the Claude Code status line |
+| `~/.config/coding-agent-status-bar/dismissed-reminders.json` | Low-usage reminders already seen |
+
+**No usage in the dropdown:**
+- Codex: its newest session files should contain `token_count` events with `rate_limits`; they
+  don't when you sign in with an API key instead of a ChatGPT plan.
+- Claude: check that `"statusLine"` in `~/.claude/settings.json` runs
+  `coding-agent-status-bar-claude.py statusline`, and that `claude-usage.json` exists. It appears
+  after a reply in Claude Code in a terminal, on a Pro or Max plan.
 
 **No Codex status:**
 - Check that `~/.codex/hooks.json` has hooks running `coding-agent-status-bar-codex.py`; if not, run

@@ -17,7 +17,8 @@ import rumps
 from ..core.models import Agent, HookState, State, SessionStatus
 from ..core.monitor.bridge import read_bridge_state
 from ..core.monitor.hooks import read_claude_state, read_codex_state
-from ..ui.menu import MenuBuilder
+from ..core.reminders import dismiss, load_dismissed, reminder_for, save_dismissed
+from ..ui.menu import MenuBuilder, tint_yellow
 from ..utils.logger import info, error
 
 from .handlers import HandlersMixin
@@ -38,8 +39,13 @@ def status_for(
     state: Optional[State],
     codex: Optional[HookState] = None,
     claude: Optional[HookState] = None,
+    dismissed: Optional[list[dict]] = None,
 ) -> tuple[str, str, bool]:
-    """Return (menu bar label, SF Symbol name, needs attention) for all apps together."""
+    """Return (menu bar label, SF Symbol name, needs attention) for all apps together.
+
+    Priority: approvals and questions, then a low-usage reminder not yet dismissed, then
+    working, done and idle.
+    """
     if (state is None or not state.connected) and not any(
         hooks is not None and hooks.running for hooks in (codex, claude)
     ):
@@ -53,6 +59,9 @@ def status_for(
         return "Awaiting approval", "hand.raised", True
     if question:
         return "Awaiting answer", "questionmark.circle", True
+    reminder = reminder_for({"Codex": codex, "Claude Code": claude}, dismissed or [])
+    if reminder:
+        return reminder, "gauge.with.dots.needle.0percent", True
     busy = [s for s in sessions if s.status == SessionStatus.BUSY]
     if busy:
         # Count sessions, not sub-agents. Codex and Claude Code report sub-agents under
@@ -68,12 +77,17 @@ def hook_fingerprint(hooks: Optional[HookState]) -> tuple:
     """Everything the menu displays about Codex or Claude Code, for change detection."""
     if hooks is None:
         return ()
+    usage = hooks.usage
     return (hooks.running,) + tuple(
         (
             s.id, s.full_dir, s.status, s.has_pending_ask_user,
             tuple(t.may_need_permission for t in s.tools),
         )
         for s in hooks.sessions
+    ) + (
+        # The reset time isn't shown, but a new window can bring back a dismissed reminder.
+        tuple((limit.name, limit.left, limit.resets_at) for limit in usage.limits)
+        if usage else None,
     )
 
 
@@ -101,9 +115,10 @@ def status_summary(
     state: Optional[State],
     codex: Optional[HookState] = None,
     claude: Optional[HookState] = None,
+    dismissed: Optional[list[dict]] = None,
 ) -> str:
     """One log line describing the status, without session titles or paths."""
-    title = status_for(state, codex, claude)[0]
+    title = status_for(state, codex, claude, dismissed)[0]
     opencode, codex_list, claude_list = (
         opencode_sessions(state), hook_sessions(codex), hook_sessions(claude)
     )
@@ -147,6 +162,8 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
         self._needs_refresh = True
         self._port_names: dict[int, str] = {}
         self._PORT_NAMES_LIMIT = 50
+        # Low-usage reminders you've seen; guarded by _state_lock.
+        self._dismissed: list[dict] = load_dismissed()
 
         # Menu builder
         self._menu_builder = MenuBuilder(self._port_names, self._PORT_NAMES_LIMIT)
@@ -169,10 +186,42 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
             if window is not None:
                 info(f"Menu bar ready: visible={item.isVisible()}, frame={window.frame()}")
                 self._menu_bar_logged = True
+        if not getattr(self, "_menu_watched", False) and hasattr(self, "_nsapp"):
+            self._menu_watched = True
+            try:
+                self._watch_menu()
+            except Exception as exc:
+                error(f"Could not watch the menu for low-usage reminders: {exc}")
         if self._needs_refresh:
             self._build_menu()
             self._update_title()
             self._needs_refresh = False
+
+    def _watch_menu(self):
+        """Opening the menu dismisses low-usage reminders. rumps has no callback for it."""
+        import AppKit
+
+        menu = self._nsapp.nsstatusitem.menu()
+        self._menu_observer = (
+            AppKit.NSNotificationCenter.defaultCenter().addObserverForName_object_queue_usingBlock_(
+                AppKit.NSMenuDidBeginTrackingNotification, menu, None,
+                lambda _notification: self._on_menu_open(),
+            )
+        )
+
+    def _on_menu_open(self):
+        """Move low-usage reminders out of the menu bar; their rows stay yellow."""
+        with self._state_lock:
+            apps = {"Codex": self._codex, "Claude Code": self._claude}
+            changed = dismiss(apps, self._dismissed, time.time())
+            dismissed = list(self._dismissed)
+        if not changed:
+            return
+        try:
+            save_dismissed(dismissed)
+        except OSError as exc:
+            error(f"Could not save dismissed reminders: {exc}")
+        self._update_title()
 
     def _update_title(self):
         """Update the compact status label and native menu bar presentation."""
@@ -180,8 +229,9 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
             state = self._state
             codex = self._codex
             claude = self._claude
+            dismissed = list(self._dismissed)
 
-        title, symbol, attention = status_for(state, codex, claude)
+        title, symbol, attention = status_for(state, codex, claude, dismissed)
 
         # Keep rumps' plain title in sync before styling its native button.
         self.title = title
@@ -205,19 +255,7 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
             image.setSize_((16, 16))
             if attention:
                 # Color only the icon's pixels; button tint also affects native text.
-                colored = AppKit.NSImage.alloc().initWithSize_((16, 16))
-                colored.lockFocus()
-                try:
-                    rect = ((0, 0), (16, 16))
-                    image.drawInRect_fromRect_operation_fraction_(
-                        rect, AppKit.NSZeroRect, AppKit.NSCompositingOperationSourceOver, 1.0
-                    )
-                    AppKit.NSColor.systemYellowColor().set()
-                    AppKit.NSRectFillUsingOperation(rect, AppKit.NSCompositingOperationSourceIn)
-                finally:
-                    colored.unlockFocus()
-                colored.setTemplate_(False)
-                image = colored
+                image = tint_yellow(image, (16, 16))
             else:
                 image.setTemplate_(True)
         button.setImage_(image)
@@ -244,6 +282,7 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
                     self._state = new_state
                     self._codex = new_codex
                     self._claude = new_claude
+                    dismissed = list(self._dismissed)
 
                 fingerprint = (
                     state_fingerprint(new_state),
@@ -254,7 +293,7 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
                     last_fingerprint = fingerprint
                     self._needs_refresh = True
 
-                summary = status_summary(new_state, new_codex, new_claude)
+                summary = status_summary(new_state, new_codex, new_claude, dismissed)
                 if summary != last_summary:
                     last_summary = summary
                     info(f"Status changed: {summary}")
