@@ -17,6 +17,16 @@ for the user. Read `DEVELOPMENT.md` for the layout.
   Usage bars follow the same rule: gray, or yellow when a limit is low.
   Don't add emoji to menu text.
 
+## Git Workflow
+
+- Never commit or push directly to `main`. Make every change on a new branch from an up-to-date
+  `main`, named for the change (such as `settings-window` or `fix-idle-label`).
+- Run the Python and plugin tests and `make lint` before committing.
+- Push the branch and open a pull request against `main` in
+  `haoyangzhang99/CodingAgentStatusBar` (pass `--repo`; the `upstream` remote is the original
+  project and must never get pull requests).
+- Merge only when the user asks. Delete the branch after merging, then update local `main`.
+
 ## Commands
 
 ```sh
