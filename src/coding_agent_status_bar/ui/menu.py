@@ -216,10 +216,9 @@ class MenuBuilder:
                     for sub_agent in sub_agents_map.get(agent.id, []):
                         items.extend(self.build_agent_items(sub_agent, 1, on_select))
             else:
-                display_name = self._port_names.get(
-                    instance.port, f"Port {instance.port}"
-                )
-                idle_item = rumps.MenuItem(f"{display_name} (idle)", callback=on_select)
+                cached_name = self._port_names.get(instance.port)
+                idle_title = f"{cached_name} (idle)" if cached_name else "OpenCode idle"
+                idle_item = rumps.MenuItem(idle_title, callback=on_select)
                 set_menu_symbol(idle_item, "moon.zzz")
                 items.append(idle_item)
 

@@ -112,7 +112,7 @@ class TestBuildDynamicItems:
     def test_idle_process_uses_last_title_or_fallback(self, builder, on_select):
         state = connected(Instance(port=-1, agents=[]))
         items = builder.build_dynamic_items(state, on_select=on_select)
-        assert items[1].title == "Port -1 (idle)"
+        assert items[1].title == "OpenCode idle"
         assert items[1].symbol_name == "moon.zzz"
         assert items[1]._menuitem.setImage_.call_args.args[0].isTemplate()
         assert items[1].callback is on_select
