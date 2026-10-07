@@ -18,6 +18,7 @@ from ..core.models import Agent, HookState, State, SessionStatus
 from ..core.monitor.bridge import read_bridge_state
 from ..core.monitor.hooks import read_claude_state, read_codex_state
 from ..core.reminders import dismiss, load_dismissed, reminder_for, save_dismissed
+from ..core.settings import load_settings, visible_states
 from ..ui.menu import MenuBuilder, tint_yellow
 from ..utils.logger import info, error
 
@@ -164,6 +165,9 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
         self._PORT_NAMES_LIMIT = 50
         # Low-usage reminders you've seen; guarded by _state_lock.
         self._dismissed: list[dict] = load_dismissed()
+        # Replaced, never changed in place; guarded by _state_lock.
+        self._settings: dict[str, bool] = load_settings()
+        self._settings_window = None
 
         # Menu builder
         self._menu_builder = MenuBuilder(self._port_names, self._PORT_NAMES_LIMIT)
@@ -212,7 +216,8 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
     def _on_menu_open(self):
         """Move low-usage reminders out of the menu bar; their rows stay yellow."""
         with self._state_lock:
-            apps = {"Codex": self._codex, "Claude Code": self._claude}
+            _, codex, claude = visible_states(self._settings, None, self._codex, self._claude)
+            apps = {"Codex": codex, "Claude Code": claude}
             changed = dismiss(apps, self._dismissed, time.time())
             dismissed = list(self._dismissed)
         if not changed:
@@ -226,9 +231,9 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
     def _update_title(self):
         """Update the compact status label and native menu bar presentation."""
         with self._state_lock:
-            state = self._state
-            codex = self._codex
-            claude = self._claude
+            state, codex, claude = visible_states(
+                self._settings, self._state, self._codex, self._claude
+            )
             dismissed = list(self._dismissed)
 
         title, symbol, attention = status_for(state, codex, claude, dismissed)
@@ -283,6 +288,7 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
                     self._codex = new_codex
                     self._claude = new_claude
                     dismissed = list(self._dismissed)
+                    settings = self._settings
 
                 fingerprint = (
                     state_fingerprint(new_state),
@@ -293,7 +299,9 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
                     last_fingerprint = fingerprint
                     self._needs_refresh = True
 
-                summary = status_summary(new_state, new_codex, new_claude, dismissed)
+                summary = status_summary(
+                    *visible_states(settings, new_state, new_codex, new_claude), dismissed
+                )
                 if summary != last_summary:
                     last_summary = summary
                     info(f"Status changed: {summary}")

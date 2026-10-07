@@ -414,7 +414,7 @@ class TestBuildMenu:
         assert cast(MockMenu, app.menu)._items == [
             app._open_opencode_item, app._open_codex_item, app._open_claude_item,
             None, opencode_row, None, *codex_rows, None, *claude_rows,
-            None, app._refresh_item, None, app._quit_item,
+            None, app._refresh_item, app._settings_item, None, app._quit_item,
         ]
 
     def test_build_menu_full(self, mock_dependencies):
@@ -440,7 +440,8 @@ class TestBuildMenu:
         assert menu._clear_called  # Direct boolean assertion
         assert menu._items == [
             app._open_opencode_item, app._open_codex_item, app._open_claude_item,
-            None, mock_item1, mock_item2, None, app._refresh_item, None, app._quit_item,
+            None, mock_item1, mock_item2, None, app._refresh_item, app._settings_item, None,
+            app._quit_item,
         ]
 
 
@@ -938,6 +939,116 @@ class TestUsageReminder:
         assert hook_fingerprint(reading) == hook_fingerprint(newer)
         # A new window can bring back a dismissed reminder, so it redraws too.
         assert hook_fingerprint(reading) != hook_fingerprint(usage_app(weekly(50, now + 7 * 86400)))
+
+
+class TestSettings:
+    """The Settings button and the switches in its window."""
+
+    @pytest.fixture
+    def saved(self, tmp_path, monkeypatch):
+        from coding_agent_status_bar.core import settings
+
+        path = tmp_path / "settings.json"
+        monkeypatch.setattr(settings, "settings_file", lambda: path)
+        return path
+
+    def test_settings_button_sits_above_quit(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        assert app._settings_item.title == "Settings..."
+        assert app._settings_item.callback == app._open_settings
+        assert app._settings_item._menuitem.setImage_.call_args.args[0].isTemplate()
+        app._build_menu()
+        items = cast(MockMenu, app.menu)._items
+        assert items[-4:] == [app._refresh_item, app._settings_item, None, app._quit_item]
+
+    def test_turned_off_parts_leave_the_dropdown(self, mock_dependencies):
+        codex_rows = [MockMenuItem("Codex")]
+        builder = mock_dependencies["builder_instance"]
+        builder.build_dynamic_items.return_value = [MockMenuItem("OpenCode")]
+        builder.build_hook_items.side_effect = (
+            lambda state, name, on_select: codex_rows if name == "Codex" and state else []
+        )
+        app = create_app_with_mocks(mock_dependencies)
+        app._codex = usage_app(weekly(50))
+        app._settings = {
+            **app._settings, "show_opencode": False, "show_codex": False,
+            "show_claude": False, "opencode": False, "codex": False, "refresh": False,
+        }
+        app._build_menu()
+        builder.build_dynamic_items.assert_not_called()
+        assert builder.build_hook_items.call_args_list[0].args[0] is None
+        assert cast(MockMenu, app.menu)._items == [app._settings_item, None, app._quit_item]
+
+        app._settings = {**app._settings, "codex": True}
+        app._build_menu()
+        assert cast(MockMenu, app.menu)._items == [
+            *codex_rows, None, app._settings_item, None, app._quit_item,
+        ]
+
+    def test_turned_off_apps_leave_the_menu_bar(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        app._codex = usage_app(weekly(8), sessions=[hook_session()])
+        app._update_title()
+        assert get_title(app) == "Codex: 8% left"
+        app._settings = {**app._settings, "codex_usage": False}
+        app._update_title()
+        assert get_title(app) == "Working..."
+        app._settings = {**app._settings, "codex": False}
+        app._update_title()
+        assert get_title(app) == "Agents offline"
+
+    def test_hidden_reminders_are_not_dismissed(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        app._codex = usage_app(weekly(8))
+        app._settings = {**app._settings, "codex_usage": False}
+        with patch("coding_agent_status_bar.app.core.save_dismissed") as save:
+            app._on_menu_open()
+        save.assert_not_called()
+        assert app._dismissed == []
+
+    def test_switch_change_is_saved_and_shown(self, mock_dependencies, saved):
+        from coding_agent_status_bar.core.settings import load_settings
+
+        app = create_app_with_mocks(mock_dependencies)
+        app._settings_window = MagicMock()
+        app._build_menu = MagicMock()
+        app._update_title = MagicMock()
+        app._on_setting_changed("refresh", False)
+        assert app._settings["refresh"] is False
+        assert json.loads(saved.read_text())["refresh"] is False
+        assert load_settings()["refresh"] is False
+        app._settings_window.update.assert_called_once_with(app._settings)
+        app._build_menu.assert_called_once_with()
+        app._update_title.assert_called_once_with()
+
+    def test_failing_to_save_still_applies_the_change(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        app._build_menu = MagicMock()
+        app._update_title = MagicMock()
+        with patch("coding_agent_status_bar.app.handlers.save_settings",
+                   side_effect=OSError("Read-only")), \
+             patch("coding_agent_status_bar.app.handlers.error") as log_error:
+            app._on_setting_changed("codex", False)
+        log_error.assert_called_once()
+        assert app._settings["codex"] is False
+        app._build_menu.assert_called_once_with()
+
+    def test_window_is_made_once(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        with patch("coding_agent_status_bar.app.handlers.SettingsWindow") as window_class:
+            app._open_settings(None)
+            app._open_settings(None)
+        window_class.assert_called_once_with(app._on_setting_changed)
+        assert window_class.return_value.show.call_count == 2
+        window_class.return_value.show.assert_called_with(app._settings)
+
+    def test_window_failure_is_logged(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        with patch("coding_agent_status_bar.app.handlers.SettingsWindow",
+                   side_effect=RuntimeError("No AppKit")), \
+             patch("coding_agent_status_bar.app.handlers.error") as log_error:
+            app._open_settings(None)
+        log_error.assert_called_once()
 
 
 # =============================================================================

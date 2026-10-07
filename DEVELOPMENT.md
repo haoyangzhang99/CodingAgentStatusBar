@@ -33,9 +33,11 @@ The whole app is these parts:
 | `src/coding_agent_status_bar/core/monitor/hooks.py` | Reads Codex and Claude Code status files into app state |
 | `src/coding_agent_status_bar/core/monitor/usage.py` | Reads Codex and Claude subscription usage |
 | `src/coding_agent_status_bar/core/reminders.py` | Low-usage reminders and their dismissal |
+| `src/coding_agent_status_bar/core/settings.py` | Which parts of the dropdown are turned on, and saving that |
 | `src/coding_agent_status_bar/core/models.py` | Session, tool, and state data classes |
 | `src/coding_agent_status_bar/app/` | Menu bar app: status label, icons, dropdown, polling loop |
 | `src/coding_agent_status_bar/ui/menu.py` | Builds the dropdown's session rows |
+| `src/coding_agent_status_bar/ui/settings.py` | The Settings window and its switches |
 | `src/coding_agent_status_bar/utils/logger.py` | Logging |
 | `tools/pycode/` | Code navigation and quality CLI for development (see `.opencode/AGENTS.md`) |
 | `install.sh`, `uninstall.sh` | Build, install, and remove the app and plugin |
@@ -71,6 +73,7 @@ Python tests run in parallel and in random order by default.
 | `~/.config/coding-agent-status-bar/claude/*.json` | Claude Code session status written by the hooks |
 | `~/.config/coding-agent-status-bar/claude-usage.json` | Claude usage written by the Claude Code status line |
 | `~/.config/coding-agent-status-bar/dismissed-reminders.json` | Low-usage reminders already seen |
+| `~/.config/coding-agent-status-bar/settings.json` | Parts of the dropdown turned on or off in Settings |
 
 **No usage in the dropdown:**
 - Codex: its newest session files should contain `token_count` events with `rate_limits`; they

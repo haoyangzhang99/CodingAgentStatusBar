@@ -37,8 +37,13 @@ count as running while their desktop app is open, even if you only use the Claud
 
 Click the item for a dropdown with **Show OpenCode**, **Show Codex** and **Show Claude** (each
 brings that app to the front, or opens it), an **OpenCode**, a **Codex** and a **Claude Code**
-section listing each recent session and what it's waiting for, **Refresh**, and **Quit**. The
-Codex and Claude Code sections appear only while those apps run.
+section listing each recent session and what it's waiting for, **Refresh**, **Settings...**, and
+**Quit**. The Codex and Claude Code sections appear only while those apps run.
+
+**Settings...** opens a window with a switch for each part of the dropdown: the OpenCode, Codex
+and Claude Code sections, Codex and Claude Code usage, and the Show and Refresh buttons. Turning
+off an app also leaves it out of the menu bar status, and turning off its usage also turns off
+its low-usage reminder. Changes apply right away and are kept across restarts.
 
 ### Subscription Usage
 
@@ -218,7 +223,7 @@ connects to OpenCode.
 - Usage: the app reads Codex's usage records from the end of its newest session files in
   `~/.codex/sessions/`. Claude Code passes usage only to its status line, which saves it to
   `~/.config/coding-agent-status-bar/claude-usage.json`. Dismissed low-usage reminders are kept in
-  `dismissed-reminders.json` next to it.
+  `dismissed-reminders.json` next to it, and your Settings choices in `settings.json`.
 
 Technical details are in [`integrations/README.md`](integrations/README.md).
 
