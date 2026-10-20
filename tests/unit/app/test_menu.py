@@ -115,6 +115,8 @@ class TestBuildDynamicItems:
         assert items[1].title == "OpenCode idle"
         assert items[1].symbol_name == "moon.zzz"
         assert items[1]._menuitem.setImage_.call_args.args[0].isTemplate()
+        # macOS 27 hides menu icons unless the item asks to show them.
+        items[1]._menuitem.setPreferredImageVisibility_.assert_called_once_with(1)
         assert items[1].callback is on_select
 
         # After a session was seen, the idle row reuses its title.
@@ -129,6 +131,18 @@ class TestBuildDynamicItems:
         builder.build_dynamic_items(state, on_select=on_select)
         assert -9 not in builder._port_names
         assert -3 in builder._port_names and len(builder._port_names) <= 2
+
+
+def test_real_menu_item_keeps_its_icon_visible():
+    """On macOS 27 a real menu item is told to show its icon; older macOS has no such setting."""
+    import AppKit
+    from types import SimpleNamespace
+
+    item = SimpleNamespace(_menuitem=AppKit.NSMenuItem.alloc().init())
+    menu_module.set_menu_symbol(item, "terminal")
+    assert item._menuitem.image() is not None
+    if hasattr(item._menuitem, "preferredImageVisibility"):
+        assert item._menuitem.preferredImageVisibility() == menu_module.MENU_IMAGE_VISIBLE
 
 
 class TestBuildHookItems:

@@ -1,5 +1,5 @@
 """
-Coding Agent Status Bar - macOS menu bar status for OpenCode, Codex and Claude Code
+Coding Agent Status Bar - macOS menu bar status for OpenCode, Codex, Claude Code and Cursor
 """
 
 from importlib.metadata import PackageNotFoundError, version

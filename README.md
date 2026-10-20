@@ -3,25 +3,25 @@
 # Coding Agent Status Bar
 
 A small macOS menu bar item that shows what the [OpenCode](https://opencode.ai) desktop app,
-and optionally Codex and Claude Code, are doing.
+and optionally Codex, Claude Code and Cursor, are doing.
 Check it while you work in other apps to see whether your agents are still working, have finished,
 or are waiting for you to approve something or answer a question.
 
 This is a fork of [OpenClaudeAgent/opencode-monitor](https://github.com/OpenClaudeAgent/opencode-monitor)
 (MIT licensed, now archived), first published as OpenCode Status Bar. It is a community project,
-not an official OpenCode, OpenAI or Anthropic product.
+not an official OpenCode, OpenAI, Anthropic or Cursor product.
 
 ## What You'll See
 
 The menu bar shows an icon and a short status, combined across OpenCode,
 [Codex](https://github.com/openai/codex) and [Claude Code](https://code.claude.com) (each in its
-desktop app or a terminal session). The icon turns yellow only when any of them needs you;
+desktop app or a terminal session), and the agent in [Cursor](https://cursor.com). The icon turns yellow only when any of them needs you;
 otherwise the icon and text follow your menu bar's light or dark appearance, like other menu bar
 items.
 
 | Status | Icon | Meaning |
 |---|---|---|
-| `Working...` | Terminal | One session is working, in any of the apps |
+| `Codex working`, `Cursor working`, ... | Terminal | One session is working, in the app named |
 | `2 working`, `3 working`, ... | Terminal | Several sessions are working, added up across all apps |
 | `Done` | Checkmark | A session finished within the last minute, and nothing is working |
 | `Awaiting approval` | Hand (yellow) | An app is waiting for you to approve a request |
@@ -32,16 +32,19 @@ items.
 | `Agents offline` | Terminal | None is running (OpenCode counts only once it has loaded the plugin) |
 
 Approvals and questions come first, then a low-usage reminder, then working, then done, then
-idle. Counts are sessions (conversations), not sub-agents or open windows. Codex and Claude Code
-count as running while their desktop app is open, even if you only use the Claude app for chat.
+idle. Counts are sessions (conversations), not sub-agents or open windows. Codex, Claude Code and
+Cursor count as running while their desktop app is open, even if you only use the Claude app for
+chat. Cursor can show working and done, but not approvals or questions (see
+[Limitations](#limitations)).
 
-Click the item for a dropdown with **Show OpenCode**, **Show Codex** and **Show Claude** (each
-brings that app to the front, or opens it), an **OpenCode**, a **Codex** and a **Claude Code**
-section listing each recent session and what it's waiting for, **Refresh**, **Settings...**, and
-**Quit**. The Codex and Claude Code sections appear only while those apps run.
+Click the item for a dropdown with **Show OpenCode**, **Show Codex**, **Show Claude** and **Show
+Cursor** (each brings that app to the front, or opens it), an **OpenCode**, a **Codex**, a
+**Claude Code** and a **Cursor** section listing each recent session and what it's waiting for,
+**Refresh**, **Settings...**, and **Quit**. The Codex, Claude Code and Cursor sections appear only
+while those apps run.
 
-**Settings...** opens a window with a switch for each part of the dropdown: the OpenCode, Codex
-and Claude Code sections, Codex and Claude Code usage, and the Show and Refresh buttons. Turning
+**Settings...** opens a window with a switch for each part of the dropdown: the OpenCode, Codex,
+Claude Code and Cursor sections, Codex and Claude Code usage, and the Show and Refresh buttons. Turning
 off an app also leaves it out of the menu bar status, and turning off its usage also turns off
 its low-usage reminder. Changes apply right away and are kept across restarts.
 
@@ -94,7 +97,7 @@ defaults read /Applications/OpenCode.app/Contents/Info.plist CFBundleShortVersio
 ```
 
 With the wrong version, OpenCode's sessions never appear: the menu bar stays on `Agents offline`
-(or `Agents idle` while Codex or Claude Code runs), and the dropdown shows `No OpenCode instances`.
+(or `Agents idle` while Codex, Claude Code or Cursor runs), and the dropdown shows `No OpenCode instances`.
 
 The `opencode-v1` branch is the last release that supports OpenCode 1, and new features are only
 added to `main`.
@@ -140,7 +143,10 @@ The installer:
    Claude Code's status line, unless you already have a status line. Your other hooks and
    settings are left as they are, and the original file is backed up once to
    `settings.json.bak-coding-agent-status-bar`.
-6. Opens the app.
+6. If Cursor is installed, adds hooks to `~/.cursor/hooks.json` that run
+   `integrations/coding-agent-status-bar-cursor.py` from this folder. Your other hooks are left as
+   they are, and the original file is backed up once to `hooks.json.bak-coding-agent-status-bar`.
+7. Opens the app.
 
 Then **fully quit OpenCode (Cmd+Q) and reopen it** so it loads the plugin. Until then the
 dropdown shows `No OpenCode instances`. From then on, **OpenCode opens the status bar app whenever
@@ -155,6 +161,11 @@ opens the status bar app.
 already open report their status from their next prompt. Starting a Claude Code session also
 opens the status bar app.
 
+**Cursor needs no extra step either:** it reloads `~/.cursor/hooks.json` on its own. Chats that
+were already open report their status from their next message, and starting a new agent chat
+opens the status bar app. Cloud agents run on another computer, so only chats running on this Mac
+appear.
+
 **The Claude Code status line** shows your usage, such as `5h 77% left · week 59% left`, at the
 bottom of Claude Code in a terminal, and is how the app learns Claude usage. While any custom
 status line is set, Claude Code hides its footer tips (`? for shortcuts`, `esc to interrupt`);
@@ -164,7 +175,7 @@ installer leaves it and Claude usage isn't shown.
 Keep the project folder where it is: the app, plugin, and hooks run from it. If you move the
 folder, run `./install.sh` again, then trust the updated Codex hooks in `/hooks`.
 
-To stop OpenCode, Codex and Claude Code from opening the app, run
+To stop OpenCode, Codex, Claude Code and Cursor from opening the app, run
 `mkdir -p ~/.config/coding-agent-status-bar && touch ~/.config/coding-agent-status-bar/no-autolaunch`.
 Delete that file to turn it back on.
 
@@ -191,7 +202,7 @@ OpenCode, and in a new Codex session trust the renamed hooks in `/hooks`. Old lo
 ## Uninstall
 
 ```sh
-./uninstall.sh          # removes the app, plugin, Codex and Claude Code hooks, and status files
+./uninstall.sh          # removes the app, plugin, Codex, Claude Code and Cursor hooks, and status files
 ./uninstall.sh --purge  # also removes logs and .venv
 ```
 
@@ -220,6 +231,10 @@ connects to OpenCode.
 - Claude Code works the same way, with status files in `~/.config/coding-agent-status-bar/claude/`.
   Its hooks also report failed turns, questions Claude asks you, and Claude Code's "idle for a
   minute" notification.
+- Cursor works the same way, with status files in `~/.config/coding-agent-status-bar/cursor/`,
+  from its agent hooks (message sent, tool finished, agent stopped, chat started or ended).
+  Cursor also runs Claude Code's hooks for its own chats; the Claude Code hook ignores those, so
+  a Cursor chat is never counted twice.
 - Usage: the app reads Codex's usage records from the end of its newest session files in
   `~/.codex/sessions/`. Claude Code passes usage only to its status line, which saves it to
   `~/.config/coding-agent-status-bar/claude-usage.json`. Dismissed low-usage reminders are kept in
@@ -231,11 +246,11 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
 
 - **Stays on your Mac.** The app makes no network requests.
 - **Written by the plugin:** session IDs, titles, project folder paths, and status flags.
-  **Written by the Codex and Claude Code hooks:** session IDs, project folder paths, the app's
+  **Written by the Codex, Claude Code and Cursor hooks:** session IDs, project folder paths, the app's
   process ID, and status flags. **Written by the Claude Code status line:** usage percentages and
   reset times. Files are readable only by your user account.
-- **Not written:** prompts, messages, tool names, inputs or output, API keys, or OpenCode's
-  server password.
+- **Not written:** prompts, messages, tool names, inputs or output, API keys, OpenCode's
+  server password, or the email address and transcript path Cursor passes to its hooks.
 - **Read from Codex:** its session files also hold your conversations. The app reads only the
   last part of the newest few, keeps only their usage records, and never stores or logs anything
   else from them.
@@ -254,6 +269,10 @@ Technical details are in [`integrations/README.md`](integrations/README.md).
   same limit when a parallel tool finishes, though a tool merely starting doesn't hide it.
 - Claude Code sends no event when you press Esc, so an interrupted Claude Code turn shows as
   working (or waiting) for about a minute, until its idle notification arrives.
+- Cursor sends no event while it waits for you to approve a command or answer a question, so a
+  Cursor chat shows as working then. It has no usage rows either, since Cursor doesn't report its
+  limits to hooks.
+- Cursor chats are titled by their project folder, since Cursor doesn't pass chat titles to hooks.
 - Usage is only as recent as each app's last reply on this Mac. Use elsewhere (Codex cloud
   tasks, another computer, claude.ai, the Claude desktop app) shows after your next local reply,
   or for Claude, your next reply in Claude Code in a terminal.

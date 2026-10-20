@@ -50,16 +50,17 @@ def usage_app():
 
 def test_visible_states_leave_out_what_is_turned_off():
     state = State(connected=True, instances=[Instance(port=1)])
-    codex, claude = usage_app(), usage_app()
-    assert settings.visible_states(settings.DEFAULTS, state, codex, claude) == (
-        state, codex, claude
+    codex, claude, cursor = usage_app(), usage_app(), HookState(running=True)
+    assert settings.visible_states(settings.DEFAULTS, state, codex, claude, cursor) == (
+        state, codex, claude, cursor
     )
 
     off = {**settings.DEFAULTS, "opencode": False, "claude": False, "codex_usage": False}
-    visible_state, visible_codex, visible_claude = settings.visible_states(
-        off, state, codex, claude
+    visible_state, visible_codex, visible_claude, visible_cursor = settings.visible_states(
+        off, state, codex, claude, cursor
     )
-    assert visible_state is None and visible_claude is None
+    assert visible_state is None and visible_claude is None and visible_cursor is cursor
+    assert settings.visible_states({**off, "cursor": False}, state, codex, claude, cursor)[3] is None
     assert visible_codex is not None and visible_codex.usage is None
     assert visible_codex.running
     # The app's own copy is left alone.

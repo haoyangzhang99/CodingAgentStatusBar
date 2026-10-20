@@ -7,7 +7,8 @@ Claude Code runs this script on its lifecycle events, with the event's JSON on s
 Each Claude Code session gets one status file in ~/.config/coding-agent-status-bar/claude/ holding
 only its status, project folder, Claude Code's process ID and a timestamp: never prompts,
 messages, tool names, tool arguments or output. Hooks never print or block, so Claude Code
-behaves as before.
+behaves as before. Cursor runs these hooks for its own chats too; those are ignored here and
+reported by the Cursor hooks instead.
 
 `statusline` is Claude Code's status line command. Claude Code passes it the subscription usage
 (5-hour and weekly limits), which it saves to ~/.config/coding-agent-status-bar/claude-usage.json
@@ -156,7 +157,14 @@ def launch_app() -> None:
     )
 
 
+def run_by_cursor(payload: dict) -> bool:
+    """Cursor also runs Claude Code's hooks for its own chats; its hooks report those."""
+    return "cursor_version" in payload or bool(os.environ.get("CURSOR_VERSION"))
+
+
 def handle(event: str, payload: dict) -> None:
+    if run_by_cursor(payload):
+        return
     path = status_path(payload.get("session_id"))
     if path is None:
         return

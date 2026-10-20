@@ -50,6 +50,16 @@ class HandlersMixin:
         except (OSError, subprocess.SubprocessError) as exc:
             error(f"Could not open Claude: {exc}")
 
+    def _open_cursor(self, _):
+        """Launch or foreground the installed Cursor app."""
+        try:
+            subprocess.run(
+                ["/usr/bin/open", "-b", "com.todesktop.230313mzl4w4u92"],
+                check=True, capture_output=True, timeout=5,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            error(f"Could not open Cursor: {exc}")
+
     def _on_refresh(self, _):
         """Manual refresh callback."""
         info("Manual refresh requested")
