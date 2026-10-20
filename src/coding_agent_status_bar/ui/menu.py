@@ -230,7 +230,7 @@ class MenuBuilder:
         app_name: str,
         on_select: Optional[Callable] = None,
     ) -> list:
-        """Build the section for Codex or Claude Code: a header, its usage limits and
+        """Build the section for Codex, Claude Code or Cursor: a header, its usage limits and
         its recent sessions, or nothing while the app isn't running.
 
         Args:

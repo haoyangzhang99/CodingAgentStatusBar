@@ -1,7 +1,7 @@
 # Integration Details
 
-Two pieces connect the OpenCode desktop app to the menu bar, and Codex and Claude Code hooks add
-those apps' status. `install.sh` builds and installs all four.
+Two pieces connect the OpenCode desktop app to the menu bar, and Codex, Claude Code and Cursor
+hooks add those apps' status. `install.sh` builds and installs all five.
 
 ## Status Plugin (`coding-agent-status-bar.js`)
 
@@ -156,12 +156,45 @@ one is ignored, and the file is rewritten only with numbers at least as new as t
 Ended windows are dropped. It prints `5h 77% left · week 59% left`, from the saved numbers when
 the session has none yet.
 
+## Cursor Hooks (`coding-agent-status-bar-cursor.py`)
+
+A standalone script like the Codex one, run as
+`<repo>/.venv/bin/python -I -S coding-agent-status-bar-cursor.py <argument>` from Cursor's user
+hooks in `~/.cursor/hooks.json`. Cursor runs these for its agent chats in the desktop app and for
+the `agent` CLI:
+
+| Cursor event | Argument | Status file |
+|---|---|---|
+| `sessionStart` | `start` | Opens the app; writes `ready` unless this Cursor process already wrote a status (skipped for cloud agents) |
+| `beforeSubmitPrompt`, `postToolUse`, `postToolUseFailure` | `prompt`, `tool` | `busy` |
+| `stop` | `stop` | `idle` (completed, aborted or failed) |
+| `sessionEnd` | `end` | Deleted |
+
+Cursor reads every hook's answer, so the script prints `{"continue": true}` for `prompt` and `{}`
+otherwise, and never blocks anything. Each chat writes
+`~/.config/coding-agent-status-bar/cursor/<conversation id>.json` in the Codex format; `permission`
+is always `false` because Cursor sends no event while it waits for an approval or an answer.
+`directory` is the chat's first workspace folder (Cursor passes `cwd` only for some tools). `pid` is
+Cursor's extension host process, which lives as long as its window. Tool events from a subagent
+carry `parent_tool_call_id` and are skipped: its chat already shows as working.
+
+`install` adds one hook per event to the end of each list in `~/.cursor/hooks.json` (creating it
+with `"version": 1` if needed), with a 3-second timeout, and backs the file up once to
+`hooks.json.bak-coding-agent-status-bar`. Cursor reloads the file on its own. `uninstall` removes
+only hooks whose command contains `coding-agent-status-bar-cursor.py`. Both refuse to rewrite a
+file they can't parse.
+
+Cursor also runs the hooks in `~/.claude/settings.json` for its own chats. The Claude Code script
+ignores an event when its JSON has `cursor_version` or `CURSOR_VERSION` is set (Cursor sets it only
+for hooks, not in its terminal), so Cursor chats aren't counted as Claude Code sessions, while
+Claude Code started in Cursor's terminal still is.
+
 ## Menu Bar App
 
-`src/coding_agent_status_bar/core/monitor/hooks.py` reads the Codex and Claude Code status files. It
-skips malformed files and files whose process has exited. Each app counts as running while its
-desktop app (`com.openai.codex`, `com.anthropic.claudefordesktop`) is open or any of its status
-files has a live process. Idle sessions are listed for 60 seconds, `ready` sessions aren't listed,
+`src/coding_agent_status_bar/core/monitor/hooks.py` reads the Codex, Claude Code and Cursor status
+files. It skips malformed files and files whose process has exited. Each app counts as running
+while its desktop app (`com.openai.codex`, `com.anthropic.claudefordesktop`,
+`com.todesktop.230313mzl4w4u92`) is open or any of its status files has a live process. Idle sessions are listed for 60 seconds, `ready` sessions aren't listed,
 and a `busy` session without an event for 15 minutes counts as idle unless it's waiting for an
 approval or an answer.
 

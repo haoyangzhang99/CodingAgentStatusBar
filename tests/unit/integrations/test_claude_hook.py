@@ -20,14 +20,17 @@ PAYLOAD = {
 }
 
 
-def run(home, *args, payload=None, shell=False):
+def run(home, *args, payload=None, shell=False, env=None):
     command = [sys.executable, "-I", "-S", str(SCRIPT), *args]
     if shell:
         # "; true" stops the shell from exec'ing the script, as some shells do.
         command = ["/bin/sh", "-c", " ".join(f"'{part}'" for part in command) + "; true"]
+    # Cursor sets CURSOR_VERSION for the hooks it runs; these tests are Claude Code's.
+    base = {k: v for k, v in os.environ.items() if k != "CURSOR_VERSION"}
     return subprocess.run(
         command, input="" if payload is None else json.dumps(payload),
-        capture_output=True, text=True, env={**os.environ, "HOME": str(home)}, timeout=30,
+        capture_output=True, text=True, env={**base, **(env or {}), "HOME": str(home)},
+        timeout=30,
     )
 
 
@@ -136,6 +139,16 @@ class TestEvents:
 
     def test_compaction_changes_nothing(self, home):
         run(home, "start", payload={**PAYLOAD, "source": "compact"})
+        assert status(home) is None
+
+    @pytest.mark.parametrize("payload,env", [
+        ({**PAYLOAD, "cursor_version": "3.25.9"}, None),
+        (PAYLOAD, {"CURSOR_VERSION": "3.25.9"}),
+    ])
+    def test_cursor_chats_are_left_to_the_cursor_hooks(self, home, payload, env):
+        for event in ("start", "prompt", "permission", "stop"):
+            result = run(home, event, payload=payload, env=env)
+            assert result.returncode == 0 and result.stdout == ""
         assert status(home) is None
 
     def test_claude_process_found_behind_a_shell(self, home):

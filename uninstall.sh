@@ -1,5 +1,6 @@
 #!/bin/bash
-# Remove Coding Agent Status Bar's app, plugin, Codex and Claude Code hooks, and status files.
+# Remove Coding Agent Status Bar's app, plugin, Codex, Claude Code and Cursor hooks, and status
+# files.
 set -euo pipefail
 
 APP_NAME="Coding Agent Status Bar"
@@ -16,8 +17,8 @@ usage() {
     cat <<EOF
 Usage: ./uninstall.sh [--purge]
 
-Removes "$APP_NAME.app", the OpenCode plugin, the Codex and Claude Code hooks, and
-live status files.
+Removes "$APP_NAME.app", the OpenCode plugin, the Codex, Claude Code and Cursor
+hooks, and live status files.
 
   --purge   Also delete logs and this folder's .venv.
 EOF
@@ -57,8 +58,10 @@ PY="$REPO/.venv/bin/python"
     echo "Could not remove the Codex hooks from ~/.codex/hooks.json; remove them yourself." >&2
 "$PY" "$REPO/integrations/coding-agent-status-bar-claude.py" uninstall ||
     echo "Could not remove the Claude Code hooks from ~/.claude/settings.json; remove them yourself." >&2
+"$PY" "$REPO/integrations/coding-agent-status-bar-cursor.py" uninstall ||
+    echo "Could not remove the Cursor hooks from ~/.cursor/hooks.json; remove them yourself." >&2
 
-rm -rf "$CONFIG_DIR/bridge" "$CONFIG_DIR/codex" "$CONFIG_DIR/claude" \
+rm -rf "$CONFIG_DIR/bridge" "$CONFIG_DIR/codex" "$CONFIG_DIR/claude" "$CONFIG_DIR/cursor" \
     "$CONFIG_DIR/claude-usage.json" "$CONFIG_DIR/dismissed-reminders.json"
 
 if [ "$PURGE" = 1 ]; then

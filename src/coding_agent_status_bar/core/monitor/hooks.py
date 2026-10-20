@@ -1,4 +1,4 @@
-"""Read the status files written by the Codex and Claude Code hooks in integrations/."""
+"""Read the status files written by the Codex, Claude Code and Cursor hooks in integrations/."""
 
 import json
 import math
@@ -11,6 +11,7 @@ from .usage import read_claude_usage, read_codex_usage
 
 CODEX_BUNDLE_ID = "com.openai.codex"
 CLAUDE_BUNDLE_ID = "com.anthropic.claudefordesktop"
+CURSOR_BUNDLE_ID = "com.todesktop.230313mzl4w4u92"
 # Finished sessions show as Done for a minute, like OpenCode sessions.
 DONE_RETENTION = 60_000
 # Some turns end without an event, so a session working this long without one is idle.
@@ -43,6 +44,11 @@ def read_claude_state() -> HookState:
     return state
 
 
+def read_cursor_state() -> HookState:
+    # Cursor doesn't report its usage limits, so it has no usage rows.
+    return read_hook_state("cursor", CURSOR_BUNDLE_ID, "Cursor")
+
+
 def read_hook_state(folder: str, bundle_id: str, name: str) -> HookState:
     """The app runs if its desktop app is open or a session's process is alive."""
     now = time.time() * 1000
@@ -53,7 +59,7 @@ def read_hook_state(folder: str, bundle_id: str, name: str) -> HookState:
             data = json.loads(path.read_text())
             pid, updated, directory = data["pid"], data["updated"], data["directory"]
             status, permission = data["status"], data["permission"]
-            # Codex can't report questions, so its files have no "question".
+            # Codex and Cursor can't report questions, so their files have no "question".
             question = data.get("question", False)
             if (
                 data["version"] != 1
