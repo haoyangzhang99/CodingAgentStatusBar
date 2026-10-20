@@ -1,6 +1,6 @@
 #!/bin/bash
-# Install Coding Agent Status Bar: the menu bar app, its OpenCode plugin, and its Codex and
-# Claude Code hooks.
+# Install Coding Agent Status Bar: the menu bar app, its OpenCode plugin, and its Codex,
+# Claude Code and Cursor hooks.
 # Safe to re-run; use it again after `git pull` or after moving this folder.
 set -euo pipefail
 
@@ -22,8 +22,9 @@ usage() {
 Usage: ./install.sh [--no-launch]
 
 Builds "$APP_NAME.app" into ~/Applications, installs the OpenCode plugin
-into ~/.config/opencode/plugins, and adds Codex hooks to ~/.codex/hooks.json
-and Claude Code hooks to ~/.claude/settings.json if those apps are installed.
+into ~/.config/opencode/plugins, and adds Codex hooks to ~/.codex/hooks.json,
+Claude Code hooks to ~/.claude/settings.json and Cursor hooks to
+~/.cursor/hooks.json if those apps are installed.
 Requires macOS, uv, and Xcode Command Line Tools.
 
   --no-launch   Install without starting the app afterwards.
@@ -175,6 +176,10 @@ step "Installing the Claude Code hooks"
 "$PY" "$REPO/integrations/coding-agent-status-bar-claude.py" install ||
     warn "Could not add the Claude Code hooks. The rest of the status bar still works."
 
+step "Installing the Cursor hooks"
+"$PY" "$REPO/integrations/coding-agent-status-bar-cursor.py" install ||
+    warn "Could not add the Cursor hooks. The rest of the status bar still works."
+
 if [ "$LAUNCH" = 1 ]; then
     open "$APP"
 fi
@@ -191,6 +196,9 @@ Done. Next steps:
 
   For Claude Code: nothing to do. New sessions report their status, and
   Claude usage appears after your next reply in Claude Code in a terminal.
+
+  For Cursor: nothing to do. Cursor reloads its hooks on its own, and each
+  agent chat reports its status from its next message.
 
 If the icon is hidden behind the notch or other menu bar icons, hold Command
 and drag it further right.

@@ -28,6 +28,7 @@ SETTINGS: list[Setting] = [
     Setting("codex", "Agents", "Codex", "Codex sessions in the menu bar and dropdown."),
     Setting("claude", "Agents", "Claude Code",
             "Claude Code sessions in the menu bar and dropdown."),
+    Setting("cursor", "Agents", "Cursor", "Cursor agent chats in the menu bar and dropdown."),
     Setting("codex_usage", "Usage", "Codex usage",
             "Codex usage bars, and a reminder in the menu bar when usage is low.",
             requires="codex"),
@@ -37,6 +38,7 @@ SETTINGS: list[Setting] = [
     Setting("show_opencode", "Buttons", "Show OpenCode", "Brings the OpenCode app to the front."),
     Setting("show_codex", "Buttons", "Show Codex", "Brings the Codex app to the front."),
     Setting("show_claude", "Buttons", "Show Claude", "Brings the Claude app to the front."),
+    Setting("show_cursor", "Buttons", "Show Cursor", "Brings the Cursor app to the front."),
     Setting("refresh", "Buttons", "Refresh", "Redraws the dropdown."),
 ]
 
@@ -74,13 +76,18 @@ def visible_states(
     state: Optional[State],
     codex: Optional[HookState],
     claude: Optional[HookState],
-) -> tuple[Optional[State], Optional[HookState], Optional[HookState]]:
+    cursor: Optional[HookState] = None,
+) -> tuple[Optional[State], Optional[HookState], Optional[HookState], Optional[HookState]]:
     """The status without what's turned off in Settings, as if those apps weren't running."""
 
     def visible_hooks(hooks: Optional[HookState], app: str) -> Optional[HookState]:
         if not settings[app]:
             return None
-        if hooks is not None and hooks.usage is not None and not settings[f"{app}_usage"]:
+        usage_key = f"{app}_usage"
+        if (
+            hooks is not None and hooks.usage is not None
+            and usage_key in settings and not settings[usage_key]
+        ):
             return replace(hooks, usage=None)
         return hooks
 
@@ -88,4 +95,5 @@ def visible_states(
         state if settings["opencode"] else None,
         visible_hooks(codex, "codex"),
         visible_hooks(claude, "claude"),
+        visible_hooks(cursor, "cursor"),
     )

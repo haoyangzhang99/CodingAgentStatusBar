@@ -153,9 +153,10 @@ def mock_dependencies():
 
     from coding_agent_status_bar.core.models import HookState
 
-    # Tests must never see the real Codex or Claude apps or status files.
+    # Tests must never see the real Codex, Claude or Cursor apps or status files.
     mock_read_codex = MagicMock(return_value=HookState())
     mock_read_claude = MagicMock(return_value=HookState())
+    mock_read_cursor = MagicMock(return_value=HookState())
 
     # Patch at SOURCE level (where functions are defined)
     # Then reload the app module so imports resolve to mocks
@@ -164,6 +165,7 @@ def mock_dependencies():
         patch("coding_agent_status_bar.core.monitor.bridge.read_bridge_state", mock_read_state),
         patch("coding_agent_status_bar.core.monitor.hooks.read_codex_state", mock_read_codex),
         patch("coding_agent_status_bar.core.monitor.hooks.read_claude_state", mock_read_claude),
+        patch("coding_agent_status_bar.core.monitor.hooks.read_cursor_state", mock_read_cursor),
         patch("coding_agent_status_bar.utils.logger.info", mock_info),
         patch("coding_agent_status_bar.utils.logger.error", mock_error),
         patch("coding_agent_status_bar.utils.logger.debug", mock_debug),
@@ -189,6 +191,7 @@ def mock_dependencies():
             "read_state": mock_read_state,
             "read_codex": mock_read_codex,
             "read_claude": mock_read_claude,
+            "read_cursor": mock_read_cursor,
             "info": mock_info,
             "error": mock_error,
             "debug": mock_debug,
@@ -394,15 +397,33 @@ class TestBuildMenu:
             app._open_claude(None)
         log_error.assert_called_once()
 
-    def test_codex_and_claude_sections_follow_opencode_rows(self, mock_dependencies):
+    def test_show_cursor_is_fourth_and_launches_cursor(self, mock_dependencies):
+        app = create_app_with_mocks(mock_dependencies)
+        assert app.menu[3].title == "Show Cursor"
+        app._build_menu()
+        assert app.menu[3] is app._open_cursor_item
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run") as run:
+            app.menu[3].callback(None)
+        run.assert_called_once_with(
+            ["/usr/bin/open", "-b", "com.todesktop.230313mzl4w4u92"],
+            check=True, capture_output=True, timeout=5,
+        )
+        with patch("coding_agent_status_bar.app.handlers.subprocess.run",
+                   side_effect=OSError("Unavailable")), \
+             patch("coding_agent_status_bar.app.handlers.error") as log_error:
+            app._open_cursor(None)
+        log_error.assert_called_once()
+
+    def test_codex_claude_and_cursor_sections_follow_opencode_rows(self, mock_dependencies):
         opencode_row = MockMenuItem("OpenCode session")
-        codex_rows = [MockMenuItem("Codex"), MockMenuItem("project")]
-        claude_rows = [MockMenuItem("Claude Code"), MockMenuItem("other")]
+        rows = {
+            "Codex": [MockMenuItem("Codex"), MockMenuItem("project")],
+            "Claude Code": [MockMenuItem("Claude Code"), MockMenuItem("other")],
+            "Cursor": [MockMenuItem("Cursor"), MockMenuItem("third")],
+        }
         builder = mock_dependencies["builder_instance"]
         builder.build_dynamic_items.return_value = [opencode_row]
-        builder.build_hook_items.side_effect = (
-            lambda state, name, on_select: codex_rows if name == "Codex" else claude_rows
-        )
+        builder.build_hook_items.side_effect = lambda state, name, on_select: rows[name]
 
         app = create_app_with_mocks(mock_dependencies)
         app._build_menu()
@@ -410,10 +431,12 @@ class TestBuildMenu:
         assert builder.build_hook_items.call_args_list == [
             ((app._codex, "Codex"), {"on_select": app._open_codex}),
             ((app._claude, "Claude Code"), {"on_select": app._open_claude}),
+            ((app._cursor, "Cursor"), {"on_select": app._open_cursor}),
         ]
         assert cast(MockMenu, app.menu)._items == [
             app._open_opencode_item, app._open_codex_item, app._open_claude_item,
-            None, opencode_row, None, *codex_rows, None, *claude_rows,
+            app._open_cursor_item, None, opencode_row, None, *rows["Codex"],
+            None, *rows["Claude Code"], None, *rows["Cursor"],
             None, app._refresh_item, app._settings_item, None, app._quit_item,
         ]
 
@@ -440,8 +463,8 @@ class TestBuildMenu:
         assert menu._clear_called  # Direct boolean assertion
         assert menu._items == [
             app._open_opencode_item, app._open_codex_item, app._open_claude_item,
-            None, mock_item1, mock_item2, None, app._refresh_item, app._settings_item, None,
-            app._quit_item,
+            app._open_cursor_item, None, mock_item1, mock_item2, None, app._refresh_item,
+            app._settings_item, None, app._quit_item,
         ]
 
 
@@ -532,7 +555,7 @@ class TestUpdateTitlePermission:
         app._update_title()
 
         title = get_title(app)
-        assert title == ("Awaiting approval" if expected_lock else "Working...")
+        assert title == ("Awaiting approval" if expected_lock else "OpenCode working")
 
 
 # =============================================================================
@@ -547,9 +570,9 @@ class TestNativeStatusTitle:
             (0, 0, False, False, False, False, "Agents offline", "terminal"),
             (0, 0, False, False, False, True, "Agents idle", "terminal"),
             (0, 0, True, False, False, True, "Done", "checkmark.circle"),
-            (1, 2, True, False, False, True, "Working...", "terminal"),
+            (1, 2, True, False, False, True, "OpenCode working", "terminal"),
             (2, 2, False, False, False, True, "2 working", "terminal"),
-            (0, 2, True, False, False, True, "Working...", "terminal"),
+            (0, 2, True, False, False, True, "OpenCode working", "terminal"),
             (1, 1, False, True, False, True, "Awaiting approval", "hand.raised"),
             (1, 1, False, False, True, True, "Awaiting answer", "questionmark.circle"),
             (2, 1, False, True, True, True, "Needs attention", "exclamationmark.circle"),
@@ -696,7 +719,7 @@ class TestUpdateTitleIdle:
         app._update_title()
 
         title = get_title(app)
-        assert title == "Working..."
+        assert title == "OpenCode working"
 
 
 def hook_session(sid="ses", status="BUSY", permission=False, question=False):
@@ -729,7 +752,7 @@ def opencode_state(*statuses, connected=True, question=False):
 
 
 class TestCombinedStatus:
-    """One status for OpenCode, Codex and Claude Code together, without app names."""
+    """One status for all apps together, naming the app only when one session is working."""
 
     @pytest.mark.parametrize(
         "opencode,codex_running,codex,title,symbol,attention",
@@ -742,11 +765,14 @@ class TestCombinedStatus:
             (opencode_state(), False, [], "Agents idle", "terminal", False),
             (None, True, [], "Agents idle", "terminal", False),
             (opencode_state(), True, [], "Agents idle", "terminal", False),
-            # One session working, in either app
-            (None, True, [("BUSY", False)], "Working...", "terminal", False),
-            (opencode_state("BUSY"), True, [], "Working...", "terminal", False),
+            # One session working shows its app's name
+            (None, True, [("BUSY", False)], "Codex working", "terminal", False),
+            (opencode_state("BUSY"), True, [], "OpenCode working", "terminal", False),
+            (opencode_state("IDLE"), True, [("BUSY", False)], "Codex working", "terminal", False),
             # Sessions add up across both apps; sub-agents don't count
-            (opencode_state("BUSY", "SUB", "SUB"), True, [], "Working...", "terminal", False),
+            (opencode_state("BUSY", "SUB", "SUB"), True, [],
+             "OpenCode working", "terminal", False),
+            (opencode_state("IDLE", "SUB"), True, [], "OpenCode working", "terminal", False),
             (opencode_state("BUSY"), True, [("BUSY", False)], "2 working", "terminal", False),
             (opencode_state("IDLE"), True, [("BUSY", False)] * 2, "2 working", "terminal", False),
             (opencode_state("BUSY", "SUB"), True, [("BUSY", False)] * 2,
@@ -784,7 +810,7 @@ class TestCombinedStatus:
             ([], True, [], "Agents idle", "terminal", False),
             ([], False, [("BUSY", False, False)], "Agents offline", "terminal", False),
             # Sessions add up across all three apps
-            ([], True, [("BUSY", False, False)], "Working...", "terminal", False),
+            ([], True, [("BUSY", False, False)], "Claude working", "terminal", False),
             ([("BUSY", False)], True, [("BUSY", False, False)] * 2,
              "4 working", "terminal", False),
             ([], True, [("IDLE", False, False)], "Done", "checkmark.circle", False),
@@ -812,6 +838,33 @@ class TestCombinedStatus:
         ])
         opencode = opencode_state("BUSY") if title == "4 working" else None
         assert status_for(opencode, codex_state, claude_state) == (title, symbol, attention)
+
+    @pytest.mark.parametrize(
+        "running,cursor,title,symbol",
+        [
+            # Cursor alone decides offline or idle, like Codex and Claude Code
+            (False, [], "Agents offline", "terminal"),
+            (True, [], "Agents idle", "terminal"),
+            (True, ["BUSY"], "Cursor working", "terminal"),
+            (True, ["BUSY", "IDLE"], "Cursor working", "terminal"),
+            (True, ["BUSY", "BUSY"], "2 working", "terminal"),
+            (True, ["IDLE"], "Done", "checkmark.circle"),
+            # Sessions add up across all apps
+            (True, ["BUSY", "BUSY", "IDLE"], "3 working", "terminal"),
+        ],
+    )
+    def test_cursor_joins_the_status(self, mock_dependencies, running, cursor, title, symbol):
+        from coding_agent_status_bar.app.core import status_for, status_summary
+        from coding_agent_status_bar.core.models import HookState
+
+        cursor_state = HookState(running=running, sessions=[
+            hook_session(f"r{i}", status) for i, status in enumerate(cursor)
+        ])
+        claude = HookState(running=True, sessions=[hook_session("a")]) if title == "3 working" else None
+        assert status_for(None, None, claude, cursor_state) == (title, symbol, False)
+        assert f"Cursor sessions: {len(cursor) if running else 0}," in status_summary(
+            None, None, claude, cursor_state
+        )
 
     def test_codex_approval_turns_icon_yellow(self, mock_dependencies):
         from coding_agent_status_bar.core.models import HookState, State
@@ -869,7 +922,7 @@ class TestUsageReminder:
         limit = weekly(8)
         codex = usage_app(limit, sessions=[hook_session()])
         dismissed = [{"app": "Codex", "limit": "Weekly", "resets_at": limit.resets_at}]
-        assert status_for(None, codex, None, dismissed) == ("Working...", "terminal", False)
+        assert status_for(None, codex, dismissed=dismissed) == ("Codex working", "terminal", False)
 
     def test_opening_the_menu_dismisses_and_remembers(self, mock_dependencies, tmp_path, monkeypatch):
         from coding_agent_status_bar.core import reminders
@@ -972,7 +1025,8 @@ class TestSettings:
         app._codex = usage_app(weekly(50))
         app._settings = {
             **app._settings, "show_opencode": False, "show_codex": False,
-            "show_claude": False, "opencode": False, "codex": False, "refresh": False,
+            "show_claude": False, "show_cursor": False, "opencode": False, "codex": False,
+            "refresh": False,
         }
         app._build_menu()
         builder.build_dynamic_items.assert_not_called()
@@ -992,7 +1046,7 @@ class TestSettings:
         assert get_title(app) == "Codex: 8% left"
         app._settings = {**app._settings, "codex_usage": False}
         app._update_title()
-        assert get_title(app) == "Working..."
+        assert get_title(app) == "Codex working"
         app._settings = {**app._settings, "codex": False}
         app._update_title()
         assert get_title(app) == "Agents offline"
@@ -1082,13 +1136,14 @@ class TestMonitorLoop:
     """Tests for StatusBarApp._run_monitor_loop"""
 
     @staticmethod
-    def _run(app, results, codex=None, claude=None):
+    def _run(app, results, codex=None, claude=None, cursor=None):
         """Run the loop over a scripted sequence of states or exceptions."""
         from coding_agent_status_bar.core.models import HookState
 
         remaining = list(results)
         codex_remaining = list(codex or [HookState()] * len(remaining))
         claude_remaining = list(claude or [HookState()] * len(remaining))
+        cursor_remaining = list(cursor or [HookState()] * len(remaining))
         refreshes = []
 
         def read():
@@ -1109,6 +1164,8 @@ class TestMonitorLoop:
                   side_effect=lambda: codex_remaining.pop(0)),
             patch("coding_agent_status_bar.app.core.read_claude_state",
                   side_effect=lambda: claude_remaining.pop(0)),
+            patch("coding_agent_status_bar.app.core.read_cursor_state",
+                  side_effect=lambda: cursor_remaining.pop(0)),
             patch("coding_agent_status_bar.app.core.time.sleep", side_effect=sleep),
         ):
             app._running = True
@@ -1141,17 +1198,17 @@ class TestMonitorLoop:
             if c.args[0].startswith("Status changed")
         ]
         assert changes == [
-            "Status changed: Working... (OpenCode sessions: 1, Codex sessions: 0, "
-            "Claude Code sessions: 0, working: 1, needing attention: 0)",
+            "Status changed: OpenCode working (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 0, Cursor sessions: 0, working: 1, needing attention: 0)",
             "Status changed: Done (OpenCode sessions: 1, Codex sessions: 0, "
-            "Claude Code sessions: 0, working: 0, needing attention: 0)",
+            "Claude Code sessions: 0, Cursor sessions: 0, working: 0, needing attention: 0)",
         ]
         # Nothing identifying a session is written to the log.
         logged = str(mock_dependencies["info"].call_args_list)
         assert "Private title" not in logged and "/private/p" not in logged
         assert "State updated" not in logged
 
-    def test_codex_and_claude_changes_redraw_and_log_without_paths(self, mock_dependencies):
+    def test_hook_app_changes_redraw_and_log_without_paths(self, mock_dependencies):
         from coding_agent_status_bar.core.models import HookState
 
         app = create_app_with_mocks(mock_dependencies)
@@ -1159,28 +1216,33 @@ class TestMonitorLoop:
         def busy(question=False):
             return HookState(running=True, sessions=[hook_session(question=question)])
 
+        idle = HookState(running=True)
         refreshes = self._run(
             app,
-            [self._state("BUSY", i) for i in range(5)],
-            codex=[HookState(), busy(), busy(), HookState(running=True), HookState(running=True)],
-            claude=[HookState(), HookState(), HookState(), busy(), busy(question=True)],
+            [self._state("BUSY", i) for i in range(6)],
+            codex=[HookState(), busy(), busy(), idle, idle, idle],
+            claude=[HookState(), HookState(), HookState(), busy(), busy(question=True), idle],
+            cursor=[HookState()] * 5 + [busy()],
         )
         assert app._codex is not None and app._codex.running
-        assert app._claude is not None and app._claude.sessions[0].has_pending_ask_user
-        assert refreshes == [True, True, False, True, True]
+        assert app._claude is not None and not app._claude.sessions
+        assert app._cursor is not None and app._cursor.sessions
+        assert refreshes == [True, True, False, True, True, True]
         changes = [
             c.args[0] for c in mock_dependencies["info"].call_args_list
             if c.args[0].startswith("Status changed")
         ]
         assert changes == [
-            "Status changed: Working... (OpenCode sessions: 1, Codex sessions: 0, "
-            "Claude Code sessions: 0, working: 1, needing attention: 0)",
+            "Status changed: OpenCode working (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 0, Cursor sessions: 0, working: 1, needing attention: 0)",
             "Status changed: 2 working (OpenCode sessions: 1, Codex sessions: 1, "
-            "Claude Code sessions: 0, working: 2, needing attention: 0)",
+            "Claude Code sessions: 0, Cursor sessions: 0, working: 2, needing attention: 0)",
             "Status changed: 2 working (OpenCode sessions: 1, Codex sessions: 0, "
-            "Claude Code sessions: 1, working: 2, needing attention: 0)",
+            "Claude Code sessions: 1, Cursor sessions: 0, working: 2, needing attention: 0)",
             "Status changed: Awaiting answer (OpenCode sessions: 1, Codex sessions: 0, "
-            "Claude Code sessions: 1, working: 2, needing attention: 1)",
+            "Claude Code sessions: 1, Cursor sessions: 0, working: 2, needing attention: 1)",
+            "Status changed: 2 working (OpenCode sessions: 1, Codex sessions: 0, "
+            "Claude Code sessions: 0, Cursor sessions: 1, working: 2, needing attention: 0)",
         ]
         assert "/work/project" not in str(mock_dependencies["info"].call_args_list)
 

@@ -12,12 +12,13 @@ from coding_agent_status_bar.core.monitor import hooks
 APPS = {
     "codex": (hooks.read_codex_state, "com.openai.codex"),
     "claude": (hooks.read_claude_state, "com.anthropic.claudefordesktop"),
+    "cursor": (hooks.read_cursor_state, "com.todesktop.230313mzl4w4u92"),
 }
 
 
 @pytest.fixture(params=sorted(APPS))
 def app(request, tmp_path, monkeypatch):
-    """(status folder, reader, desktop app bundle ID) for Codex and for Claude Code."""
+    """(status folder, reader, desktop app bundle ID) for Codex, Claude Code and Cursor."""
     monkeypatch.setattr(hooks.Path, "home", lambda: tmp_path)
     monkeypatch.setattr(hooks, "app_running", lambda bundle_id: False)
     path = tmp_path / ".config/coding-agent-status-bar" / request.param
@@ -127,6 +128,14 @@ def test_apps_read_only_their_own_folder(tmp_path, monkeypatch):
     write(folder)
     assert hooks.read_codex_state().running
     assert not hooks.read_claude_state().running
+    assert not hooks.read_cursor_state().running
+
+
+def test_cursor_has_no_usage(tmp_path, monkeypatch):
+    monkeypatch.setattr(hooks.Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(hooks, "app_running", lambda bundle_id: True)
+    state = hooks.read_cursor_state()
+    assert state.running and state.usage is None
 
 
 def test_app_running_checks_bundle_id():

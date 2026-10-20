@@ -1,5 +1,5 @@
 """Data models for Coding Agent Status Bar, filled in from the OpenCode plugin's snapshots and
-the Codex and Claude Code hooks' status files."""
+the Codex, Claude Code and Cursor hooks' status files."""
 
 import time
 from dataclasses import dataclass, field
@@ -120,7 +120,7 @@ class Usage:
 
 @dataclass
 class HookState:
-    """Codex or Claude Code status from their hooks. Sessions are recent ones, titled by
+    """Codex, Claude Code or Cursor status from their hooks. Sessions are recent ones, titled by
     project folder."""
 
     running: bool = False

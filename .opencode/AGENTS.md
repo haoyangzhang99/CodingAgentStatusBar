@@ -1,17 +1,18 @@
 # Project Instructions: Coding Agent Status Bar
 
-A macOS menu bar app showing whether OpenCode, Codex and Claude Code are working, done, or waiting
-for the user. Read `DEVELOPMENT.md` for the layout.
+A macOS menu bar app showing whether OpenCode, Codex, Claude Code and Cursor are working, done, or
+waiting for the user. Read `DEVELOPMENT.md` for the layout.
 
 ## Scope
 
 - The app's runtime path is: `integrations/coding-agent-status-bar.js` (plugin) → snapshot files →
-  `core/monitor/bridge.py` → `app/` and `ui/menu.py`. Codex and Claude Code follow the same path
-  through `integrations/coding-agent-status-bar-codex.py` and `integrations/coding-agent-status-bar-claude.py`
+  `core/monitor/bridge.py` → `app/` and `ui/menu.py`. Codex, Claude Code and Cursor follow the same
+  path through `integrations/coding-agent-status-bar-codex.py`,
+  `integrations/coding-agent-status-bar-claude.py` and `integrations/coding-agent-status-bar-cursor.py`
   (hooks) and `core/monitor/hooks.py`. Prefer changes there.
 - Keep runtime dependencies to `rumps` and `loguru`; the app should stay small (about 36 MB).
 - The app makes no network requests, and reads Codex's session files only for their usage records.
-  The plugin, the Codex and Claude Code hooks, and the Claude status line must not write prompts,
+  The plugin, the Codex, Claude Code and Cursor hooks, and the Claude status line must not write prompts,
   messages, tool arguments, tool output, or credentials.
 - Menu bar and dropdown icons are monochrome SF Symbol templates, except yellow for attention states.
   Usage bars follow the same rule: gray, or yellow when a limit is low.
