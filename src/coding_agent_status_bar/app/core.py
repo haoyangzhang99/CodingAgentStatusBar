@@ -46,16 +46,20 @@ def status_for(
     """Return (menu bar label, SF Symbol name, needs attention) for all apps together.
 
     Priority: approvals and questions, then a low-usage reminder not yet dismissed, then
-    working, done and idle.
+    working, done and idle. One working session shows its app's name, such as
+    "Codex working"; more show how many, such as "2 working".
     """
     if (state is None or not state.connected) and not any(
         hooks is not None and hooks.running for hooks in (codex, claude, cursor)
     ):
         return "Agents offline", "terminal", False
-    sessions = (
-        opencode_sessions(state) + hook_sessions(codex) + hook_sessions(claude)
-        + hook_sessions(cursor)
-    )
+    apps = {
+        "OpenCode": opencode_sessions(state),
+        "Codex": hook_sessions(codex),
+        "Claude Code": hook_sessions(claude),
+        "Cursor": hook_sessions(cursor),
+    }
+    sessions = [s for app_sessions in apps.values() for s in app_sessions]
     approval = any(tool.may_need_permission for s in sessions for tool in s.tools)
     question = any(s.has_pending_ask_user for s in sessions)
     if approval and question:
@@ -67,12 +71,18 @@ def status_for(
     reminder = reminder_for({"Codex": codex, "Claude Code": claude}, dismissed or [])
     if reminder:
         return reminder, "gauge.with.dots.needle.0percent", True
-    busy = [s for s in sessions if s.status == SessionStatus.BUSY]
+    busy = [
+        (app, s) for app, app_sessions in apps.items()
+        for s in app_sessions if s.status == SessionStatus.BUSY
+    ]
     if busy:
         # Count sessions, not sub-agents. Codex, Claude Code and Cursor report sub-agents
         # under their session.
-        root_count = sum(not s.is_subagent for s in busy)
-        return (f"{root_count} working" if root_count > 1 else "Working..."), "terminal", False
+        roots = [app for app, s in busy if not s.is_subagent]
+        if len(roots) > 1:
+            return f"{len(roots)} working", "terminal", False
+        # One session, or only an OpenCode session's sub-agents, is working.
+        return f"{roots[0] if roots else busy[0][0]} working", "terminal", False
     if sessions:
         return "Done", "checkmark.circle", False
     return "Agents idle", "terminal", False

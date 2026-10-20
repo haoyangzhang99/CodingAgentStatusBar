@@ -21,7 +21,7 @@ items.
 
 | Status | Icon | Meaning |
 |---|---|---|
-| `Working...` | Terminal | One session is working, in any of the apps |
+| `Codex working`, `Cursor working`, ... | Terminal | One session is working, in the app named |
 | `2 working`, `3 working`, ... | Terminal | Several sessions are working, added up across all apps |
 | `Done` | Checkmark | A session finished within the last minute, and nothing is working |
 | `Awaiting approval` | Hand (yellow) | An app is waiting for you to approve a request |

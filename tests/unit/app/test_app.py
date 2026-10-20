@@ -555,7 +555,7 @@ class TestUpdateTitlePermission:
         app._update_title()
 
         title = get_title(app)
-        assert title == ("Awaiting approval" if expected_lock else "Working...")
+        assert title == ("Awaiting approval" if expected_lock else "OpenCode working")
 
 
 # =============================================================================
@@ -570,9 +570,9 @@ class TestNativeStatusTitle:
             (0, 0, False, False, False, False, "Agents offline", "terminal"),
             (0, 0, False, False, False, True, "Agents idle", "terminal"),
             (0, 0, True, False, False, True, "Done", "checkmark.circle"),
-            (1, 2, True, False, False, True, "Working...", "terminal"),
+            (1, 2, True, False, False, True, "OpenCode working", "terminal"),
             (2, 2, False, False, False, True, "2 working", "terminal"),
-            (0, 2, True, False, False, True, "Working...", "terminal"),
+            (0, 2, True, False, False, True, "OpenCode working", "terminal"),
             (1, 1, False, True, False, True, "Awaiting approval", "hand.raised"),
             (1, 1, False, False, True, True, "Awaiting answer", "questionmark.circle"),
             (2, 1, False, True, True, True, "Needs attention", "exclamationmark.circle"),
@@ -719,7 +719,7 @@ class TestUpdateTitleIdle:
         app._update_title()
 
         title = get_title(app)
-        assert title == "Working..."
+        assert title == "OpenCode working"
 
 
 def hook_session(sid="ses", status="BUSY", permission=False, question=False):
@@ -752,7 +752,7 @@ def opencode_state(*statuses, connected=True, question=False):
 
 
 class TestCombinedStatus:
-    """One status for OpenCode, Codex and Claude Code together, without app names."""
+    """One status for all apps together, naming the app only when one session is working."""
 
     @pytest.mark.parametrize(
         "opencode,codex_running,codex,title,symbol,attention",
@@ -765,11 +765,14 @@ class TestCombinedStatus:
             (opencode_state(), False, [], "Agents idle", "terminal", False),
             (None, True, [], "Agents idle", "terminal", False),
             (opencode_state(), True, [], "Agents idle", "terminal", False),
-            # One session working, in either app
-            (None, True, [("BUSY", False)], "Working...", "terminal", False),
-            (opencode_state("BUSY"), True, [], "Working...", "terminal", False),
+            # One session working shows its app's name
+            (None, True, [("BUSY", False)], "Codex working", "terminal", False),
+            (opencode_state("BUSY"), True, [], "OpenCode working", "terminal", False),
+            (opencode_state("IDLE"), True, [("BUSY", False)], "Codex working", "terminal", False),
             # Sessions add up across both apps; sub-agents don't count
-            (opencode_state("BUSY", "SUB", "SUB"), True, [], "Working...", "terminal", False),
+            (opencode_state("BUSY", "SUB", "SUB"), True, [],
+             "OpenCode working", "terminal", False),
+            (opencode_state("IDLE", "SUB"), True, [], "OpenCode working", "terminal", False),
             (opencode_state("BUSY"), True, [("BUSY", False)], "2 working", "terminal", False),
             (opencode_state("IDLE"), True, [("BUSY", False)] * 2, "2 working", "terminal", False),
             (opencode_state("BUSY", "SUB"), True, [("BUSY", False)] * 2,
@@ -807,7 +810,7 @@ class TestCombinedStatus:
             ([], True, [], "Agents idle", "terminal", False),
             ([], False, [("BUSY", False, False)], "Agents offline", "terminal", False),
             # Sessions add up across all three apps
-            ([], True, [("BUSY", False, False)], "Working...", "terminal", False),
+            ([], True, [("BUSY", False, False)], "Claude Code working", "terminal", False),
             ([("BUSY", False)], True, [("BUSY", False, False)] * 2,
              "4 working", "terminal", False),
             ([], True, [("IDLE", False, False)], "Done", "checkmark.circle", False),
@@ -842,7 +845,9 @@ class TestCombinedStatus:
             # Cursor alone decides offline or idle, like Codex and Claude Code
             (False, [], "Agents offline", "terminal"),
             (True, [], "Agents idle", "terminal"),
-            (True, ["BUSY"], "Working...", "terminal"),
+            (True, ["BUSY"], "Cursor working", "terminal"),
+            (True, ["BUSY", "IDLE"], "Cursor working", "terminal"),
+            (True, ["BUSY", "BUSY"], "2 working", "terminal"),
             (True, ["IDLE"], "Done", "checkmark.circle"),
             # Sessions add up across all apps
             (True, ["BUSY", "BUSY", "IDLE"], "3 working", "terminal"),
@@ -917,7 +922,7 @@ class TestUsageReminder:
         limit = weekly(8)
         codex = usage_app(limit, sessions=[hook_session()])
         dismissed = [{"app": "Codex", "limit": "Weekly", "resets_at": limit.resets_at}]
-        assert status_for(None, codex, dismissed=dismissed) == ("Working...", "terminal", False)
+        assert status_for(None, codex, dismissed=dismissed) == ("Codex working", "terminal", False)
 
     def test_opening_the_menu_dismisses_and_remembers(self, mock_dependencies, tmp_path, monkeypatch):
         from coding_agent_status_bar.core import reminders
@@ -1041,7 +1046,7 @@ class TestSettings:
         assert get_title(app) == "Codex: 8% left"
         app._settings = {**app._settings, "codex_usage": False}
         app._update_title()
-        assert get_title(app) == "Working..."
+        assert get_title(app) == "Codex working"
         app._settings = {**app._settings, "codex": False}
         app._update_title()
         assert get_title(app) == "Agents offline"
@@ -1193,7 +1198,7 @@ class TestMonitorLoop:
             if c.args[0].startswith("Status changed")
         ]
         assert changes == [
-            "Status changed: Working... (OpenCode sessions: 1, Codex sessions: 0, "
+            "Status changed: OpenCode working (OpenCode sessions: 1, Codex sessions: 0, "
             "Claude Code sessions: 0, Cursor sessions: 0, working: 1, needing attention: 0)",
             "Status changed: Done (OpenCode sessions: 1, Codex sessions: 0, "
             "Claude Code sessions: 0, Cursor sessions: 0, working: 0, needing attention: 0)",
@@ -1228,7 +1233,7 @@ class TestMonitorLoop:
             if c.args[0].startswith("Status changed")
         ]
         assert changes == [
-            "Status changed: Working... (OpenCode sessions: 1, Codex sessions: 0, "
+            "Status changed: OpenCode working (OpenCode sessions: 1, Codex sessions: 0, "
             "Claude Code sessions: 0, Cursor sessions: 0, working: 1, needing attention: 0)",
             "Status changed: 2 working (OpenCode sessions: 1, Codex sessions: 1, "
             "Claude Code sessions: 0, Cursor sessions: 0, working: 2, needing attention: 0)",
