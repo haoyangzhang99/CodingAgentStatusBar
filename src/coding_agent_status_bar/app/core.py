@@ -53,10 +53,11 @@ def status_for(
         hooks is not None and hooks.running for hooks in (codex, claude, cursor)
     ):
         return "Agents offline", "terminal", False
+    # Short names for the menu bar, such as "Claude working".
     apps = {
         "OpenCode": opencode_sessions(state),
         "Codex": hook_sessions(codex),
-        "Claude Code": hook_sessions(claude),
+        "Claude": hook_sessions(claude),
         "Cursor": hook_sessions(cursor),
     }
     sessions = [s for app_sessions in apps.values() for s in app_sessions]

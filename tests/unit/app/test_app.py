@@ -810,7 +810,7 @@ class TestCombinedStatus:
             ([], True, [], "Agents idle", "terminal", False),
             ([], False, [("BUSY", False, False)], "Agents offline", "terminal", False),
             # Sessions add up across all three apps
-            ([], True, [("BUSY", False, False)], "Claude Code working", "terminal", False),
+            ([], True, [("BUSY", False, False)], "Claude working", "terminal", False),
             ([("BUSY", False)], True, [("BUSY", False, False)] * 2,
              "4 working", "terminal", False),
             ([], True, [("IDLE", False, False)], "Done", "checkmark.circle", False),
