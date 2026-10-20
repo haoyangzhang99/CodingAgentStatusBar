@@ -13,6 +13,9 @@ from ..core.models import Agent, HookState, SessionStatus, State, Usage, UsageLi
 TITLE_MAX_LENGTH = 40
 TOOL_ARG_MAX_LENGTH = 30
 
+# NSMenuItemImageVisibilityVisible (macOS 27): show the item's image even where macOS would hide it.
+MENU_IMAGE_VISIBLE = 1
+
 # Usage row layout, in points. Text fields pad their text by 2, so the inset puts the label's
 # text where menu titles and icons start.
 USAGE_ROW_SIZE = (260, 20)
@@ -66,6 +69,9 @@ def set_menu_symbol(item: Any, symbol: str) -> None:
             return
         image.setTemplate_(True)
         item._menuitem.setImage_(image)
+        # macOS 27 hides menu item images in apps built with its SDK unless asked to show them.
+        if hasattr(item._menuitem, "setPreferredImageVisibility_"):
+            item._menuitem.setPreferredImageVisibility_(MENU_IMAGE_VISIBLE)
     except Exception:
         # A missing icon must never break the menu; the text still shows.
         pass
