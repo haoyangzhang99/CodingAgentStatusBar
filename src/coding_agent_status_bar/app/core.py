@@ -3,8 +3,8 @@ Core StatusBarApp class - Main menu bar application.
 
 This module provides the StatusBarApp class which:
 - Manages application state and lifecycle
-- Polls status snapshots written by the OpenCode desktop bridge plugin, and Codex and
-  Claude Code hooks
+- Polls status snapshots written by the OpenCode desktop bridge plugin, and Codex,
+  Claude Code and Cursor hooks
 - Combines MenuMixin and HandlersMixin for functionality
 """
 
@@ -16,7 +16,7 @@ import rumps
 
 from ..core.models import Agent, HookState, State, SessionStatus
 from ..core.monitor.bridge import read_bridge_state
-from ..core.monitor.hooks import read_claude_state, read_codex_state
+from ..core.monitor.hooks import read_claude_state, read_codex_state, read_cursor_state
 from ..core.reminders import dismiss, load_dismissed, reminder_for, save_dismissed
 from ..core.settings import load_settings, visible_states
 from ..ui.menu import MenuBuilder, tint_yellow
@@ -40,6 +40,7 @@ def status_for(
     state: Optional[State],
     codex: Optional[HookState] = None,
     claude: Optional[HookState] = None,
+    cursor: Optional[HookState] = None,
     dismissed: Optional[list[dict]] = None,
 ) -> tuple[str, str, bool]:
     """Return (menu bar label, SF Symbol name, needs attention) for all apps together.
@@ -48,10 +49,13 @@ def status_for(
     working, done and idle.
     """
     if (state is None or not state.connected) and not any(
-        hooks is not None and hooks.running for hooks in (codex, claude)
+        hooks is not None and hooks.running for hooks in (codex, claude, cursor)
     ):
         return "Agents offline", "terminal", False
-    sessions = opencode_sessions(state) + hook_sessions(codex) + hook_sessions(claude)
+    sessions = (
+        opencode_sessions(state) + hook_sessions(codex) + hook_sessions(claude)
+        + hook_sessions(cursor)
+    )
     approval = any(tool.may_need_permission for s in sessions for tool in s.tools)
     question = any(s.has_pending_ask_user for s in sessions)
     if approval and question:
@@ -65,8 +69,8 @@ def status_for(
         return reminder, "gauge.with.dots.needle.0percent", True
     busy = [s for s in sessions if s.status == SessionStatus.BUSY]
     if busy:
-        # Count sessions, not sub-agents. Codex and Claude Code report sub-agents under
-        # their session.
+        # Count sessions, not sub-agents. Codex, Claude Code and Cursor report sub-agents
+        # under their session.
         root_count = sum(not s.is_subagent for s in busy)
         return (f"{root_count} working" if root_count > 1 else "Working..."), "terminal", False
     if sessions:
@@ -75,7 +79,7 @@ def status_for(
 
 
 def hook_fingerprint(hooks: Optional[HookState]) -> tuple:
-    """Everything the menu displays about Codex or Claude Code, for change detection."""
+    """Everything the menu displays about Codex, Claude Code or Cursor, for change detection."""
     if hooks is None:
         return ()
     usage = hooks.usage
@@ -116,14 +120,16 @@ def status_summary(
     state: Optional[State],
     codex: Optional[HookState] = None,
     claude: Optional[HookState] = None,
+    cursor: Optional[HookState] = None,
     dismissed: Optional[list[dict]] = None,
 ) -> str:
     """One log line describing the status, without session titles or paths."""
-    title = status_for(state, codex, claude, dismissed)[0]
-    opencode, codex_list, claude_list = (
-        opencode_sessions(state), hook_sessions(codex), hook_sessions(claude)
+    title = status_for(state, codex, claude, cursor, dismissed)[0]
+    opencode, codex_list, claude_list, cursor_list = (
+        opencode_sessions(state), hook_sessions(codex), hook_sessions(claude),
+        hook_sessions(cursor),
     )
-    sessions = opencode + codex_list + claude_list
+    sessions = opencode + codex_list + claude_list + cursor_list
     busy = sum(s.status == SessionStatus.BUSY and not s.is_subagent for s in sessions)
     attention = sum(
         s.has_pending_ask_user or any(t.may_need_permission for t in s.tools)
@@ -131,7 +137,8 @@ def status_summary(
     )
     return (
         f"{title} (OpenCode sessions: {len(opencode)}, Codex sessions: {len(codex_list)}, "
-        f"Claude Code sessions: {len(claude_list)}, working: {busy}, "
+        f"Claude Code sessions: {len(claude_list)}, Cursor sessions: {len(cursor_list)}, "
+        f"working: {busy}, "
         f"needing attention: {attention})"
     )
 
@@ -158,6 +165,7 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
         self._state: Optional[State] = None
         self._codex: Optional[HookState] = None
         self._claude: Optional[HookState] = None
+        self._cursor: Optional[HookState] = None
         self._state_lock = threading.Lock()
         self._running = True
         self._needs_refresh = True
@@ -216,7 +224,9 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
     def _on_menu_open(self):
         """Move low-usage reminders out of the menu bar; their rows stay yellow."""
         with self._state_lock:
-            _, codex, claude = visible_states(self._settings, None, self._codex, self._claude)
+            _, codex, claude, _ = visible_states(
+                self._settings, None, self._codex, self._claude, self._cursor
+            )
             apps = {"Codex": codex, "Claude Code": claude}
             changed = dismiss(apps, self._dismissed, time.time())
             dismissed = list(self._dismissed)
@@ -231,12 +241,12 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
     def _update_title(self):
         """Update the compact status label and native menu bar presentation."""
         with self._state_lock:
-            state, codex, claude = visible_states(
-                self._settings, self._state, self._codex, self._claude
+            state, codex, claude, cursor = visible_states(
+                self._settings, self._state, self._codex, self._claude, self._cursor
             )
             dismissed = list(self._dismissed)
 
-        title, symbol, attention = status_for(state, codex, claude, dismissed)
+        title, symbol, attention = status_for(state, codex, claude, cursor, dismissed)
 
         # Keep rumps' plain title in sync before styling its native button.
         self.title = title
@@ -270,7 +280,7 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
         button.setNeedsDisplay_(True)
 
     def _run_monitor_loop(self):
-        """Poll OpenCode, Codex and Claude Code status files; log and redraw only when
+        """Poll OpenCode, Codex, Claude Code and Cursor status files; log and redraw only when
         something changes."""
         info("Coding Agent Status Bar started")
         last_fingerprint = None
@@ -283,10 +293,12 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
                 new_state = read_bridge_state()
                 new_codex = read_codex_state()
                 new_claude = read_claude_state()
+                new_cursor = read_cursor_state()
                 with self._state_lock:
                     self._state = new_state
                     self._codex = new_codex
                     self._claude = new_claude
+                    self._cursor = new_cursor
                     dismissed = list(self._dismissed)
                     settings = self._settings
 
@@ -294,13 +306,15 @@ class StatusBarApp(HandlersMixin, MenuMixin, rumps.App):
                     state_fingerprint(new_state),
                     hook_fingerprint(new_codex),
                     hook_fingerprint(new_claude),
+                    hook_fingerprint(new_cursor),
                 )
                 if fingerprint != last_fingerprint:
                     last_fingerprint = fingerprint
                     self._needs_refresh = True
 
                 summary = status_summary(
-                    *visible_states(settings, new_state, new_codex, new_claude), dismissed
+                    *visible_states(settings, new_state, new_codex, new_claude, new_cursor),
+                    dismissed,
                 )
                 if summary != last_summary:
                     last_summary = summary

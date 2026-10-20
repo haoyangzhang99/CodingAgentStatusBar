@@ -23,6 +23,7 @@ class MenuMixin:
     _state: Optional[State]
     _codex: Optional[HookState]
     _claude: Optional[HookState]
+    _cursor: Optional[HookState]
     _settings: dict[str, bool]
     _state_lock: threading.Lock
     _menu_builder: MenuBuilder
@@ -31,6 +32,7 @@ class MenuMixin:
     _open_opencode_item: rumps.MenuItem
     _open_codex_item: rumps.MenuItem
     _open_claude_item: rumps.MenuItem
+    _open_cursor_item: rumps.MenuItem
     _refresh_item: rumps.MenuItem
     _settings_item: rumps.MenuItem
     _quit_item: rumps.MenuItem
@@ -40,6 +42,7 @@ class MenuMixin:
     def _open_opencode(self, _): ...
     def _open_codex(self, _): ...
     def _open_claude(self, _): ...
+    def _open_cursor(self, _): ...
     def _open_settings(self, _): ...
 
     def _build_static_menu(self):
@@ -49,6 +52,7 @@ class MenuMixin:
         )
         self._open_codex_item = rumps.MenuItem("Show Codex", callback=self._open_codex)
         self._open_claude_item = rumps.MenuItem("Show Claude", callback=self._open_claude)
+        self._open_cursor_item = rumps.MenuItem("Show Cursor", callback=self._open_cursor)
         self._refresh_item = rumps.MenuItem("Refresh", callback=self._on_refresh)
         set_menu_symbol(self._refresh_item, "arrow.clockwise")
         self._settings_item = rumps.MenuItem("Settings...", callback=self._open_settings)
@@ -72,6 +76,7 @@ class MenuMixin:
                 (self._open_opencode_item, "show_opencode"),
                 (self._open_codex_item, "show_codex"),
                 (self._open_claude_item, "show_claude"),
+                (self._open_cursor_item, "show_cursor"),
             )
             if settings[key]
         ]
@@ -87,9 +92,10 @@ class MenuMixin:
             state = self._state
             codex = self._codex
             claude = self._claude
+            cursor = self._cursor
             settings = self._settings
 
-        state, codex, claude = visible_states(settings, state, codex, claude)
+        state, codex, claude, cursor = visible_states(settings, state, codex, claude, cursor)
 
         # Clicking a session row brings its app to the front. An app turned off in Settings
         # has no section.
@@ -100,6 +106,7 @@ class MenuMixin:
             self._menu_builder.build_hook_items(
                 claude, "Claude Code", on_select=self._open_claude
             ),
+            self._menu_builder.build_hook_items(cursor, "Cursor", on_select=self._open_cursor),
         ]
 
         # Rebuild complete menu (rumps.App.menu has .add()/.clear() but no type stubs)

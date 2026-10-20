@@ -28,9 +28,10 @@ The whole app is these parts:
 | `integrations/coding-agent-status-bar.js` | OpenCode plugin that writes status snapshots |
 | `integrations/coding-agent-status-bar-codex.py` | Codex hooks that write status files; installs and removes the hooks |
 | `integrations/coding-agent-status-bar-claude.py` | The same for Claude Code |
+| `integrations/coding-agent-status-bar-cursor.py` | The same for Cursor |
 | `integrations/launcher.m` | Native app executable that embeds Python |
 | `src/coding_agent_status_bar/core/monitor/bridge.py` | Reads snapshots into app state |
-| `src/coding_agent_status_bar/core/monitor/hooks.py` | Reads Codex and Claude Code status files into app state |
+| `src/coding_agent_status_bar/core/monitor/hooks.py` | Reads Codex, Claude Code and Cursor status files into app state |
 | `src/coding_agent_status_bar/core/monitor/usage.py` | Reads Codex and Claude subscription usage |
 | `src/coding_agent_status_bar/core/reminders.py` | Low-usage reminders and their dismissal |
 | `src/coding_agent_status_bar/core/settings.py` | Which parts of the dropdown are turned on, and saving that |
@@ -71,6 +72,7 @@ Python tests run in parallel and in random order by default.
 | `~/.config/coding-agent-status-bar/bridge/*.json` | Live snapshots written by the plugin |
 | `~/.config/coding-agent-status-bar/codex/*.json` | Codex session status written by the hooks |
 | `~/.config/coding-agent-status-bar/claude/*.json` | Claude Code session status written by the hooks |
+| `~/.config/coding-agent-status-bar/cursor/*.json` | Cursor chat status written by the hooks |
 | `~/.config/coding-agent-status-bar/claude-usage.json` | Claude usage written by the Claude Code status line |
 | `~/.config/coding-agent-status-bar/dismissed-reminders.json` | Low-usage reminders already seen |
 | `~/.config/coding-agent-status-bar/settings.json` | Parts of the dropdown turned on or off in Settings |
@@ -96,6 +98,13 @@ Python tests run in parallel and in random order by default.
 - Check for status files: `ls -l ~/.config/coding-agent-status-bar/claude/`. One is rewritten on
   every Claude Code event.
 
+**No Cursor status:**
+- Check that `~/.cursor/hooks.json` has hooks running `coding-agent-status-bar-cursor.py`; if not,
+  run `./install.sh` again. Cursor's **Hooks** settings tab and **Hooks** output channel show
+  whether they loaded and ran.
+- Check for status files: `ls -l ~/.config/coding-agent-status-bar/cursor/`. One is rewritten
+  when you send a message, after each tool, and when the agent stops.
+
 **Dropdown shows `No OpenCode instances`** (menu bar on `Agents offline` without Codex or
 Claude Code):
 - Check for fresh snapshots: `ls -l ~/.config/coding-agent-status-bar/bridge/`. Files are rewritten
@@ -113,8 +122,8 @@ Claude Code):
 
 - After changing Python code, restart the app. After changing the plugin, restart OpenCode.
   Changes to the Codex hook script apply on the next Codex event; changes to the hook commands
-  need `./install.sh` and trusting them again in Codex's `/hooks`. The Claude Code hook script
-  works the same way, without the trust step.
+  need `./install.sh` and trusting them again in Codex's `/hooks`. The Claude Code and Cursor
+  hook scripts work the same way, without the trust step.
 - Keep the app free of network access and the plugin free of prompts, messages, tool arguments,
   and credentials. `README.md`'s Privacy section documents those promises.
 - Update the snapshot format in `integrations/README.md` if you change it, and keep the plugin
